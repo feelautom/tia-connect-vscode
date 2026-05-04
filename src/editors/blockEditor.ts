@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
-import { exportBlockSource, importAndGenerate, compileBlock } from '../api/blocks';
+import { getBlockContent, importAndGenerate, compileBlock, exportBlockXml } from '../api/blocks';
 import { BlockFileManager } from './blockFileManager';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
 import { getAutoReimport, getAutoCompile } from '../utils/config';
+import { EDITABLE_LANGUAGES } from '../utils/constants';
 import { log, logError } from '../views/outputChannel';
 
 export class BlockEditor {
@@ -23,26 +24,70 @@ export class BlockEditor {
             return;
         }
 
+        const isEditable = EDITABLE_LANGUAGES.includes(item.language.toUpperCase() as any);
+
         try {
-            const result = await vscode.window.withProgress(
-                { location: vscode.ProgressLocation.Notification, title: `Exporting ${item.blockName}...` },
-                () => exportBlockSource(item.deviceName!, item.blockName!)
-            );
-
-            const filePath = this.fileManager.writeBlock(
-                item.deviceName,
-                item.blockName,
-                item.language,
-                result.Content
-            );
-
-            const doc = await vscode.workspace.openTextDocument(filePath);
-            await vscode.window.showTextDocument(doc);
-            log(`Opened block ${item.blockName} from ${item.deviceName}`);
+            if (isEditable) {
+                await this.openEditableBlock(item);
+            } else {
+                await this.openReadOnlyBlock(item);
+            }
         } catch (err) {
             logError(`Failed to open block ${item.blockName}`, err);
             vscode.window.showErrorMessage(`Failed to open block: ${err instanceof Error ? err.message : err}`);
         }
+    }
+
+    /** Open SCL/STL block for editing */
+    private async openEditableBlock(item: TiaTreeItem): Promise<void> {
+        const content = await vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Notification, title: `Loading ${item.blockName}...` },
+            async () => {
+                const dto = await getBlockContent(item.deviceName!, item.blockName!);
+
+                if (dto.SourceText) {
+                    return dto.SourceText;
+                }
+
+                // Fallback: try to extract SCL from RawXml
+                if (dto.RawXml) {
+                    log(`No SourceText for ${item.blockName}, showing RawXml as fallback.`);
+                    return dto.RawXml;
+                }
+
+                throw new Error(`No source code available for ${item.blockName}. The block may need compilation first.`);
+            }
+        );
+
+        const filePath = this.fileManager.writeBlock(
+            item.deviceName!,
+            item.blockName!,
+            item.language!,
+            content
+        );
+
+        const doc = await vscode.workspace.openTextDocument(filePath);
+        await vscode.window.showTextDocument(doc);
+        log(`Opened block ${item.blockName} from ${item.deviceName}`);
+    }
+
+    /** Open LAD/FBD/GRAPH block as read-only XML */
+    private async openReadOnlyBlock(item: TiaTreeItem): Promise<void> {
+        const xml = await vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Notification, title: `Exporting ${item.blockName} (XML)...` },
+            () => exportBlockXml(item.deviceName!, item.blockName!)
+        );
+
+        const filePath = this.fileManager.writeBlock(
+            item.deviceName!,
+            item.blockName!,
+            'xml',
+            xml
+        );
+
+        const doc = await vscode.workspace.openTextDocument(filePath);
+        await vscode.window.showTextDocument(doc, { preview: true });
+        log(`Opened block ${item.blockName} as read-only XML`);
     }
 
     /** Handle document save — reimport into TIA Portal */
@@ -53,11 +98,14 @@ export class BlockEditor {
         const meta = this.fileManager.readMetadata(doc.uri.fsPath);
         if (!meta) { return; }
 
-        log(`Auto-reimporting ${meta.blockName} to ${meta.deviceName}...`);
+        // Only reimport editable languages
+        if (!EDITABLE_LANGUAGES.includes(meta.language.toUpperCase() as any)) { return; }
+
+        log(`Reimporting ${meta.blockName} to ${meta.deviceName}...`);
 
         try {
             const content = doc.getText();
-            const result = await importAndGenerate(meta.deviceName, content);
+            const result = await importAndGenerate(meta.deviceName, content, `${meta.blockName}_vscode`);
 
             if (result.Success) {
                 vscode.window.showInformationMessage(`Block ${meta.blockName} reimported successfully.`);

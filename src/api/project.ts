@@ -7,6 +7,6 @@ export async function getProjectOverview(): Promise<ProjectOverview> {
 }
 
 export async function listDevices(): Promise<DeviceInfo[]> {
-    const res = await client.get<DeviceInfo[]>('/api/devices');
+    const res = await client.get<DeviceInfo[]>('/api/projects/devices');
     return res.Data;
 }

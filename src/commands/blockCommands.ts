@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { BlockEditor } from '../editors/blockEditor';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
-import { compileDevice, compileBlock, exportBlockToFile } from '../api/blocks';
+import { compileDevice, compileBlock, exportBlockXml } from '../api/blocks';
 import { log, logError } from '../views/outputChannel';
 
 export function registerBlockCommands(
@@ -85,10 +85,13 @@ async function doExportBlock(item: TiaTreeItem): Promise<void> {
     if (!uri) { return; }
 
     try {
-        await vscode.window.withProgress(
+        const xml = await vscode.window.withProgress(
             { location: vscode.ProgressLocation.Notification, title: `Exporting ${item.blockName}...` },
-            () => exportBlockToFile(item.deviceName!, item.blockName!, uri.fsPath)
+            () => exportBlockXml(item.deviceName!, item.blockName!)
         );
+
+        const fs = await import('fs');
+        fs.writeFileSync(uri.fsPath, xml, 'utf-8');
 
         vscode.window.showInformationMessage(`Block ${item.blockName} exported.`);
         log(`Exported ${item.blockName} to ${uri.fsPath}`);

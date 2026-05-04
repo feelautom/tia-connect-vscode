@@ -76,11 +76,20 @@ export interface CompilationMessage {
     ErrorLevel: 'Error' | 'Warning' | 'Info';
 }
 
-/** Export source result */
-export interface ExportSourceResult {
-    Content: string;
-    Language: string;
-    BlockName: string;
+/** Block content from GET /api/devices/{d}/blocks/{b}/content */
+export interface BlockContentDto {
+    Name: string;
+    BlockType: string;
+    Number: number;
+    ProgrammingLanguage: string;
+    Title: string;
+    Author: string;
+    IsProtected: boolean;
+    IsKnowHowProtected: boolean;
+    NeedsCompilation: boolean;
+    RawXml: string;
+    /** Plain-text source code (SCL/STL/DB) from GenerateSource */
+    SourceText?: string;
 }
 
 /** Import result */

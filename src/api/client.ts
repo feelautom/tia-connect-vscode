@@ -67,12 +67,20 @@ export class TiaClient {
             });
 
             const text = await resp.text();
-            let json: ApiResponse<T>;
+            let raw: any;
             try {
-                json = JSON.parse(text);
+                raw = JSON.parse(text);
             } catch {
                 throw new Error(`Invalid JSON response from ${path}: ${text.substring(0, 200)}`);
             }
+
+            // Normalize casing: backend may return camelCase or PascalCase
+            const json: ApiResponse<T> = {
+                Success: raw.Success ?? raw.success ?? false,
+                Message: raw.Message ?? raw.message ?? '',
+                Data: raw.Data ?? raw.data ?? null,
+                Timestamp: raw.Timestamp ?? raw.timestamp ?? '',
+            };
 
             if (!resp.ok) {
                 const msg = json.Message || `HTTP ${resp.status}`;

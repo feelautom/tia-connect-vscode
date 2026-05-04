@@ -5,6 +5,7 @@
   "version": "0.1.0",
   "publisher": "FEELAUTOM",
   "license": "MIT",
+  "icon": "resources/icons/icon.png",
   "engines": {
     "vscode": "^1.85.0"
   },

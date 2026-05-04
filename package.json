@@ -49,6 +49,18 @@
           "type": "boolean",
           "default": false,
           "description": "Automatically compile after reimporting a block"
+        },
+        "tiaConnect.autoSaveInterval": {
+          "type": "number",
+          "default": 5,
+          "enum": [0, 5, 10, 15],
+          "enumDescriptions": [
+            "Disabled",
+            "Every 5 minutes",
+            "Every 10 minutes",
+            "Every 15 minutes"
+          ],
+          "description": "Auto-save interval for open block files (in minutes). This is a safety backup — reimport to TIA only happens on manual Ctrl+S."
         }
       }
     },
@@ -191,6 +203,18 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "tiaProjectExplorer",
+        "contents": "No connection to T-IA Connect server.\n\nMake sure the T-IA Connect server is running, then click Connect.\n[Connect to Server](command:tiaConnect.connect)\n\nYou can configure the server URL and API key in the extension settings.\n[Open Settings](command:workbench.action.openSettings?%22tiaConnect%22)",
+        "when": "!tiaConnect.connected"
+      },
+      {
+        "view": "tiaProjectExplorer",
+        "contents": "Connected but no project found.\n\nOpen a TIA Portal project in T-IA Connect, then refresh.\n[Refresh](command:tiaConnect.refreshProject)",
+        "when": "tiaConnect.connected"
+      }
+    ],
     "menus": {
       "view/title": [
         {

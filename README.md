@@ -17,6 +17,7 @@ Browse your TIA Portal project structure directly in VS Code: devices, program b
 - Lazy-loaded device and block tree
 - Block type icons (OB, FB, FC, DB)
 - Language and consistency indicators
+- Folder structure preserved
 
 ### SCL / STL Editing
 
@@ -24,10 +25,12 @@ Double-click any SCL or STL block to open it in VS Code with full syntax highlig
 
 - **SCL** syntax highlighting with TextMate grammar
 - **STL** syntax highlighting with TextMate grammar
-- Auto-reimport on save (`onDidSaveTextDocument`)
+- Reimport on **manual save only** (Ctrl+S) — VS Code auto-save is ignored
+- Safety auto-save timer (configurable: 5/10/15 minutes, saves to disk without reimporting)
 - Optional auto-compile after reimport
 - 15 SCL snippets (FB, FC, OB, DB, IF, FOR, CASE, TON, R_TRIG...)
 - Compilation diagnostics in the editor (errors and warnings)
+- LAD/FBD/GRAPH blocks open as read-only XML
 
 ### Compile
 
@@ -70,11 +73,10 @@ Define and run CI/CD pipelines for your TIA Portal projects.
 ## Getting Started
 
 1. Install the extension
-2. Open VS Code Settings (`Ctrl+,`) and search for `tiaConnect`
-3. Set the **Server URL** (default: `http://localhost:9000`)
-4. Set your **API Key** (configured in T-IA Connect)
-5. Click the T-IA Connect icon in the Activity Bar
-6. Click the **Connect** button in the panel toolbar
+2. Click the **T-IA Connect** icon in the Activity Bar (left sidebar)
+3. Click the **Connect** button in the panel toolbar
+4. Enter the **API Key** when prompted (configured in T-IA Connect server)
+5. The project tree loads automatically once connected
 
 ## Extension Settings
 
@@ -82,8 +84,9 @@ Define and run CI/CD pipelines for your TIA Portal projects.
 |---------|---------|-------------|
 | `tiaConnect.serverUrl` | `http://localhost:9000` | T-IA Connect server URL |
 | `tiaConnect.apiKey` | *(empty)* | API key for authentication |
-| `tiaConnect.autoReimportOnSave` | `true` | Reimport SCL/STL blocks on save |
+| `tiaConnect.autoReimportOnSave` | `true` | Reimport SCL/STL blocks on manual save (Ctrl+S) |
 | `tiaConnect.autoCompileOnReimport` | `false` | Compile after reimport |
+| `tiaConnect.autoSaveInterval` | `5` | Safety auto-save interval in minutes (0 = disabled, 5/10/15) |
 
 ## Commands
 
@@ -91,15 +94,22 @@ All commands are available via the Command Palette (`Ctrl+Shift+P`):
 
 | Command | Description |
 |---------|-------------|
-| T-IA Connect: Connect to Server | Connect to T-IA Connect |
+| T-IA Connect: Connect to Server | Connect and authenticate |
+| T-IA Connect: Disconnect from Server | Disconnect and clear tree |
+| T-IA Connect: Refresh Project Tree | Reload project structure |
 | T-IA Connect: Compile Device | Compile all software on a device |
 | T-IA Connect: Compile Block | Compile a single block |
 | T-IA Connect: Export Block to File | Export block as SimaticML XML |
+| T-IA Connect VCS: Initialize VCS Repository | Initialize source control |
 | T-IA Connect VCS: Commit | Export project and create a Git commit |
+| T-IA Connect VCS: Push | Push to remote repository |
+| T-IA Connect VCS: Pull | Pull from remote repository |
 | T-IA Connect VCS: Branch Operations | Create, switch, delete, or merge branches |
 | T-IA Connect VCS: Show Commit Log | View commit history with diffs |
+| T-IA Connect Pipelines: List Pipelines | View defined pipelines |
 | T-IA Connect Pipelines: Run Pipeline | Select and run a CI/CD pipeline |
 | T-IA Connect Pipelines: Pipeline History | View past pipeline executions |
+| T-IA Connect Pipelines: Create Pipeline from Template | Create pipeline from template |
 
 ## How It Works
 
@@ -121,6 +131,11 @@ The extension is a **lightweight REST client**. All the heavy lifting (Openness 
 | VS Code | Yes |
 | Cursor | Yes |
 | Windsurf | Yes |
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md) — Structure du code, composants, flux de donnees
+- [Roadmap](docs/ROADMAP.md) — Etat d'avancement par phase, fonctionnalites a venir
 
 ## License
 

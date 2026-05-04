@@ -143,6 +143,12 @@
         "icon": "$(cloud-download)"
       },
       {
+        "command": "tiaConnect.vcsRemote",
+        "title": "Configure Remote",
+        "category": "T-IA Connect VCS",
+        "icon": "$(remote)"
+      },
+      {
         "command": "tiaConnect.vcsBranch",
         "title": "Branch Operations",
         "category": "T-IA Connect VCS",
@@ -291,13 +297,18 @@
           "group": "3_vcs"
         },
         {
-          "command": "tiaConnect.vcsPush",
+          "command": "tiaConnect.vcsRemote",
           "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized",
           "group": "4_vcs_sync"
         },
         {
+          "command": "tiaConnect.vcsPush",
+          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote",
+          "group": "4_vcs_sync"
+        },
+        {
           "command": "tiaConnect.vcsPull",
-          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized",
+          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote",
           "group": "4_vcs_sync"
         }
       ]

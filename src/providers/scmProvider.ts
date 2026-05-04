@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import {
     vcsGetStatus, vcsCommit, vcsGetLog, vcsGetDiff,
     vcsListBranches, vcsCreateBranch, vcsCheckoutBranch,
-    vcsDeleteBranch, vcsMerge, vcsPush, vcsPull, vcsInit
+    vcsDeleteBranch, vcsMerge, vcsPush, vcsPull, vcsInit,
+    vcsListRemotes, vcsAddRemote, vcsRemoveRemote
 } from '../api/sourceControl';
 import { pollJob } from '../api/jobs';
 import { VcsFileChange } from '../api/types';
@@ -39,6 +40,7 @@ export class TiaSourceControl implements vscode.Disposable {
             vscode.commands.registerCommand('tiaConnect.vcsPull', () => this.pull()),
             vscode.commands.registerCommand('tiaConnect.vcsBranch', () => this.branchMenu()),
             vscode.commands.registerCommand('tiaConnect.vcsLog', () => this.showLog()),
+            vscode.commands.registerCommand('tiaConnect.vcsRemote', () => this.remoteMenu()),
         ];
 
         context.subscriptions.push(...commands);
@@ -54,12 +56,21 @@ export class TiaSourceControl implements vscode.Disposable {
             if (!status.IsInitialized) {
                 this.changesGroup.resourceStates = [];
                 this.scm.count = 0;
+                vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, false);
                 this.scm.statusBarCommands = [{
                     command: 'tiaConnect.vcsInit',
                     title: '$(repo) Initialize VCS',
                     tooltip: 'Initialize source control for this project',
                 }];
                 return;
+            }
+
+            // Check if remotes are configured
+            try {
+                const remotes = await vcsListRemotes();
+                vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, remotes.length > 0);
+            } catch {
+                vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, false);
             }
 
             this.changesGroup.resourceStates = (status.Changes || []).map(c => this.toResourceState(c));
@@ -271,6 +282,64 @@ export class TiaSourceControl implements vscode.Disposable {
         } catch (err) {
             logError('VCS log failed', err);
             vscode.window.showErrorMessage(`Log failed: ${err instanceof Error ? err.message : err}`);
+        }
+    }
+
+    private async remoteMenu(): Promise<void> {
+        try {
+            const remotes = await vcsListRemotes();
+
+            const items: vscode.QuickPickItem[] = [
+                { label: '$(add) Add Remote', description: 'Configure a new remote repository' },
+            ];
+
+            for (const r of remotes) {
+                items.push({
+                    label: `$(trash) Remove "${r.Name}"`,
+                    description: r.Url,
+                });
+            }
+
+            if (remotes.length > 0) {
+                items.unshift({
+                    label: '$(info) Current Remotes',
+                    description: remotes.map(r => `${r.Name}: ${r.Url}`).join(', '),
+                    kind: vscode.QuickPickItemKind.Separator,
+                } as any);
+            }
+
+            const pick = await vscode.window.showQuickPick(items, { placeHolder: 'Remote operations' });
+            if (!pick) { return; }
+
+            if (pick.label.startsWith('$(add)')) {
+                const name = await vscode.window.showInputBox({
+                    prompt: 'Remote name',
+                    value: 'origin',
+                });
+                if (!name) { return; }
+
+                const url = await vscode.window.showInputBox({
+                    prompt: 'Remote URL',
+                    placeHolder: 'https://github.com/user/repo.git',
+                });
+                if (!url) { return; }
+
+                await vcsAddRemote(name, url);
+                vscode.window.showInformationMessage(`Remote "${name}" added: ${url}`);
+                log(`Remote added: ${name} → ${url}`);
+                await this.refresh();
+            } else if (pick.label.startsWith('$(trash)')) {
+                const remoteName = pick.label.match(/Remove "(.+)"/)?.[1];
+                if (remoteName) {
+                    await vcsRemoveRemote(remoteName);
+                    vscode.window.showInformationMessage(`Remote "${remoteName}" removed.`);
+                    log(`Remote removed: ${remoteName}`);
+                    await this.refresh();
+                }
+            }
+        } catch (err) {
+            logError('Remote operation failed', err);
+            vscode.window.showErrorMessage(`Remote operation failed: ${err instanceof Error ? err.message : err}`);
         }
     }
 

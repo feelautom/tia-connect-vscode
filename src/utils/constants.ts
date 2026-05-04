@@ -16,6 +16,7 @@ export const COMMANDS = {
 export const CONTEXT_KEYS = {
     connected: 'tiaConnect.connected',
     vcsInitialized: 'tiaConnect.vcsInitialized',
+    vcsHasRemote: 'tiaConnect.vcsHasRemote',
 } as const;
 
 export const EDITABLE_LANGUAGES = ['SCL', 'STL'] as const;

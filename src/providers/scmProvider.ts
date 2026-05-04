@@ -101,11 +101,16 @@ export class TiaSourceControl implements vscode.Disposable {
     }
 
     private async commit(): Promise<void> {
-        const message = this.scm.inputBox.value.trim();
+        let message = this.scm.inputBox.value.trim();
         if (!message) {
-            vscode.window.showWarningMessage('Please enter a commit message.');
-            return;
+            const input = await vscode.window.showInputBox({
+                prompt: 'Commit message',
+                placeHolder: 'Describe your changes...',
+            });
+            if (!input) { return; }
+            message = input.trim();
         }
+        if (!message) { return; }
 
         try {
             const jobId = await vcsCommit(message);

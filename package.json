@@ -269,6 +269,36 @@
           "command": "tiaConnect.exportBlock",
           "when": "view == tiaProjectExplorer && viewItem =~ /^block-(scl|stl)$/",
           "group": "2_export"
+        },
+        {
+          "command": "tiaConnect.vcsInit",
+          "when": "view == tiaProjectExplorer && viewItem == project",
+          "group": "3_vcs"
+        },
+        {
+          "command": "tiaConnect.vcsCommit",
+          "when": "view == tiaProjectExplorer && viewItem == project",
+          "group": "3_vcs"
+        },
+        {
+          "command": "tiaConnect.vcsLog",
+          "when": "view == tiaProjectExplorer && viewItem == project",
+          "group": "3_vcs"
+        },
+        {
+          "command": "tiaConnect.vcsBranch",
+          "when": "view == tiaProjectExplorer && viewItem == project",
+          "group": "3_vcs"
+        },
+        {
+          "command": "tiaConnect.vcsPush",
+          "when": "view == tiaProjectExplorer && viewItem == project",
+          "group": "4_vcs_sync"
+        },
+        {
+          "command": "tiaConnect.vcsPull",
+          "when": "view == tiaProjectExplorer && viewItem == project",
+          "group": "4_vcs_sync"
         }
       ]
     },

@@ -68,7 +68,9 @@ export class BlockFileManager {
 
     /** Check if a file is a managed block file */
     isManagedFile(filePath: string): boolean {
-        return filePath.startsWith(this.tempDir) && !filePath.endsWith(META_FILE_SUFFIX);
+        const normFile = path.normalize(filePath).toLowerCase();
+        const normDir = path.normalize(this.tempDir).toLowerCase();
+        return normFile.startsWith(normDir) && !normFile.endsWith(META_FILE_SUFFIX.toLowerCase());
     }
 
     /** Clean up all temp files */

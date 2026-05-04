@@ -56,7 +56,7 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
                 item.iconPath = this.getBlockIcon(element.blockType, element.language);
                 item.contextValue = this.getBlockContextValue(element.language);
                 item.description = this.getBlockDescription(element);
-                if (element.language && EDITABLE_LANGUAGES.includes(element.language as any)) {
+                if (element.language) {
                     item.command = {
                         command: 'tiaConnect.openBlock',
                         title: 'Open Block',
@@ -89,13 +89,21 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
     private async getRootChildren(): Promise<TiaTreeItem[]> {
         try {
             this.projectData = await getProjectOverview();
+            if (!this.projectData?.Name) {
+                log('No project open in TIA Portal.');
+                return [];
+            }
             log(`Project loaded: ${this.projectData.Name}`);
             return [{
                 type: 'project',
                 label: this.projectData.Name,
             }];
         } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
             logError('Failed to load project', err);
+            if (msg.toLowerCase().includes('no project') || msg.toLowerCase().includes('aucun projet')) {
+                log('No project is currently open in TIA Portal.');
+            }
             return [];
         }
     }
@@ -125,7 +133,9 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
     }
 
     private convertBlockNode(node: BlockTreeNode, deviceName: string): TiaTreeItem {
-        if (node.Type === 'Folder') {
+        const isFolder = node.IsFolder || node.NodeType === 'Folder' || node.NodeType === 'UserFolder' || node.Type === 'Folder';
+
+        if (isFolder) {
             return {
                 type: 'folder',
                 label: node.Name,
@@ -134,14 +144,19 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
             };
         }
 
+        // Block info can be nested in BlockInfo or flat on the node
+        const blockType = node.BlockInfo?.Type || node.NodeType || node.Type || '';
+        const language = node.BlockInfo?.Language || node.ProgrammingLanguage || '';
+        const isConsistent = node.BlockInfo?.IsConsistent ?? node.IsConsistent;
+
         return {
             type: 'block',
             label: node.Name,
             deviceName,
             blockName: node.Name,
-            blockType: node.Type,
-            language: node.ProgrammingLanguage,
-            isConsistent: node.IsConsistent,
+            blockType,
+            language,
+            isConsistent,
         };
     }
 

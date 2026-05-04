@@ -147,6 +147,30 @@
         "title": "Run All PLC Tests",
         "category": "T-IA Connect Tests",
         "icon": "$(run-all)"
+      },
+      {
+        "command": "tiaConnect.pipelineList",
+        "title": "List Pipelines",
+        "category": "T-IA Connect Pipelines",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "tiaConnect.pipelineRun",
+        "title": "Run Pipeline",
+        "category": "T-IA Connect Pipelines",
+        "icon": "$(play)"
+      },
+      {
+        "command": "tiaConnect.pipelineHistory",
+        "title": "Pipeline History",
+        "category": "T-IA Connect Pipelines",
+        "icon": "$(history)"
+      },
+      {
+        "command": "tiaConnect.pipelineFromTemplate",
+        "title": "Create Pipeline from Template",
+        "category": "T-IA Connect Pipelines",
+        "icon": "$(file-add)"
       }
     ],
     "viewsContainers": {
@@ -229,6 +253,12 @@
           ".stl"
         ],
         "configuration": "./language-configuration/stl-language-configuration.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "scl",
+        "path": "./snippets/scl.json"
       }
     ],
     "grammars": [

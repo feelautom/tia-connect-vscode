@@ -5,7 +5,9 @@ import { TiaTestProvider } from './providers/testProvider';
 import { BlockEditor } from './editors/blockEditor';
 import { registerProjectCommands } from './commands/projectCommands';
 import { registerBlockCommands } from './commands/blockCommands';
+import { registerPipelineCommands } from './commands/pipelineCommands';
 import { createStatusBar, disposeStatusBar } from './views/statusBar';
+import { createDiagnostics, disposeDiagnostics } from './views/diagnostics';
 import { getOutputChannel, log } from './views/outputChannel';
 
 let blockEditor: BlockEditor;
@@ -18,6 +20,10 @@ export function activate(context: vscode.ExtensionContext): void {
     // Status bar
     const statusBar = createStatusBar();
     context.subscriptions.push(statusBar);
+
+    // Diagnostics (compilation errors in editor)
+    const diagnostics = createDiagnostics();
+    context.subscriptions.push(diagnostics);
 
     // Tree view provider
     const treeProvider = new ProjectTreeProvider();
@@ -44,6 +50,7 @@ export function activate(context: vscode.ExtensionContext): void {
     // Register commands
     registerProjectCommands(context, treeProvider, scmProvider, testProvider);
     registerBlockCommands(context, blockEditor);
+    registerPipelineCommands(context);
 
     // Output channel
     context.subscriptions.push(getOutputChannel());
@@ -55,5 +62,6 @@ export function deactivate(): void {
     blockEditor?.dispose();
     scmProvider?.dispose();
     testProvider?.dispose();
+    disposeDiagnostics();
     disposeStatusBar();
 }

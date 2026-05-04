@@ -5,6 +5,7 @@ import { TiaTreeItem } from '../providers/projectTreeProvider';
 import { getAutoReimport, getAutoCompile } from '../utils/config';
 import { EDITABLE_LANGUAGES } from '../utils/constants';
 import { log, logError } from '../views/outputChannel';
+import { updateDiagnostics, clearDiagnostics } from '../views/diagnostics';
 
 export class BlockEditor {
     private fileManager = new BlockFileManager();
@@ -108,11 +109,12 @@ export class BlockEditor {
             const result = await importAndGenerate(meta.deviceName, content, `${meta.blockName}_vscode`);
 
             if (result.Success) {
+                clearDiagnostics(doc.uri);
                 vscode.window.showInformationMessage(`Block ${meta.blockName} reimported successfully.`);
                 log(`Reimport OK: ${meta.blockName}`);
 
                 if (getAutoCompile()) {
-                    await this.autoCompile(meta.deviceName, meta.blockName);
+                    await this.autoCompile(meta.deviceName, meta.blockName, doc.uri);
                 }
             } else {
                 vscode.window.showWarningMessage(`Reimport warning: ${result.Message}`);
@@ -124,10 +126,18 @@ export class BlockEditor {
         }
     }
 
-    private async autoCompile(deviceName: string, blockName: string): Promise<void> {
+    private async autoCompile(deviceName: string, blockName: string, fileUri?: vscode.Uri): Promise<void> {
         try {
             log(`Auto-compiling ${blockName}...`);
             const result = await compileBlock(deviceName, blockName);
+
+            // Update diagnostics in editor
+            if (fileUri && result.Messages?.length) {
+                updateDiagnostics(fileUri, result.Messages);
+            } else if (fileUri) {
+                clearDiagnostics(fileUri);
+            }
+
             if (result.ErrorCount === 0) {
                 log(`Compilation OK: ${result.WarningCount} warning(s)`);
             } else {

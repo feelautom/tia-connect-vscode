@@ -222,6 +222,63 @@ export interface AssertionResult {
     ExpectedValue: unknown;
 }
 
+// ─── Pipeline types ────────────────────────────────────────────────
+
+export type PipelineStatus = 'Pending' | 'Running' | 'Completed' | 'Failed' | 'Cancelled' | 'Skipped';
+
+export interface PipelineDefinition {
+    name: string;
+    description?: string;
+    trigger: string;
+    variables?: Record<string, unknown>;
+    steps: PipelineStepDefinition[];
+    onFailure: string;
+    createdAt: string;
+    updatedAt?: string;
+}
+
+export interface PipelineStepDefinition {
+    name: string;
+    action: string;
+    params?: Record<string, unknown>;
+    condition?: string;
+    timeoutSeconds: number;
+    retryCount: number;
+    retryDelayMs: number;
+}
+
+export interface PipelineExecution {
+    Id: string;
+    PipelineName: string;
+    Status: PipelineStatus;
+    JobId: string;
+    StepResults: PipelineStepResult[];
+    StartedAt: string;
+    CompletedAt?: string;
+    DurationMs: number;
+    Error?: string;
+}
+
+export interface PipelineStepResult {
+    StepIndex: number;
+    StepName: string;
+    Action: string;
+    Status: PipelineStatus;
+    StartedAt: string;
+    CompletedAt?: string;
+    DurationMs: number;
+    ResultMessage: string;
+    Error?: string;
+    Attempts: number;
+}
+
+export interface PipelineTemplateSummary {
+    Id: string;
+    Name: string;
+    Description: string;
+    Category: string;
+}
+
 // ─── Common types ──────────────────────────────────────────────────
 
 /** Block metadata stored alongside temp files */

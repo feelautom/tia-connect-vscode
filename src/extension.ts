@@ -9,7 +9,7 @@ import { registerPipelineCommands } from './commands/pipelineCommands';
 import { createStatusBar, setConnected, disposeStatusBar } from './views/statusBar';
 import { createDiagnostics, disposeDiagnostics } from './views/diagnostics';
 import { getOutputChannel, log } from './views/outputChannel';
-import { CONTEXT_KEYS } from './utils/constants';
+import { CONTEXT_KEYS, ORIGINAL_SCHEME } from './utils/constants';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -38,11 +38,23 @@ export function activate(context: vscode.ExtensionContext): void {
     // Block editor (handles open/save/reimport)
     blockEditor = new BlockEditor();
     blockEditor.activate(context);
+    // QuickDiff will be connected after scmProvider is created (below)
 
     // Source Control (VCS)
     scmProvider = new TiaSourceControl();
     scmProvider.activate(context);
     context.subscriptions.push(scmProvider);
+
+    // Register QuickDiff content provider for original block content
+    context.subscriptions.push(
+        vscode.workspace.registerTextDocumentContentProvider(
+            ORIGINAL_SCHEME,
+            scmProvider.originalContentProvider
+        )
+    );
+
+    // Connect block editor to QuickDiff provider
+    blockEditor.setOriginalContentProvider(scmProvider.originalContentProvider);
 
     // Test Explorer (integrated in sidebar)
     testProvider = new TestTreeProvider();

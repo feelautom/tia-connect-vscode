@@ -3,6 +3,7 @@ import { getBlockContent, importAndGenerate, compileBlock } from '../api/blocks'
 import { openLadWebview } from './ladWebview';
 import { BlockFileManager } from './blockFileManager';
 import { BlockMetadata } from '../api/types';
+import { OriginalContentProvider } from '../providers/originalContentProvider';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
 import { getAutoReimport, getAutoCompile, getAutoSaveInterval } from '../utils/config';
 import { EDITABLE_LANGUAGES } from '../utils/constants';
@@ -21,6 +22,13 @@ export class BlockEditor {
     private _onBlockReimported = new vscode.EventEmitter<void>();
     /** Fires after a successful block reimport (signals tree to refresh) */
     readonly onBlockReimported = this._onBlockReimported.event;
+
+    private originalProvider: OriginalContentProvider | undefined;
+
+    /** Set the original content provider for QuickDiff gutter decorations */
+    setOriginalContentProvider(provider: OriginalContentProvider): void {
+        this.originalProvider = provider;
+    }
 
     activate(context: vscode.ExtensionContext): void {
         // Track manual saves (Ctrl+S) vs auto-saves
@@ -121,6 +129,9 @@ export class BlockEditor {
             modifiedDate
         );
 
+        // Store original content for QuickDiff gutter decorations
+        this.originalProvider?.setOriginal(filePath, content);
+
         const doc = await vscode.workspace.openTextDocument(filePath);
         await vscode.window.showTextDocument(doc);
         log(`Opened block ${item.blockName} from ${item.deviceName}`);
@@ -215,6 +226,8 @@ export class BlockEditor {
                 clearDiagnostics(doc.uri);
                 vscode.window.showInformationMessage(`Block ${meta.blockName} reimported successfully.`);
                 log(`Reimport OK: ${meta.blockName}`);
+                // Update QuickDiff original to current content (now synced with TIA)
+                this.originalProvider?.setOriginal(key, content);
                 this._onBlockReimported.fire();
 
                 if (getAutoCompile()) {

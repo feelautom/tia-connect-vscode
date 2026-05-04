@@ -2,6 +2,7 @@ export const EXTENSION_ID = 'tiaConnect';
 export const OUTPUT_CHANNEL_NAME = 'T-IA Connect';
 export const TEMP_DIR_NAME = '.tia-temp';
 export const META_FILE_SUFFIX = '.tia-meta.json';
+export const ORIGINAL_SCHEME = 'tia-original';
 
 export const COMMANDS = {
     connect: 'tiaConnect.connect',

@@ -8,13 +8,15 @@ import {
 import { pollJob } from '../api/jobs';
 import { VcsFileChange } from '../api/types';
 import { log, logError } from '../views/outputChannel';
-import { CONTEXT_KEYS } from '../utils/constants';
+import { CONTEXT_KEYS, ORIGINAL_SCHEME } from '../utils/constants';
+import { OriginalContentProvider } from './originalContentProvider';
 
 export class TiaSourceControl implements vscode.Disposable {
     private scm: vscode.SourceControl;
     private changesGroup: vscode.SourceControlResourceGroup;
     private disposables: vscode.Disposable[] = [];
     private refreshTimer: NodeJS.Timeout | undefined;
+    readonly originalContentProvider: OriginalContentProvider;
 
     constructor() {
         this.scm = vscode.scm.createSourceControl('tiaConnect', 'T-IA Connect VCS');
@@ -23,7 +25,17 @@ export class TiaSourceControl implements vscode.Disposable {
             command: 'tiaConnect.vcsCommit',
             title: 'Commit',
         };
-        this.scm.quickDiffProvider = undefined; // No quick diff for now
+
+        // QuickDiff: provides gutter decorations (green/red/blue bars)
+        this.originalContentProvider = new OriginalContentProvider();
+        this.scm.quickDiffProvider = {
+            provideOriginalResource: (uri: vscode.Uri): vscode.Uri | undefined => {
+                if (this.originalContentProvider.hasOriginal(uri.fsPath)) {
+                    return OriginalContentProvider.toOriginalUri(uri.fsPath);
+                }
+                return undefined;
+            },
+        };
 
         this.changesGroup = this.scm.createResourceGroup('changes', 'Changes');
         this.changesGroup.hideWhenEmpty = true;

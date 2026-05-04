@@ -1,0 +1,179 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "STL",
+  "scopeName": "source.stl",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#instructions" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#variables" },
+    { "include": "#labels" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.stl",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.stl",
+          "begin": "\\(\\*",
+          "end": "\\*\\)"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.stl",
+          "begin": "'",
+          "end": "'"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.hex.stl",
+          "match": "(?i)(W|DW|B)#16#[0-9A-Fa-f_]+"
+        },
+        {
+          "name": "constant.numeric.binary.stl",
+          "match": "(?i)2#[01_]+"
+        },
+        {
+          "name": "constant.numeric.time.stl",
+          "match": "(?i)(T|S5T|TOD|D|DT)#[\\w\\d:.\\-_]+"
+        },
+        {
+          "name": "constant.numeric.float.stl",
+          "match": "\\b[0-9]+\\.[0-9]+([eE][+-]?[0-9]+)?\\b"
+        },
+        {
+          "name": "constant.numeric.integer.stl",
+          "match": "(?i)L#[+-]?[0-9]+"
+        },
+        {
+          "name": "constant.numeric.integer.stl",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    },
+    "instructions": {
+      "patterns": [
+        {
+          "name": "keyword.control.stl",
+          "match": "(?i)\\b(A|AN|O|ON|X|XN|S|R|=|FP|FN|NOT|SET|CLR|SAVE)\\b"
+        },
+        {
+          "name": "keyword.control.stl",
+          "match": "(?i)\\b(AW|OW|XOW|AD|OD|XOD)\\b"
+        },
+        {
+          "name": "keyword.operator.stl",
+          "match": "(?i)\\b(L|T|LC|LAR1|LAR2|TAR1|TAR2|CAR)\\b"
+        },
+        {
+          "name": "keyword.operator.arithmetic.stl",
+          "match": "(?i)\\b(\\+I|\\-I|\\*I|\\/I|\\+D|\\-D|\\*D|\\/D|\\+R|\\-R|\\*R|\\/R|MOD|NEG|ABS|SQR|SQRT|LN|EXP|SIN|COS|TAN|ASIN|ACOS|ATAN)\\b"
+        },
+        {
+          "name": "keyword.control.flow.stl",
+          "match": "(?i)\\b(JU|JC|JCN|JCB|JNB|JBI|JNBI|JZ|JN|JP|JM|JPZ|JMZ|JUO|LOOP|JL|JOS|JO)\\b"
+        },
+        {
+          "name": "keyword.control.call.stl",
+          "match": "(?i)\\b(CALL|CC|UC|BE|BEU|BEC)\\b"
+        },
+        {
+          "name": "keyword.operator.comparison.stl",
+          "match": "(?i)\\b(==I|<>I|>I|<I|>=I|<=I|==D|<>D|>D|<D|>=D|<=D|==R|<>R|>R|<R|>=R|<=R)\\b"
+        },
+        {
+          "name": "keyword.operator.shift.stl",
+          "match": "(?i)\\b(SLW|SRW|SLD|SRD|SSI|SSD|RLW|RRW|RLD|RRD)\\b"
+        },
+        {
+          "name": "keyword.operator.conversion.stl",
+          "match": "(?i)\\b(BTI|BTD|ITB|ITD|DTB|DTR|DTI|RND|RND\\+|RND\\-|TRUNC|INVI|INVD|NEGI|NEGD|NEGR|TAW|TAD|CAW|CAD)\\b"
+        },
+        {
+          "name": "keyword.operator.timer.stl",
+          "match": "(?i)\\b(SI|SV|SE|SS|SA|SP|FR)\\b"
+        },
+        {
+          "name": "keyword.operator.counter.stl",
+          "match": "(?i)\\b(CU|CD|S|R|FR)\\b"
+        },
+        {
+          "name": "keyword.other.stl",
+          "match": "(?i)\\b(NOP|NOP_0|NOP_1|BLD|MCR|MCRA|MCRD|OPN|PUSH|POP|ENT|LEAVE)\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.other.section.stl",
+          "match": "(?i)\\b(VAR|VAR_INPUT|VAR_OUTPUT|VAR_IN_OUT|VAR_TEMP|END_VAR|CONST|END_CONST)\\b"
+        },
+        {
+          "name": "keyword.declaration.stl",
+          "match": "(?i)\\b(FUNCTION_BLOCK|END_FUNCTION_BLOCK|FUNCTION|END_FUNCTION|ORGANIZATION_BLOCK|END_ORGANIZATION_BLOCK|DATA_BLOCK|END_DATA_BLOCK)\\b"
+        },
+        {
+          "name": "constant.language.stl",
+          "match": "(?i)\\b(TRUE|FALSE)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.stl",
+          "match": "(?i)\\b(BOOL|BYTE|WORD|DWORD|INT|DINT|REAL|S5TIME|TIME|DATE|TOD|DT|CHAR|STRING|TIMER|COUNTER|POINTER|ANY|VOID)\\b"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.other.local.stl",
+          "match": "#\\w+"
+        },
+        {
+          "name": "variable.other.global.stl",
+          "match": "\"[^\"]+\""
+        },
+        {
+          "name": "variable.other.address.stl",
+          "match": "(?i)\\b[IIQM][XBWD]?\\s*[0-9]+\\.?[0-9]*\\b"
+        },
+        {
+          "name": "variable.other.address.stl",
+          "match": "(?i)\\b(DB|DI|FC|FB|OB|SFB|SFC|SDB|T|C)[0-9]+\\b"
+        },
+        {
+          "name": "variable.other.address.stl",
+          "match": "(?i)\\bDB[0-9]+\\.DB[XBWD][0-9]+\\.?[0-9]*\\b"
+        }
+      ]
+    },
+    "labels": {
+      "patterns": [
+        {
+          "name": "entity.name.label.stl",
+          "match": "^\\s*\\w+:"
+        },
+        {
+          "name": "entity.name.section.stl",
+          "match": "(?i)^\\s*(NETWORK|TITLE)\\b"
+        }
+      ]
+    }
+  }
+}

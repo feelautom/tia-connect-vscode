@@ -1,0 +1,146 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "SCL",
+  "scopeName": "source.scl",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#operators" },
+    { "include": "#blocks" },
+    { "include": "#variables" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.scl",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.scl",
+          "begin": "\\(\\*",
+          "end": "\\*\\)"
+        },
+        {
+          "name": "comment.block.scl",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.scl",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.scl",
+              "match": "\\$[0-9A-Fa-f]{2,4}|\\$[LNPRT'\"$]"
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.hex.scl",
+          "match": "(?i)16#[0-9A-Fa-f_]+"
+        },
+        {
+          "name": "constant.numeric.binary.scl",
+          "match": "(?i)2#[01_]+"
+        },
+        {
+          "name": "constant.numeric.time.scl",
+          "match": "(?i)(T|TIME|TOD|TIME_OF_DAY|DT|DATE_AND_TIME|LT|LTIME|LTOD|LDT|DATE|D)#[\\w\\d:.\\-_]+"
+        },
+        {
+          "name": "constant.numeric.float.scl",
+          "match": "\\b[0-9][0-9_]*\\.[0-9][0-9_]*([eE][+-]?[0-9]+)?\\b"
+        },
+        {
+          "name": "constant.numeric.integer.scl",
+          "match": "\\b[0-9][0-9_]*\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.scl",
+          "match": "(?i)\\b(IF|THEN|ELSIF|ELSE|END_IF|CASE|OF|END_CASE|FOR|TO|BY|DO|END_FOR|WHILE|END_WHILE|REPEAT|UNTIL|END_REPEAT|CONTINUE|EXIT|RETURN|GOTO)\\b"
+        },
+        {
+          "name": "keyword.other.scl",
+          "match": "(?i)\\b(VAR|VAR_INPUT|VAR_OUTPUT|VAR_IN_OUT|VAR_TEMP|VAR_GLOBAL|VAR_EXTERNAL|VAR_ACCESS|CONST|END_VAR|END_CONST|AT|RETAIN|NON_RETAIN)\\b"
+        },
+        {
+          "name": "constant.language.scl",
+          "match": "(?i)\\b(TRUE|FALSE|NULL)\\b"
+        },
+        {
+          "name": "keyword.operator.new.scl",
+          "match": "(?i)\\b(AND|OR|XOR|NOT|MOD)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.scl",
+          "match": "(?i)\\b(BOOL|BYTE|WORD|DWORD|LWORD|SINT|INT|DINT|LINT|USINT|UINT|UDINT|ULINT|REAL|LREAL|CHAR|WCHAR|STRING|WSTRING|TIME|LTIME|DATE|TOD|LTOD|DT|LDT|S5TIME|TIMER|COUNTER|POINTER|ANY|VOID|ARRAY|STRUCT|END_STRUCT|REF_TO)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.assignment.scl",
+          "match": ":=|=>|\\?="
+        },
+        {
+          "name": "keyword.operator.comparison.scl",
+          "match": "<>|<=|>=|<|>|="
+        },
+        {
+          "name": "keyword.operator.arithmetic.scl",
+          "match": "\\+|-|\\*|\\*\\*|/"
+        }
+      ]
+    },
+    "blocks": {
+      "patterns": [
+        {
+          "name": "keyword.declaration.scl",
+          "match": "(?i)\\b(FUNCTION_BLOCK|END_FUNCTION_BLOCK|FUNCTION|END_FUNCTION|ORGANIZATION_BLOCK|END_ORGANIZATION_BLOCK|DATA_BLOCK|END_DATA_BLOCK|TYPE|END_TYPE|PROGRAM|END_PROGRAM)\\b"
+        },
+        {
+          "name": "storage.modifier.scl",
+          "match": "\\{[^}]*\\}"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.other.local.scl",
+          "match": "#\\w+"
+        },
+        {
+          "name": "variable.other.global.scl",
+          "match": "\"[^\"]+\""
+        },
+        {
+          "name": "variable.other.address.scl",
+          "match": "(?i)%[IIQM][XBWD]?[0-9.]+"
+        }
+      ]
+    }
+  }
+}

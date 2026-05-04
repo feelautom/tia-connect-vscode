@@ -1,0 +1,211 @@
+{
+  "name": "tia-connect-vscode",
+  "displayName": "T-IA Connect for VS Code",
+  "description": "Explore, edit SCL/STL, and compile Siemens TIA Portal projects from VS Code via T-IA Connect REST API",
+  "version": "0.1.0",
+  "publisher": "FEELAUTOM",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "TIA Portal",
+    "Siemens",
+    "PLC",
+    "SCL",
+    "STL",
+    "automation",
+    "industrial"
+  ],
+  "activationEvents": [
+    "onView:tiaProjectExplorer"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "T-IA Connect",
+      "properties": {
+        "tiaConnect.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:9000",
+          "description": "T-IA Connect server URL"
+        },
+        "tiaConnect.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for authentication (X-API-Key header)"
+        },
+        "tiaConnect.autoReimportOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically reimport SCL/STL blocks into TIA Portal on save"
+        },
+        "tiaConnect.autoCompileOnReimport": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically compile after reimporting a block"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "tiaConnect.connect",
+        "title": "Connect to Server",
+        "category": "T-IA Connect",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "tiaConnect.disconnect",
+        "title": "Disconnect from Server",
+        "category": "T-IA Connect",
+        "icon": "$(debug-disconnect)"
+      },
+      {
+        "command": "tiaConnect.refreshProject",
+        "title": "Refresh Project Tree",
+        "category": "T-IA Connect",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "tiaConnect.openBlock",
+        "title": "Open Block",
+        "category": "T-IA Connect",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "tiaConnect.compileDevice",
+        "title": "Compile Device",
+        "category": "T-IA Connect",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "tiaConnect.compileBlock",
+        "title": "Compile Block",
+        "category": "T-IA Connect",
+        "icon": "$(check)"
+      },
+      {
+        "command": "tiaConnect.exportBlock",
+        "title": "Export Block to File",
+        "category": "T-IA Connect",
+        "icon": "$(desktop-download)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tiaConnect",
+          "title": "T-IA Connect",
+          "icon": "resources/icons/tia-portal.svg"
+        }
+      ]
+    },
+    "views": {
+      "tiaConnect": [
+        {
+          "id": "tiaProjectExplorer",
+          "name": "Project Explorer"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "tiaConnect.connect",
+          "when": "view == tiaProjectExplorer && !tiaConnect.connected",
+          "group": "navigation"
+        },
+        {
+          "command": "tiaConnect.disconnect",
+          "when": "view == tiaProjectExplorer && tiaConnect.connected",
+          "group": "navigation"
+        },
+        {
+          "command": "tiaConnect.refreshProject",
+          "when": "view == tiaProjectExplorer && tiaConnect.connected",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "tiaConnect.openBlock",
+          "when": "view == tiaProjectExplorer && viewItem =~ /^block-(scl|stl)$/",
+          "group": "inline"
+        },
+        {
+          "command": "tiaConnect.compileDevice",
+          "when": "view == tiaProjectExplorer && viewItem == device",
+          "group": "1_compile"
+        },
+        {
+          "command": "tiaConnect.compileBlock",
+          "when": "view == tiaProjectExplorer && viewItem =~ /^block-/",
+          "group": "1_compile"
+        },
+        {
+          "command": "tiaConnect.exportBlock",
+          "when": "view == tiaProjectExplorer && viewItem =~ /^block-/",
+          "group": "2_export"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "id": "scl",
+        "aliases": [
+          "SCL",
+          "Structured Control Language"
+        ],
+        "extensions": [
+          ".scl"
+        ],
+        "configuration": "./language-configuration/scl-language-configuration.json"
+      },
+      {
+        "id": "stl",
+        "aliases": [
+          "STL",
+          "Statement List"
+        ],
+        "extensions": [
+          ".stl"
+        ],
+        "configuration": "./language-configuration/stl-language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "scl",
+        "scopeName": "source.scl",
+        "path": "./syntaxes/scl.tmLanguage.json"
+      },
+      {
+        "language": "stl",
+        "scopeName": "source.stl",
+        "path": "./syntaxes/stl.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "build": "node esbuild.mjs --production",
+    "watch": "node esbuild.mjs --watch",
+    "lint": "eslint src/",
+    "package": "npx @vscode/vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.5.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/feelautomcorp/tia-connect-vscode"
+  }
+}

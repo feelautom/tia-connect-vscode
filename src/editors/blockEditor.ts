@@ -151,12 +151,38 @@ export class BlockEditor {
         this.doReimport(doc, meta, key);
     }
 
+    /**
+     * Extract block name from SCL source header.
+     * Matches: FUNCTION "Name", FUNCTION_BLOCK "Name", DATA_BLOCK "Name", ORGANIZATION_BLOCK "Name"
+     */
+    private extractBlockNameFromSource(source: string): string | undefined {
+        const match = source.match(/^\s*(?:FUNCTION_BLOCK|FUNCTION|DATA_BLOCK|ORGANIZATION_BLOCK)\s+"([^"]+)"/im);
+        return match?.[1];
+    }
+
     private async doReimport(doc: vscode.TextDocument, meta: BlockMetadata, key: string): Promise<void> {
         this.reimportInProgress.add(key);
         log(`Reimporting ${meta.blockName} to ${meta.deviceName}...`);
 
         try {
             const content = doc.getText();
+
+            // Safety check: verify the block name in source matches the expected block
+            const sourceBlockName = this.extractBlockNameFromSource(content);
+            if (sourceBlockName && sourceBlockName !== meta.blockName) {
+                const choice = await vscode.window.showWarningMessage(
+                    `Block name mismatch: source declares "${sourceBlockName}" but you are editing "${meta.blockName}". ` +
+                    `Reimporting will create a NEW block "${sourceBlockName}" instead of updating "${meta.blockName}".`,
+                    'Reimport Anyway',
+                    'Cancel'
+                );
+                if (choice !== 'Reimport Anyway') {
+                    log(`Reimport cancelled: name mismatch (source="${sourceBlockName}", expected="${meta.blockName}")`);
+                    this.reimportInProgress.delete(key);
+                    return;
+                }
+            }
+
             const res = await importAndGenerate(meta.deviceName, content, `${meta.blockName}_vscode`);
 
             if (res.Success) {

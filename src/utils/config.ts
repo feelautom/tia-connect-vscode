@@ -8,10 +8,19 @@ export function getApiKey(): string {
     return vscode.workspace.getConfiguration('tiaConnect').get<string>('apiKey', '');
 }
 
+export async function setApiKey(key: string): Promise<void> {
+    await vscode.workspace.getConfiguration('tiaConnect').update('apiKey', key, vscode.ConfigurationTarget.Global);
+}
+
 export function getAutoReimport(): boolean {
     return vscode.workspace.getConfiguration('tiaConnect').get<boolean>('autoReimportOnSave', true);
 }
 
 export function getAutoCompile(): boolean {
     return vscode.workspace.getConfiguration('tiaConnect').get<boolean>('autoCompileOnReimport', false);
+}
+
+/** Auto-save interval in minutes (0 = disabled) */
+export function getAutoSaveInterval(): number {
+    return vscode.workspace.getConfiguration('tiaConnect').get<number>('autoSaveInterval', 5);
 }

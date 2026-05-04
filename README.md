@@ -46,14 +46,23 @@ Version your TIA Portal project using the native VS Code Source Control panel. E
 - Commit log with diff viewer
 - Auto-refresh status every 30 seconds
 
-### Test Explorer
+### PLC Tests
 
-Run PLC tests against PLCSim directly from the VS Code Test Explorer.
+Run PLC tests against PLCSim Advanced directly from the T-IA Connect sidebar.
 
+- **License and PLCSim checks**: verifies the Test Harness feature is enabled and PLCSim Advanced is available before showing tests
 - Discover tests from the T-IA Connect test harness
 - Run individual tests or the entire suite
 - Pass/fail results with detailed assertion messages
 - Step-level breakdown in the test tree
+
+### Cross-References
+
+View cross-references for any block (SCL, STL, LAD, FBD, GRAPH) in a dedicated webview panel.
+
+- Source and target references with type badges
+- Read/Write access indicators
+- Dark-theme styled panel alongside the editor
 
 ### Pipelines (CI/CD)
 
@@ -66,7 +75,7 @@ Define and run CI/CD pipelines for your TIA Portal projects.
 
 ## Requirements
 
-- **T-IA Connect** server running (v2.0+) — [t-ia-connect.com](https://t-ia-connect.com)
+- **T-IA Connect** server running (v2.1.609+) — [t-ia-connect.com](https://t-ia-connect.com)
 - **TIA Portal** V17-V21 installed on the same machine as the server
 - Network access to the server (default: `http://localhost:9000`)
 
@@ -110,6 +119,10 @@ All commands are available via the Command Palette (`Ctrl+Shift+P`):
 | T-IA Connect Pipelines: Run Pipeline | Select and run a CI/CD pipeline |
 | T-IA Connect Pipelines: Pipeline History | View past pipeline executions |
 | T-IA Connect Pipelines: Create Pipeline from Template | Create pipeline from template |
+| T-IA Connect: Show Cross-References | Show cross-references for a block |
+| T-IA Connect Tests: Refresh PLC Tests | Refresh PLC test discovery |
+| T-IA Connect Tests: Run All PLC Tests | Run all discovered tests |
+| T-IA Connect Tests: Run Test | Run a single test |
 
 ## How It Works
 

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ProjectTreeProvider } from './providers/projectTreeProvider';
 import { TiaSourceControl } from './providers/scmProvider';
-import { TiaTestProvider } from './providers/testProvider';
+import { TestTreeProvider } from './providers/testTreeProvider';
 import { BlockEditor } from './editors/blockEditor';
 import { registerProjectCommands } from './commands/projectCommands';
 import { registerBlockCommands } from './commands/blockCommands';
@@ -13,7 +13,7 @@ import { CONTEXT_KEYS } from './utils/constants';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
-let testProvider: TiaTestProvider;
+let testProvider: TestTreeProvider;
 
 export function activate(context: vscode.ExtensionContext): void {
     log('T-IA Connect for VS Code activating...');
@@ -43,10 +43,15 @@ export function activate(context: vscode.ExtensionContext): void {
     scmProvider.activate(context);
     context.subscriptions.push(scmProvider);
 
-    // Test Explorer
-    testProvider = new TiaTestProvider();
+    // Test Explorer (integrated in sidebar)
+    testProvider = new TestTreeProvider();
     testProvider.activate(context);
     context.subscriptions.push(testProvider);
+
+    // Refresh tree after successful reimport
+    blockEditor.onBlockReimported(() => {
+        treeProvider.refresh();
+    });
 
     // When the tree loads a project, activate VCS + tests + status bar
     treeProvider.onProjectLoaded((projectName) => {

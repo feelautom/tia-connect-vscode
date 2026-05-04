@@ -18,6 +18,10 @@ export class BlockEditor {
     private manualSavePaths = new Set<string>();
     private autoSaveTimer: NodeJS.Timeout | undefined;
 
+    private _onBlockReimported = new vscode.EventEmitter<void>();
+    /** Fires after a successful block reimport (signals tree to refresh) */
+    readonly onBlockReimported = this._onBlockReimported.event;
+
     activate(context: vscode.ExtensionContext): void {
         // Track manual saves (Ctrl+S) vs auto-saves
         this.willSaveListener = vscode.workspace.onWillSaveTextDocument((e) => {
@@ -189,6 +193,7 @@ export class BlockEditor {
                 clearDiagnostics(doc.uri);
                 vscode.window.showInformationMessage(`Block ${meta.blockName} reimported successfully.`);
                 log(`Reimport OK: ${meta.blockName}`);
+                this._onBlockReimported.fire();
 
                 if (getAutoCompile()) {
                     await this.autoCompile(meta.deviceName, meta.blockName, doc.uri);

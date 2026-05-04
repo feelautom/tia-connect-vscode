@@ -1,5 +1,5 @@
 import { client } from './client';
-import { BlockTreeNode, BlockContentDto, CompilationResult } from './types';
+import { BlockTreeNode, BlockContentDto, CompilationResult, CompilationMessage, CrossReferenceResult } from './types';
 import { ApiResponse } from './types';
 
 export async function getBlockTree(deviceName: string): Promise<BlockTreeNode[]> {
@@ -80,14 +80,14 @@ function normalizeCompilationResult(data: any): CompilationResult {
     };
 }
 
-function flattenMessages(messages: any[]): Array<{ Path: string; Description: string; ErrorLevel: string }> {
-    const result: Array<{ Path: string; Description: string; ErrorLevel: string }> = [];
+function flattenMessages(messages: any[]): CompilationMessage[] {
+    const result: CompilationMessage[] = [];
     for (const msg of messages) {
         if (msg.Description || msg.description) {
             result.push({
                 Path: msg.Path || msg.path || '',
                 Description: msg.Description || msg.description || '',
-                ErrorLevel: mapState(msg.State || msg.state),
+                ErrorLevel: mapState(msg.State || msg.state) as CompilationMessage['ErrorLevel'],
             });
         }
         // Recurse into nested messages
@@ -111,6 +111,14 @@ function mapState(state: string): 'Error' | 'Warning' | 'Info' {
 export async function getBlockDetails(deviceName: string, blockName: string): Promise<any> {
     const res = await client.get<any>(
         `/api/devices/${enc(deviceName)}/blocks/${enc(blockName)}/content`
+    );
+    return res.Data;
+}
+
+/** Get cross-references for a block */
+export async function getCrossReferences(deviceName: string, blockName: string): Promise<CrossReferenceResult> {
+    const res = await client.get<CrossReferenceResult>(
+        `/api/devices/${enc(deviceName)}/blocks/${enc(blockName)}/cross-references`
     );
     return res.Data;
 }

@@ -173,6 +173,12 @@
         "icon": "$(run-all)"
       },
       {
+        "command": "tiaConnect.testRunSingle",
+        "title": "Run Test",
+        "category": "T-IA Connect Tests",
+        "icon": "$(play)"
+      },
+      {
         "command": "tiaConnect.pipelineList",
         "title": "List Pipelines",
         "category": "T-IA Connect Pipelines",
@@ -197,6 +203,24 @@
         "icon": "$(file-add)"
       },
       {
+        "command": "tiaConnect.showCrossReferences",
+        "title": "Show Cross-References",
+        "category": "T-IA Connect",
+        "icon": "$(references)"
+      },
+      {
+        "command": "tiaConnect.openTagTable",
+        "title": "Open Tag Table",
+        "category": "T-IA Connect",
+        "icon": "$(table)"
+      },
+      {
+        "command": "tiaConnect.openUdt",
+        "title": "Open UDT",
+        "category": "T-IA Connect",
+        "icon": "$(symbol-struct)"
+      },
+      {
         "command": "tiaConnect.openSettings",
         "title": "Settings",
         "category": "T-IA Connect",
@@ -217,6 +241,11 @@
         {
           "id": "tiaProjectExplorer",
           "name": "Project Explorer"
+        },
+        {
+          "id": "tiaTestExplorer",
+          "name": "PLC Tests",
+          "when": "tiaConnect.connected"
         }
       ]
     },
@@ -234,6 +263,16 @@
     ],
     "menus": {
       "view/title": [
+        {
+          "command": "tiaConnect.testRunAll",
+          "when": "view == tiaTestExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "tiaConnect.testRefresh",
+          "when": "view == tiaTestExplorer",
+          "group": "navigation"
+        },
         {
           "command": "tiaConnect.connect",
           "when": "view == tiaProjectExplorer && !tiaConnect.connected",
@@ -277,6 +316,11 @@
           "group": "2_export"
         },
         {
+          "command": "tiaConnect.showCrossReferences",
+          "when": "view == tiaProjectExplorer && viewItem =~ /^block-/",
+          "group": "2_export"
+        },
+        {
           "command": "tiaConnect.vcsInit",
           "when": "view == tiaProjectExplorer && viewItem == project && !tiaConnect.vcsInitialized",
           "group": "3_vcs"
@@ -310,6 +354,11 @@
           "command": "tiaConnect.vcsPull",
           "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote",
           "group": "4_vcs_sync"
+        },
+        {
+          "command": "tiaConnect.testRunSingle",
+          "when": "view == tiaTestExplorer && viewItem == plcTest",
+          "group": "inline"
         }
       ]
     },
@@ -341,6 +390,13 @@
       {
         "language": "scl",
         "path": "./snippets/scl.json"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "tiaConnect.compileDevice",
+        "key": "ctrl+shift+b",
+        "when": "tiaConnect.connected"
       }
     ],
     "grammars": [

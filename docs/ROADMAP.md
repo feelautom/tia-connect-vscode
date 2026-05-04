@@ -49,24 +49,33 @@
 | Auto-refresh status (30s) | DONE | Timer configurable |
 | Init repository | DONE | Commande dediee |
 
-### Test Explorer
+### PLC Tests (sidebar)
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
-| TestController natif (Test Explorer) | DONE | `vscode.tests` API |
+| TreeDataProvider dans la sidebar T-IA Connect | DONE | Sous le Project Explorer, pas un onglet separe |
+| Verification licence (hasTestHarness) | DONE | Affiche icone cadenas si pas disponible |
+| Verification PLCSim Advanced disponible | DONE | Affiche icone warning si pas disponible |
 | Decouverte des tests | DONE | Depuis backend T-IA Connect |
-| Arborescence Test → Steps | DONE | `resolveHandler` |
-| Execution individuelle | DONE | Polling job |
-| Execution globale (Run All) | DONE | |
+| Arborescence Test → Steps | DONE | getChildren avec lazy loading |
+| Execution individuelle (bouton inline) | DONE | Polling job, icones pass/fail/running |
+| Execution globale (Run All) | DONE | Sequentiel |
 | Resultats pass/fail avec assertions | DONE | Messages detailles par step |
 
-**Statut global Phase 2 : CODE EN PLACE, A TESTER**
+### Cross-References
 
-Le code VCS et Tests est implemente mais n'a pas encore ete teste en conditions reelles avec un serveur T-IA Connect. Il faut valider :
-- Connexion VCS avec un projet reel
-- Commit + export + diff
-- Execution de tests PLCSim
-- Gestion des erreurs et edge cases
+| Fonctionnalite | Statut | Notes |
+|----------------|--------|-------|
+| Webview cross-references par bloc | DONE | Panel a cote de l'editeur |
+| Tous types de blocs (SCL, STL, LAD, FBD, GRAPH) | DONE | Clic droit dans le tree |
+| Badges type + indicateurs Read/Write | DONE | Theme sombre |
+
+**Statut global Phase 2 : TERMINEE ET TESTEE**
+
+Teste en conditions reelles le 2026-05-04 avec :
+- VCS : commit, diff, branches, checkout inline
+- Tests PLCSim : Motor_Start_Stop (PASSED), Speed_Check (PASSED)
+- Cross-references : fonctionne sur tous types de blocs
 
 ---
 
@@ -87,19 +96,19 @@ Le code VCS et Tests est implemente mais n'a pas encore ete teste en conditions 
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
-| Tag tables dans le TreeView (sous chaque device) | TODO | Liste tables + tags en lecture seule |
-| UDTs dans le TreeView (sous chaque device) | TODO | Liste UDTs en lecture seule |
-| Detail tag table au clic (webview ou output) | TODO | Nom, type, adresse, commentaire |
-| Detail UDT au clic | TODO | Structure et membres |
+| Tag tables dans le TreeView (sous chaque device) | DONE | Liste tables + tags en lecture seule |
+| UDTs dans le TreeView (sous chaque device) | DONE | Liste UDTs en lecture seule |
+| Detail tag (type + adresse dans description) | DONE | DataType + LogicalAddress inline |
+| Detail UDT au clic | TODO | Structure et membres (webview) |
 
 ### Polish UX
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
 | Icones custom SVG par type de bloc | TODO | Remplacer ThemeIcon par icones custom |
-| Rafraichir tree apres reimport | TODO | Mettre a jour l'etat de coherence |
+| Rafraichir tree apres reimport | DONE | Event onBlockReimported → tree refresh |
 | Detection conflit (bloc modifie dans TIA en parallele) | TODO | Comparer ModifiedDate avant reimport |
-| Keybinding pour compiler (ex: Ctrl+Shift+B) | TODO | |
+| Keybinding pour compiler (Ctrl+Shift+B) | DONE | Auto-pick device si un seul, QuickPick sinon |
 | Notification groupee pour multi-erreurs | TODO | |
 | Setting pour desactiver auto-reimport par bloc | TODO | |
 
@@ -126,7 +135,7 @@ Le code VCS et Tests est implemente mais n'a pas encore ete teste en conditions 
 
 | Bug | Statut | Notes |
 |-----|--------|-------|
-| *(aucun bug connu pour le moment)* | | A remplir lors des tests |
+| Output channel ne scroll pas automatiquement vers le bas | KNOWN | Limitation VS Code API — `outputChannel.show()` ne force pas le scroll |
 
 ---
 
@@ -154,6 +163,9 @@ Le code VCS et Tests est implemente mais n'a pas encore ete teste en conditions 
 | Test details | `GET /api/testharness/tests/{name}` | 2 |
 | Test run | `POST /api/testharness/run` | 2 |
 | Test run all | `POST /api/testharness/run-all` | 2 |
+| License features | `GET /api/license/features` | 2 |
+| PLCSim status | `GET /api/simulation/status` | 2 |
+| Cross-references | `GET /api/devices/{d}/blocks/{b}/cross-references` | 2 |
 | Pipelines list | `GET /api/pipelines` | 3 |
 | Pipeline details | `GET /api/pipelines/{name}` | 3 |
 | Pipeline run | `POST /api/pipelines/{name}/run` | 3 |

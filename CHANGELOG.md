@@ -14,7 +14,20 @@ All notable changes to the T-IA Connect for VS Code extension will be documented
 - Compilation diagnostics displayed in the editor
 - Export blocks as SimaticML XML
 - Source Control (VCS) integration: commit, push, pull, branch, merge, log
-- Test Explorer: discover and run PLC tests with step-level results
+- PLC Tests panel in the T-IA Connect sidebar with license and PLCSim checks
+- Run individual tests or entire suite with pass/fail results and step-level details
+- Cross-references webview panel for any block type (SCL, STL, LAD, FBD, GRAPH)
 - CI/CD Pipelines: list, run, create from templates, execution history
+- Tag Tables in Project Explorer: browse tag tables and individual tags with type/address display
+- UDTs in Project Explorer: browse User-Defined Types under each device
+- Device tree now shows 3 sections: Program Blocks, Tag Tables, UDTs
 - Status bar with connection state and project name
 - API key authentication with interactive prompt
+
+- Keybinding Ctrl+Shift+B to compile device (auto-picks single device or shows QuickPick)
+- Project tree auto-refreshes after successful block reimport
+
+### Fixed
+- PascalCase normalization for license features and PLCSim status types
+- PLCSim status endpoint URL (`/api/simulation/status` instead of `/api/plcsim/status`)
+- Job polling log no longer shows `undefined` when server message is empty

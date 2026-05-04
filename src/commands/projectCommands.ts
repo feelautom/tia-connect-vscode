@@ -3,7 +3,7 @@ import { client } from '../api/client';
 import { getProjectOverview } from '../api/project';
 import { ProjectTreeProvider } from '../providers/projectTreeProvider';
 import { TiaSourceControl } from '../providers/scmProvider';
-import { TiaTestProvider } from '../providers/testProvider';
+import { TestTreeProvider } from '../providers/testTreeProvider';
 import { setConnected, setDisconnected, setError } from '../views/statusBar';
 import { log, logError } from '../views/outputChannel';
 import { CONTEXT_KEYS } from '../utils/constants';
@@ -13,7 +13,7 @@ export function registerProjectCommands(
     context: vscode.ExtensionContext,
     treeProvider: ProjectTreeProvider,
     scmProvider: TiaSourceControl,
-    testProvider: TiaTestProvider,
+    testProvider: TestTreeProvider,
 ): void {
     context.subscriptions.push(
         vscode.commands.registerCommand('tiaConnect.connect', () => connect(treeProvider, scmProvider, testProvider)),
@@ -98,7 +98,7 @@ async function ensureApiKey(): Promise<boolean> {
 async function connect(
     treeProvider: ProjectTreeProvider,
     scmProvider: TiaSourceControl,
-    testProvider: TiaTestProvider,
+    testProvider: TestTreeProvider,
 ): Promise<void> {
     try {
         log('Connecting to T-IA Connect server...');

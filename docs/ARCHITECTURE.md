@@ -35,17 +35,20 @@ tia-connect-vscode/
 │   │   ├── sourceControl.ts        # VCS: status, commit, diff, branches, push/pull
 │   │   ├── testHarness.ts          # Tests PLCSim: list, run, results
 │   │   ├── pipelines.ts            # Pipelines CI/CD: list, run, templates, history
+│   │   ├── tags.ts                 # Tag tables, tags, UDTs: list, details
 │   │   └── jobs.ts                 # Polling jobs asynchrones
 │   ├── providers/
 │   │   ├── projectTreeProvider.ts  # TreeDataProvider (explorateur projet TIA)
 │   │   ├── scmProvider.ts          # SourceControl provider (panel SCM natif)
-│   │   └── testProvider.ts         # TestController provider (Test Explorer natif)
+│   │   └── testTreeProvider.ts     # TreeDataProvider (PLC Tests dans la sidebar)
 │   ├── editors/
 │   │   ├── blockEditor.ts          # Ouverture, sauvegarde, reimport blocs SCL/STL
 │   │   └── blockFileManager.ts     # Fichiers temporaires + metadata .tia-meta.json
+│   ├── editors/
+│   │   └── crossRefWebview.ts      # Webview cross-references (sources, objets, locations)
 │   ├── commands/
 │   │   ├── projectCommands.ts      # connect, disconnect, refresh (+ API key prompt)
-│   │   ├── blockCommands.ts        # openBlock, compileDevice, compileBlock, exportBlock
+│   │   ├── blockCommands.ts        # openBlock, compileDevice, compileBlock, exportBlock, crossRefs
 │   │   └── pipelineCommands.ts     # list, run, history, createFromTemplate
 │   ├── views/
 │   │   ├── statusBar.ts            # Barre de statut (Connected/Disconnected/Error)
@@ -128,16 +131,31 @@ Utilise l'API native `vscode.scm` pour le panel Source Control.
 - Log de commits avec diff
 - Auto-refresh toutes les 30 secondes
 
-### 5. Test Explorer (`providers/testProvider.ts`)
+### 5. PLC Tests (`providers/testTreeProvider.ts`)
 
-Utilise l'API native `vscode.tests` (TestController).
+`TreeDataProvider` integre dans la sidebar T-IA Connect (sous le Project Explorer).
+
+**Pre-requis verifies automatiquement :**
+- Feature `hasTestHarness` activee dans la licence (sinon affiche icone cadenas)
+- PLCSim Advanced disponible via `/api/simulation/status` (sinon affiche icone warning)
 
 **Fonctionnalites :**
 - Decouverte des tests depuis le backend T-IA Connect
 - Arborescence : Test → Steps
-- Execution individuelle ou globale
-- Resultats pass/fail avec messages d'assertion detailles
+- Execution individuelle (bouton inline) ou globale (Run All)
+- Resultats pass/fail avec icones colorees et messages d'assertion detailles
 - Progression via polling de jobs
+- Nodes de message (lock, warning, info) quand les pre-requis ne sont pas remplis
+
+### 5b. Cross-References (`editors/crossRefWebview.ts`)
+
+Webview panel pour afficher les references croisees d'un bloc.
+
+**Fonctionnalites :**
+- Sources avec badges de type (OB, FB, FC, DB)
+- Objets references avec indicateur Read/Write
+- Theme sombre integre
+- Loading spinner pendant le chargement
 
 ### 6. Pipelines (`commands/pipelineCommands.ts`)
 

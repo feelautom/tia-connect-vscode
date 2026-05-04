@@ -1,10 +1,16 @@
 import * as vscode from 'vscode';
 import { getProjectOverview } from '../api/project';
 import { getBlockTree } from '../api/blocks';
+import { getTagTables, getUdts } from '../api/tags';
 import { BlockTreeNode, ProjectOverview } from '../api/types';
 import { log, logError } from '../views/outputChannel';
 
-export type TreeNodeType = 'project' | 'device' | 'folder' | 'block';
+export type TreeNodeType =
+    | 'project' | 'device'
+    | 'section'                          // "Program Blocks", "Tag Tables", "UDTs"
+    | 'folder' | 'block'
+    | 'tagTable'
+    | 'udt';
 
 export interface TiaTreeItem {
     type: TreeNodeType;
@@ -15,6 +21,12 @@ export interface TiaTreeItem {
     language?: string;
     children?: TiaTreeItem[];
     isConsistent?: boolean;
+    /** Section kind for 'section' nodes */
+    sectionKind?: 'blocks' | 'tagTables' | 'udts';
+    /** Tag table name (for tag nodes) */
+    tagTableName?: string;
+    /** UDT number */
+    udtNumber?: number;
 }
 
 export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem> {
@@ -35,9 +47,14 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
     }
 
     getTreeItem(element: TiaTreeItem): vscode.TreeItem {
+        const isCollapsible = element.type === 'project'
+            || element.type === 'device'
+            || element.type === 'section'
+            || element.type === 'folder';
+
         const item = new vscode.TreeItem(
             element.label,
-            element.children !== undefined || element.type === 'device' || element.type === 'project' || element.type === 'folder'
+            isCollapsible
                 ? vscode.TreeItemCollapsibleState.Collapsed
                 : vscode.TreeItemCollapsibleState.None
         );
@@ -50,6 +67,10 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
             case 'device':
                 item.iconPath = new vscode.ThemeIcon('server');
                 item.contextValue = 'device';
+                break;
+            case 'section':
+                item.iconPath = this.getSectionIcon(element.sectionKind);
+                item.contextValue = `section-${element.sectionKind}`;
                 break;
             case 'folder':
                 item.iconPath = new vscode.ThemeIcon('folder');
@@ -67,6 +88,27 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
                     };
                 }
                 break;
+            case 'tagTable':
+                item.iconPath = new vscode.ThemeIcon('tag');
+                item.contextValue = 'tagTable';
+                item.command = {
+                    command: 'tiaConnect.openTagTable',
+                    title: 'Open Tag Table',
+                    arguments: [element],
+                };
+                break;
+            case 'udt':
+                item.iconPath = new vscode.ThemeIcon('symbol-struct');
+                item.contextValue = 'udt';
+                if (element.udtNumber !== undefined) {
+                    item.description = `UDT ${element.udtNumber}`;
+                }
+                item.command = {
+                    command: 'tiaConnect.openUdt',
+                    title: 'Open UDT',
+                    arguments: [element],
+                };
+                break;
         }
 
         return item;
@@ -81,9 +123,13 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
             case 'project':
                 return this.getDeviceChildren();
             case 'device':
-                return this.getBlockTreeChildren(element.deviceName!);
+                return this.getDeviceSections(element.deviceName!);
+            case 'section':
+                return this.getSectionChildren(element);
             case 'folder':
                 return element.children || [];
+            case 'udt':
+                return []; // UDTs are leaf nodes (detail shown on click later)
             default:
                 return [];
         }
@@ -121,6 +167,46 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
             deviceName: d.Name,
         }));
     }
+
+    /** Returns the 3 section folders under a device */
+    private getDeviceSections(deviceName: string): TiaTreeItem[] {
+        return [
+            {
+                type: 'section',
+                label: 'Program Blocks',
+                deviceName,
+                sectionKind: 'blocks',
+            },
+            {
+                type: 'section',
+                label: 'Tag Tables',
+                deviceName,
+                sectionKind: 'tagTables',
+            },
+            {
+                type: 'section',
+                label: 'UDTs',
+                deviceName,
+                sectionKind: 'udts',
+            },
+        ];
+    }
+
+    private async getSectionChildren(section: TiaTreeItem): Promise<TiaTreeItem[]> {
+        const deviceName = section.deviceName!;
+        switch (section.sectionKind) {
+            case 'blocks':
+                return this.getBlockTreeChildren(deviceName);
+            case 'tagTables':
+                return this.getTagTableNodes(deviceName);
+            case 'udts':
+                return this.getUdtNodes(deviceName);
+            default:
+                return [];
+        }
+    }
+
+    // ─── Program Blocks ─────────────────────────────────────────────
 
     private async getBlockTreeChildren(deviceName: string): Promise<TiaTreeItem[]> {
         try {
@@ -164,6 +250,52 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
         };
     }
 
+    // ─── Tag Tables ─────────────────────────────────────────────────
+
+    private async getTagTableNodes(deviceName: string): Promise<TiaTreeItem[]> {
+        try {
+            const tables = await getTagTables(deviceName);
+            return tables.map(t => ({
+                type: 'tagTable' as const,
+                label: t.Name,
+                deviceName,
+                tagTableName: t.Name,
+            }));
+        } catch (err) {
+            logError(`Failed to load tag tables for ${deviceName}`, err);
+            return [];
+        }
+    }
+
+    // ─── UDTs ───────────────────────────────────────────────────────
+
+    private async getUdtNodes(deviceName: string): Promise<TiaTreeItem[]> {
+        try {
+            const udts = await getUdts(deviceName);
+            return udts.map(u => ({
+                type: 'udt' as const,
+                label: u.Name,
+                deviceName,
+                udtNumber: u.Number,
+                isConsistent: u.IsConsistent,
+            }));
+        } catch (err) {
+            logError(`Failed to load UDTs for ${deviceName}`, err);
+            return [];
+        }
+    }
+
+    // ─── Icons & descriptions ───────────────────────────────────────
+
+    private getSectionIcon(kind?: string): vscode.ThemeIcon {
+        switch (kind) {
+            case 'blocks': return new vscode.ThemeIcon('symbol-method');
+            case 'tagTables': return new vscode.ThemeIcon('tag');
+            case 'udts': return new vscode.ThemeIcon('symbol-struct');
+            default: return new vscode.ThemeIcon('folder');
+        }
+    }
+
     private getBlockIcon(blockType?: string, _language?: string): vscode.ThemeIcon {
         switch (blockType) {
             case 'OB': return new vscode.ThemeIcon('symbol-event');
@@ -190,4 +322,5 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
         if (element.isConsistent === false) { parts.push('inconsistent'); }
         return parts.join(' | ');
     }
+
 }

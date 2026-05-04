@@ -293,6 +293,101 @@ export interface PipelineTemplateSummary {
     Category: string;
 }
 
+// ─── License & PLCSim types ─────────────────────────────────────────
+
+export interface LicenseFeatures {
+    Edition: string;
+    IsValid: boolean;
+    Features: LicenseFeature[];
+}
+
+export interface LicenseFeature {
+    Key: string;
+    Name: string;
+    Description: string;
+    Enabled: boolean;
+}
+
+export interface PlcSimStatus {
+    RuntimeManagerRunning: boolean;
+    ApiVersion: string;
+    ApiAvailable: boolean;
+    RegisteredInstances: unknown[];
+    ConnectedInstance: unknown;
+}
+
+// ─── Cross-Reference types ──────────────────────────────────────────
+
+export interface CrossReferenceResult {
+    BlockName: string;
+    SourceCount: number;
+    TotalReferenceCount: number;
+    Sources: CrossReferenceSource[];
+}
+
+export interface CrossReferenceSource {
+    Name: string;
+    TypeName: string;
+    Address: string;
+    Device: string;
+    Path: string;
+    ReferenceObjects: CrossReferenceObject[];
+}
+
+export interface CrossReferenceObject {
+    Name: string;
+    TypeName: string;
+    Address: string;
+    Device: string;
+    Path: string;
+    Locations: CrossReferenceLocation[];
+}
+
+export interface CrossReferenceLocation {
+    ReferenceLocation: string;
+    ReferenceType: string;
+    Access: string;
+}
+
+// ─── Tag & UDT types ──────────────────────────────────────────────
+
+export interface TagTableInfo {
+    Name: string;
+    TagCount: number;
+    IsDefault: boolean;
+}
+
+export interface TagInfo {
+    Name: string;
+    DataType: string;
+    LogicalAddress: string;
+    Comment: string;
+    ExternalAccessible: boolean;
+    ExternalVisible: boolean;
+    ExternalWritable: boolean;
+}
+
+export interface UdtSummary {
+    Name: string;
+    Number: number;
+    IsConsistent: boolean;
+    ModifiedDate?: string;
+}
+
+export interface UdtDetail {
+    Name: string;
+    Number: number;
+    IsConsistent: boolean;
+    Members: UdtMember[];
+}
+
+export interface UdtMember {
+    Name: string;
+    DataType: string;
+    StartValue?: string;
+    Comment?: string;
+}
+
 // ─── Common types ──────────────────────────────────────────────────
 
 /** Block metadata stored alongside temp files */

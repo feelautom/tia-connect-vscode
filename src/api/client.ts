@@ -112,9 +112,13 @@ export class TiaClient {
             };
 
             if (!resp.ok) {
-                if (resp.status === 403) {
-                    const quotaMsg = 'API quota exceeded. Your daily limit has been reached. Please upgrade your license or try again tomorrow.';
-                    log(`QUOTA ${method} ${path}: ${json.Message || quotaMsg}`);
+                if (resp.status === 429) {
+                    const resetHeader = resp.headers.get('X-RateLimit-Reset');
+                    const resetInfo = resetHeader
+                        ? ` Resets at ${new Date(Number(resetHeader) * 1000).toLocaleTimeString()}.`
+                        : '';
+                    const quotaMsg = json.Message || `API rate limit exceeded.${resetInfo} Upgrade your license to remove all limits.`;
+                    log(`QUOTA ${method} ${path}: ${quotaMsg}`);
                     throw new Error(quotaMsg);
                 }
                 if (resp.status === 401) {

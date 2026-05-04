@@ -112,6 +112,15 @@ export class TiaClient {
             };
 
             if (!resp.ok) {
+                if (resp.status === 403) {
+                    const quotaMsg = 'API quota exceeded. Your daily limit has been reached. Please upgrade your license or try again tomorrow.';
+                    log(`QUOTA ${method} ${path}: ${json.Message || quotaMsg}`);
+                    throw new Error(quotaMsg);
+                }
+                if (resp.status === 401) {
+                    log(`AUTH ${method} ${path}: unauthorized`);
+                    throw new Error('Authentication failed. Check your API key in T-IA Connect settings.');
+                }
                 const msg = json.Message || `HTTP ${resp.status}`;
                 log(`ERROR ${method} ${path}: ${msg}`);
                 throw new Error(msg);

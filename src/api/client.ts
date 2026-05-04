@@ -125,6 +125,11 @@ export class TiaClient {
                     log(`AUTH ${method} ${path}: unauthorized`);
                     throw new Error('Authentication failed. Check your API key in T-IA Connect settings.');
                 }
+                if (resp.status === 403) {
+                    const featureMsg = json.Message || 'This feature is not available in your license edition.';
+                    log(`LICENSE ${method} ${path}: ${featureMsg}`);
+                    throw new Error(featureMsg);
+                }
                 const msg = json.Message || `HTTP ${resp.status}`;
                 log(`ERROR ${method} ${path}: ${msg}`);
                 throw new Error(msg);

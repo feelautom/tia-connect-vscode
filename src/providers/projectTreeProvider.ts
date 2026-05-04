@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { getProjectOverview } from '../api/project';
 import { getBlockTree } from '../api/blocks';
 import { BlockTreeNode, ProjectOverview } from '../api/types';
-import { EDITABLE_LANGUAGES } from '../utils/constants';
 import { log, logError } from '../views/outputChannel';
 
 export type TreeNodeType = 'project' | 'device' | 'folder' | 'block';

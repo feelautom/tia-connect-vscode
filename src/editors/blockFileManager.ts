@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import { BlockMetadata } from '../api/types';
 import { TEMP_DIR_NAME, META_FILE_SUFFIX } from '../utils/constants';
 
@@ -16,7 +17,7 @@ export class BlockFileManager {
         const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
         this.tempDir = wsFolder
             ? path.join(wsFolder, TEMP_DIR_NAME)
-            : path.join(require('os').tmpdir(), 'tia-connect');
+            : path.join(os.tmpdir(), 'tia-connect');
 
         if (!fs.existsSync(this.tempDir)) {
             fs.mkdirSync(this.tempDir, { recursive: true });

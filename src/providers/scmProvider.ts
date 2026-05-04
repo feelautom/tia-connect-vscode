@@ -5,7 +5,7 @@ import {
     vcsDeleteBranch, vcsMerge, vcsPush, vcsPull, vcsInit
 } from '../api/sourceControl';
 import { pollJob } from '../api/jobs';
-import { VcsFileChange, VcsStatus } from '../api/types';
+import { VcsFileChange } from '../api/types';
 import { log, logError } from '../views/outputChannel';
 
 export class TiaSourceControl implements vscode.Disposable {
@@ -30,7 +30,7 @@ export class TiaSourceControl implements vscode.Disposable {
     }
 
     activate(context: vscode.ExtensionContext): void {
-        context.subscriptions.push(
+        const commands = [
             vscode.commands.registerCommand('tiaConnect.vcsCommit', () => this.commit()),
             vscode.commands.registerCommand('tiaConnect.vcsRefresh', () => this.refresh()),
             vscode.commands.registerCommand('tiaConnect.vcsInit', () => this.init()),
@@ -38,9 +38,10 @@ export class TiaSourceControl implements vscode.Disposable {
             vscode.commands.registerCommand('tiaConnect.vcsPull', () => this.pull()),
             vscode.commands.registerCommand('tiaConnect.vcsBranch', () => this.branchMenu()),
             vscode.commands.registerCommand('tiaConnect.vcsLog', () => this.showLog()),
-        );
+        ];
 
-        this.disposables.push(...context.subscriptions.slice(-7));
+        context.subscriptions.push(...commands);
+        this.disposables.push(...commands);
     }
 
     async refresh(): Promise<void> {

@@ -3,7 +3,6 @@ import {
     VcsStatus, VcsLogEntry, VcsDiffResult, VcsBranchInfo,
     VcsSettings, VcsRemoteInfo
 } from './types';
-import { JobStatus } from './types';
 
 const PREFIX = '/api/source-control';
 

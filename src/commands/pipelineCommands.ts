@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import {
     listPipelines, getPipeline, runPipeline,
     getExecutionHistory, listTemplates, instantiateTemplate,
-    deletePipeline
 } from '../api/pipelines';
 import { pollJob } from '../api/jobs';
 import { PipelineExecution, PipelineStepResult } from '../api/types';

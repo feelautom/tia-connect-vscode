@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { listTests, getTest, runTest, runAllTests } from '../api/testHarness';
+import { listTests, getTest, runTest } from '../api/testHarness';
 import { pollJob } from '../api/jobs';
 import { TestRunResult } from '../api/types';
 import { log, logError } from '../views/outputChannel';

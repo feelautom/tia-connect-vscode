@@ -75,12 +75,20 @@ export class TiaClient {
 
         try {
             log(`${method} ${path}`);
-            const resp = await fetch(url, {
-                method,
-                headers: this.headers,
-                body: body ? JSON.stringify(body) : undefined,
-                signal: controller.signal,
-            });
+            let resp: Response;
+            try {
+                resp = await fetch(url, {
+                    method,
+                    headers: this.headers,
+                    body: body ? JSON.stringify(body) : undefined,
+                    signal: controller.signal,
+                });
+            } catch {
+                if (controller.signal.aborted) {
+                    throw new Error('Request cancelled.');
+                }
+                throw new Error(`Cannot reach T-IA Connect server at ${this.baseUrl}. Check that the server is running.`);
+            }
 
             const text = await resp.text();
             let raw: any;

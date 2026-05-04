@@ -13,15 +13,15 @@ export async function runJobWithProgress(title: string, jobId: string): Promise<
         {
             location: vscode.ProgressLocation.Notification,
             title,
-            cancellable: false,
+            cancellable: true,
         },
-        async (progress) => {
+        async (progress, token) => {
             const result = await pollJob(jobId, (status) => {
                 progress.report({
                     message: status.Message || `${status.Status} (${status.Progress}%)`,
                     increment: undefined,
                 });
-            });
+            }, undefined, undefined, token);
             return result;
         }
     );

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
 import { BlockEditor } from '../editors/blockEditor';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
 import { compileDevice, compileBlock, exportBlockXml } from '../api/blocks';
@@ -90,7 +91,6 @@ async function doExportBlock(item: TiaTreeItem): Promise<void> {
             () => exportBlockXml(item.deviceName!, item.blockName!)
         );
 
-        const fs = await import('fs');
         fs.writeFileSync(uri.fsPath, xml, 'utf-8');
 
         vscode.window.showInformationMessage(`Block ${item.blockName} exported.`);

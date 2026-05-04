@@ -105,7 +105,8 @@ function renderCrossRefHtml(blockName: string, xref: CrossReferenceResult): stri
 }
 
 function styles(): string {
-    return `<style>
+    return `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+    <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background: #1E1E1E; color: #C8C8C8;
@@ -176,7 +177,9 @@ function styles(): string {
 }
 
 function loadingHtml(blockName: string): string {
-    return `<!DOCTYPE html><html><head><style>
+    return `<!DOCTYPE html><html><head>
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+        <style>
         body { background: #1E1E1E; color: #C8C8C8; font-family: 'Segoe UI', sans-serif;
                display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .spinner { border: 3px solid #3E3E42; border-top: 3px solid #569CD6; border-radius: 50%;
@@ -186,7 +189,9 @@ function loadingHtml(blockName: string): string {
 }
 
 function errorHtml(blockName: string, message: string): string {
-    return `<!DOCTYPE html><html><head><style>
+    return `<!DOCTYPE html><html><head>
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+        <style>
         body { background: #1E1E1E; color: #C8C8C8; font-family: 'Segoe UI', sans-serif; padding: 24px; }
         .error { color: #EF4444; margin-top: 8px; }
     </style></head><body>

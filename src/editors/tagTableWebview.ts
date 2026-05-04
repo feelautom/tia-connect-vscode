@@ -170,7 +170,9 @@ function styles(): string {
 }
 
 function loadingHtml(tableName: string): string {
-    return `<!DOCTYPE html><html><head><style>
+    return `<!DOCTYPE html><html><head>
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+        <style>
         body { background: #1E1E1E; color: #C8C8C8; font-family: 'Segoe UI', sans-serif;
                display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .spinner { border: 3px solid #3E3E42; border-top: 3px solid #569CD6; border-radius: 50%;
@@ -180,7 +182,9 @@ function loadingHtml(tableName: string): string {
 }
 
 function errorHtml(tableName: string, message: string): string {
-    return `<!DOCTYPE html><html><head><style>
+    return `<!DOCTYPE html><html><head>
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+        <style>
         body { background: #1E1E1E; color: #C8C8C8; font-family: 'Segoe UI', sans-serif; padding: 24px; }
         .error { color: #EF4444; margin-top: 8px; }
     </style></head><body>

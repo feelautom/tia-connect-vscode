@@ -19,6 +19,9 @@ export function registerProjectCommands(
         vscode.commands.registerCommand('tiaConnect.connect', () => connect(treeProvider, scmProvider, testProvider)),
         vscode.commands.registerCommand('tiaConnect.disconnect', () => disconnect(treeProvider, scmProvider)),
         vscode.commands.registerCommand('tiaConnect.refreshProject', () => treeProvider.refresh()),
+        vscode.commands.registerCommand('tiaConnect.openSettings', () =>
+            vscode.commands.executeCommand('workbench.action.openSettings', 'tiaConnect')
+        ),
     );
 }
 

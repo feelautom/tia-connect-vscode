@@ -189,6 +189,12 @@
         "title": "Create Pipeline from Template",
         "category": "T-IA Connect Pipelines",
         "icon": "$(file-add)"
+      },
+      {
+        "command": "tiaConnect.openSettings",
+        "title": "Settings",
+        "category": "T-IA Connect",
+        "icon": "$(settings-gear)"
       }
     ],
     "viewsContainers": {
@@ -235,6 +241,11 @@
         {
           "command": "tiaConnect.refreshProject",
           "when": "view == tiaProjectExplorer && tiaConnect.connected",
+          "group": "navigation"
+        },
+        {
+          "command": "tiaConnect.openSettings",
+          "when": "view == tiaProjectExplorer",
           "group": "navigation"
         }
       ],

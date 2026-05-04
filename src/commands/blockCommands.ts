@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import { BlockEditor } from '../editors/blockEditor';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
 import { compileDevice, compileBlock, getBlockContent } from '../api/blocks';
-import { log, logError } from '../views/outputChannel';
+import { log, logError, showOutput } from '../views/outputChannel';
 
 export function registerBlockCommands(
     context: vscode.ExtensionContext,
@@ -28,6 +28,9 @@ export function registerBlockCommands(
 async function doCompileDevice(item: TiaTreeItem): Promise<void> {
     if (!item.deviceName) { return; }
 
+    showOutput();
+    log(`--- Compiling device ${item.deviceName} ---`);
+
     try {
         const result = await vscode.window.withProgress(
             { location: vscode.ProgressLocation.Notification, title: `Compiling ${item.deviceName}...` },
@@ -37,14 +40,14 @@ async function doCompileDevice(item: TiaTreeItem): Promise<void> {
         const msg = `Compilation: ${result.ErrorCount} error(s), ${result.WarningCount} warning(s)`;
         log(msg);
 
+        for (const m of result.Messages) {
+            log(`  [${m.ErrorLevel}] ${m.Path}: ${m.Description}`);
+        }
+
         if (result.ErrorCount === 0) {
             vscode.window.showInformationMessage(msg);
         } else {
             vscode.window.showErrorMessage(msg);
-            // Show details in output
-            for (const m of result.Messages) {
-                log(`  [${m.ErrorLevel}] ${m.Path}: ${m.Description}`);
-            }
         }
     } catch (err) {
         logError('Compilation failed', err);
@@ -55,6 +58,9 @@ async function doCompileDevice(item: TiaTreeItem): Promise<void> {
 async function doCompileBlock(item: TiaTreeItem): Promise<void> {
     if (!item.deviceName || !item.blockName) { return; }
 
+    showOutput();
+    log(`--- Compiling block ${item.blockName} ---`);
+
     try {
         const result = await vscode.window.withProgress(
             { location: vscode.ProgressLocation.Notification, title: `Compiling ${item.blockName}...` },
@@ -63,6 +69,10 @@ async function doCompileBlock(item: TiaTreeItem): Promise<void> {
 
         const msg = `${item.blockName}: ${result.ErrorCount} error(s), ${result.WarningCount} warning(s)`;
         log(msg);
+
+        for (const m of result.Messages) {
+            log(`  [${m.ErrorLevel}] ${m.Path}: ${m.Description}`);
+        }
 
         if (result.ErrorCount === 0) {
             vscode.window.showInformationMessage(msg);

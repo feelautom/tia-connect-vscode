@@ -6,7 +6,7 @@ import { BlockMetadata } from '../api/types';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
 import { getAutoReimport, getAutoCompile, getAutoSaveInterval } from '../utils/config';
 import { EDITABLE_LANGUAGES } from '../utils/constants';
-import { log, logError } from '../views/outputChannel';
+import { log, logError, showOutput } from '../views/outputChannel';
 import { updateDiagnostics, clearDiagnostics } from '../views/diagnostics';
 
 export class BlockEditor {
@@ -173,6 +173,7 @@ export class BlockEditor {
             }
         } catch (err) {
             logError(`Reimport failed for ${meta.blockName}`, err);
+            showOutput();
             vscode.window.showErrorMessage(`Reimport failed: ${err instanceof Error ? err.message : err}`);
         } finally {
             this.reimportInProgress.delete(key);
@@ -191,12 +192,16 @@ export class BlockEditor {
                 clearDiagnostics(fileUri);
             }
 
-            if (result.ErrorCount === 0) {
-                log(`Compilation OK: ${result.WarningCount} warning(s)`);
-            } else {
-                vscode.window.showWarningMessage(
-                    `Compilation: ${result.ErrorCount} error(s), ${result.WarningCount} warning(s)`
-                );
+            const msg = `${blockName}: ${result.ErrorCount} error(s), ${result.WarningCount} warning(s)`;
+            log(msg);
+
+            for (const m of result.Messages ?? []) {
+                log(`  [${m.ErrorLevel}] ${m.Path}: ${m.Description}`);
+            }
+
+            if (result.ErrorCount > 0) {
+                showOutput();
+                vscode.window.showWarningMessage(msg);
             }
         } catch (err) {
             logError('Auto-compile failed', err);

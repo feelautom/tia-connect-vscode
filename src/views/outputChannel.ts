@@ -20,3 +20,8 @@ export function logError(message: string, error?: unknown): void {
     const errMsg = error instanceof Error ? error.message : String(error ?? '');
     getOutputChannel().appendLine(`[${ts}] ERROR: ${message}${errMsg ? ' - ' + errMsg : ''}`);
 }
+
+/** Reveal the output channel panel */
+export function showOutput(): void {
+    getOutputChannel().show(true);
+}

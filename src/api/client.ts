@@ -2,6 +2,22 @@ import { getServerUrl, getApiKey } from '../utils/config';
 import { ApiResponse } from './types';
 import { log } from '../views/outputChannel';
 
+/** Recursively convert first char of each key to uppercase (PascalCase) */
+function toPascalCaseKeys(obj: unknown): unknown {
+    if (obj === null || obj === undefined || typeof obj !== 'object') {
+        return obj;
+    }
+    if (Array.isArray(obj)) {
+        return obj.map(toPascalCaseKeys);
+    }
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+        const pascal = key.charAt(0).toUpperCase() + key.slice(1);
+        result[pascal] = toPascalCaseKeys(value);
+    }
+    return result;
+}
+
 /** HTTP client for T-IA Connect REST API */
 export class TiaClient {
     private abortControllers: Set<AbortController> = new Set();
@@ -74,12 +90,17 @@ export class TiaClient {
                 throw new Error(`Invalid JSON response from ${path}: ${text.substring(0, 200)}`);
             }
 
-            // Normalize casing: backend may return camelCase or PascalCase
+            // Normalize entire response to PascalCase keys
+            const normalized = toPascalCaseKeys(raw) as any;
+
+            // T-IA Connect wraps responses in { Status, Response: { Success, Data }, Success, Message }
+            // Extract the inner Response if present, otherwise use top-level
+            const inner = normalized.Response ?? normalized;
             const json: ApiResponse<T> = {
-                Success: raw.Success ?? raw.success ?? false,
-                Message: raw.Message ?? raw.message ?? '',
-                Data: raw.Data ?? raw.data ?? null,
-                Timestamp: raw.Timestamp ?? raw.timestamp ?? '',
+                Success: inner.Success ?? normalized.Success ?? false,
+                Message: inner.Message ?? normalized.Message ?? '',
+                Data: inner.Data ?? normalized.Data ?? null,
+                Timestamp: inner.Timestamp ?? normalized.Timestamp ?? '',
             };
 
             if (!resp.ok) {

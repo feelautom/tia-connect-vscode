@@ -9,7 +9,9 @@ export interface ApiResponse<T = unknown> {
 /** Project overview */
 export interface ProjectOverview {
     Name: string;
+    ProjectName: string;
     Path: string;
+    ProjectPath: string;
     Author: string;
     Comment: string;
     Devices: DeviceInfo[];
@@ -30,13 +32,25 @@ export interface DeviceItemInfo {
 /** Block tree node from GET /api/devices/{d}/blocks/tree */
 export interface BlockTreeNode {
     Name: string;
-    Type: 'Folder' | 'OB' | 'FB' | 'FC' | 'DB' | 'UDT';
+    // Can come as "Type" or "NodeType" depending on API version
+    Type?: string;
+    NodeType?: string;
+    IsFolder?: boolean;
     ProgrammingLanguage?: string;
     Number?: number;
     Children?: BlockTreeNode[];
     IsConsistent?: boolean;
     IsKnowHowProtected?: boolean;
     Size?: number;
+    // Nested block info from the tree endpoint
+    BlockInfo?: {
+        Name: string;
+        Type: string;
+        Number: number;
+        Language: string;
+        IsConsistent?: boolean;
+        IsKnowHowProtected?: boolean;
+    };
 }
 
 /** Block details */

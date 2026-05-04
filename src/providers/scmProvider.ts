@@ -7,6 +7,7 @@ import {
 import { pollJob } from '../api/jobs';
 import { VcsFileChange } from '../api/types';
 import { log, logError } from '../views/outputChannel';
+import { CONTEXT_KEYS } from '../utils/constants';
 
 export class TiaSourceControl implements vscode.Disposable {
     private scm: vscode.SourceControl;
@@ -47,6 +48,8 @@ export class TiaSourceControl implements vscode.Disposable {
     async refresh(): Promise<void> {
         try {
             const status = await vcsGetStatus();
+
+            vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsInitialized, status.IsInitialized);
 
             if (!status.IsInitialized) {
                 this.changesGroup.resourceStates = [];

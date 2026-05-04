@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { BlockEditor } from '../editors/blockEditor';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
-import { compileDevice, compileBlock, exportBlockXml } from '../api/blocks';
+import { compileDevice, compileBlock, getBlockContent } from '../api/blocks';
 import { log, logError } from '../views/outputChannel';
 
 export function registerBlockCommands(
@@ -78,22 +78,31 @@ async function doCompileBlock(item: TiaTreeItem): Promise<void> {
 async function doExportBlock(item: TiaTreeItem): Promise<void> {
     if (!item.deviceName || !item.blockName) { return; }
 
+    const lang = (item.language || '').toUpperCase();
+    const ext = lang === 'STL' ? '.stl' : '.scl';
+
     const uri = await vscode.window.showSaveDialog({
-        defaultUri: vscode.Uri.file(`${item.blockName}.xml`),
-        filters: { 'SimaticML XML': ['xml'], 'All files': ['*'] },
+        defaultUri: vscode.Uri.file(`${item.blockName}${ext}`),
+        filters: { [`${lang} Source`]: [ext.substring(1)], 'All files': ['*'] },
     });
 
     if (!uri) { return; }
 
     try {
-        const xml = await vscode.window.withProgress(
+        const content = await vscode.window.withProgress(
             { location: vscode.ProgressLocation.Notification, title: `Exporting ${item.blockName}...` },
-            () => exportBlockXml(item.deviceName!, item.blockName!)
+            async () => {
+                const dto = await getBlockContent(item.deviceName!, item.blockName!);
+                if (dto.SourceText) {
+                    return dto.SourceText;
+                }
+                throw new Error(`No source code available for ${item.blockName}.`);
+            }
         );
 
-        fs.writeFileSync(uri.fsPath, xml, 'utf-8');
+        fs.writeFileSync(uri.fsPath, content, 'utf-8');
 
-        vscode.window.showInformationMessage(`Block ${item.blockName} exported.`);
+        vscode.window.showInformationMessage(`Block ${item.blockName} exported to ${uri.fsPath}`);
         log(`Exported ${item.blockName} to ${uri.fsPath}`);
     } catch (err) {
         logError(`Export block ${item.blockName} failed`, err);

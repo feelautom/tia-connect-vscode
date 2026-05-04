@@ -256,7 +256,7 @@
         },
         {
           "command": "tiaConnect.exportBlock",
-          "when": "view == tiaProjectExplorer && viewItem =~ /^block-/",
+          "when": "view == tiaProjectExplorer && viewItem =~ /^block-(scl|stl)$/",
           "group": "2_export"
         }
       ]

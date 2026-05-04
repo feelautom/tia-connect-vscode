@@ -56,12 +56,14 @@ export async function compileBlock(deviceName: string, blockName: string): Promi
     return normalizeCompilationResult(data);
 }
 
-/** Export block as raw XML (for non-editable blocks like LAD/FBD) */
+/** Export block as raw XML */
 export async function exportBlockXml(deviceName: string, blockName: string): Promise<string> {
-    const res = await client.get<string>(
-        `/api/devices/${enc(deviceName)}/blocks/${enc(blockName)}/export-xml`
-    );
-    return res.Data;
+    // Use /content endpoint which reliably returns RawXml
+    const details = await getBlockDetails(deviceName, blockName);
+    if (details?.RawXml) {
+        return details.RawXml;
+    }
+    throw new Error(`No XML available for block ${blockName}.`);
 }
 
 function normalizeCompilationResult(data: any): CompilationResult {

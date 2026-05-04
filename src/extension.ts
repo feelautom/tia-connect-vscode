@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import { ProjectTreeProvider } from './providers/projectTreeProvider';
+import { TiaSourceControl } from './providers/scmProvider';
+import { TiaTestProvider } from './providers/testProvider';
 import { BlockEditor } from './editors/blockEditor';
 import { registerProjectCommands } from './commands/projectCommands';
 import { registerBlockCommands } from './commands/blockCommands';
@@ -7,6 +9,8 @@ import { createStatusBar, disposeStatusBar } from './views/statusBar';
 import { getOutputChannel, log } from './views/outputChannel';
 
 let blockEditor: BlockEditor;
+let scmProvider: TiaSourceControl;
+let testProvider: TiaTestProvider;
 
 export function activate(context: vscode.ExtensionContext): void {
     log('T-IA Connect for VS Code activating...');
@@ -27,8 +31,18 @@ export function activate(context: vscode.ExtensionContext): void {
     blockEditor = new BlockEditor();
     blockEditor.activate(context);
 
+    // Source Control (VCS)
+    scmProvider = new TiaSourceControl();
+    scmProvider.activate(context);
+    context.subscriptions.push(scmProvider);
+
+    // Test Explorer
+    testProvider = new TiaTestProvider();
+    testProvider.activate(context);
+    context.subscriptions.push(testProvider);
+
     // Register commands
-    registerProjectCommands(context, treeProvider);
+    registerProjectCommands(context, treeProvider, scmProvider, testProvider);
     registerBlockCommands(context, blockEditor);
 
     // Output channel
@@ -39,5 +53,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
 export function deactivate(): void {
     blockEditor?.dispose();
+    scmProvider?.dispose();
+    testProvider?.dispose();
     disposeStatusBar();
 }

@@ -93,6 +93,60 @@
         "title": "Export Block to File",
         "category": "T-IA Connect",
         "icon": "$(desktop-download)"
+      },
+      {
+        "command": "tiaConnect.vcsCommit",
+        "title": "Commit",
+        "category": "T-IA Connect VCS",
+        "icon": "$(check)"
+      },
+      {
+        "command": "tiaConnect.vcsRefresh",
+        "title": "Refresh VCS Status",
+        "category": "T-IA Connect VCS",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "tiaConnect.vcsInit",
+        "title": "Initialize VCS Repository",
+        "category": "T-IA Connect VCS",
+        "icon": "$(repo)"
+      },
+      {
+        "command": "tiaConnect.vcsPush",
+        "title": "Push",
+        "category": "T-IA Connect VCS",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "tiaConnect.vcsPull",
+        "title": "Pull",
+        "category": "T-IA Connect VCS",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "tiaConnect.vcsBranch",
+        "title": "Branch Operations",
+        "category": "T-IA Connect VCS",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "tiaConnect.vcsLog",
+        "title": "Show Commit Log",
+        "category": "T-IA Connect VCS",
+        "icon": "$(history)"
+      },
+      {
+        "command": "tiaConnect.testRefresh",
+        "title": "Refresh PLC Tests",
+        "category": "T-IA Connect Tests",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "tiaConnect.testRunAll",
+        "title": "Run All PLC Tests",
+        "category": "T-IA Connect Tests",
+        "icon": "$(run-all)"
       }
     ],
     "viewsContainers": {

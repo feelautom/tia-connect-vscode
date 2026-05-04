@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { client } from '../api/client';
 import { getProjectOverview } from '../api/project';
 import { ProjectTreeProvider } from '../providers/projectTreeProvider';
+import { TiaSourceControl } from '../providers/scmProvider';
+import { TiaTestProvider } from '../providers/testProvider';
 import { setConnected, setDisconnected, setError } from '../views/statusBar';
 import { log, logError } from '../views/outputChannel';
 import { CONTEXT_KEYS } from '../utils/constants';
@@ -9,15 +11,21 @@ import { CONTEXT_KEYS } from '../utils/constants';
 export function registerProjectCommands(
     context: vscode.ExtensionContext,
     treeProvider: ProjectTreeProvider,
+    scmProvider: TiaSourceControl,
+    testProvider: TiaTestProvider,
 ): void {
     context.subscriptions.push(
-        vscode.commands.registerCommand('tiaConnect.connect', () => connect(treeProvider)),
-        vscode.commands.registerCommand('tiaConnect.disconnect', () => disconnect(treeProvider)),
+        vscode.commands.registerCommand('tiaConnect.connect', () => connect(treeProvider, scmProvider, testProvider)),
+        vscode.commands.registerCommand('tiaConnect.disconnect', () => disconnect(treeProvider, scmProvider)),
         vscode.commands.registerCommand('tiaConnect.refreshProject', () => treeProvider.refresh()),
     );
 }
 
-async function connect(treeProvider: ProjectTreeProvider): Promise<void> {
+async function connect(
+    treeProvider: ProjectTreeProvider,
+    scmProvider: TiaSourceControl,
+    testProvider: TiaTestProvider,
+): Promise<void> {
     try {
         log('Connecting to T-IA Connect server...');
         const reachable = await client.ping();
@@ -42,7 +50,11 @@ async function connect(treeProvider: ProjectTreeProvider): Promise<void> {
             log('Connected (no project open).');
         }
 
+        // Refresh all providers
         treeProvider.refresh();
+        scmProvider.refresh();
+        scmProvider.startAutoRefresh();
+        testProvider.discoverTests();
     } catch (err) {
         logError('Connection failed', err);
         setError('Connection failed');
@@ -50,10 +62,11 @@ async function connect(treeProvider: ProjectTreeProvider): Promise<void> {
     }
 }
 
-function disconnect(treeProvider: ProjectTreeProvider): void {
+function disconnect(treeProvider: ProjectTreeProvider, scmProvider: TiaSourceControl): void {
     client.cancelAll();
     vscode.commands.executeCommand('setContext', CONTEXT_KEYS.connected, false);
     setDisconnected();
+    scmProvider.stopAutoRefresh();
     treeProvider.refresh();
     log('Disconnected.');
 }

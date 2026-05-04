@@ -83,6 +83,15 @@ Le code VCS et Tests est implemente mais n'a pas encore ete teste en conditions 
 | Historique des executions | DONE | Details par etape |
 | Creer depuis template | DONE | QuickPick templates |
 
+### TreeView — Tags & UDTs
+
+| Fonctionnalite | Statut | Notes |
+|----------------|--------|-------|
+| Tag tables dans le TreeView (sous chaque device) | TODO | Liste tables + tags en lecture seule |
+| UDTs dans le TreeView (sous chaque device) | TODO | Liste UDTs en lecture seule |
+| Detail tag table au clic (webview ou output) | TODO | Nom, type, adresse, commentaire |
+| Detail UDT au clic | TODO | Structure et membres |
+
 ### Polish UX
 
 | Fonctionnalite | Statut | Notes |
@@ -151,3 +160,7 @@ Le code VCS et Tests est implemente mais n'a pas encore ete teste en conditions 
 | Pipeline history | `GET /api/pipelines/executions` | 3 |
 | Pipeline templates | `GET /api/pipelines/templates` | 3 |
 | Pipeline from template | `POST /api/pipelines/templates/{id}/instantiate` | 3 |
+| Tag tables list | `GET /api/devices/{d}/tag-tables` | 3 |
+| Tags list | `GET /api/devices/{d}/tag-tables/{t}/tags` | 3 |
+| UDTs list | `GET /api/devices/{d}/udts` | 3 |
+| UDT details | `GET /api/devices/{d}/udts/{u}` | 3 |

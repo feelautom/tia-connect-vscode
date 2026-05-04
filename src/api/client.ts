@@ -2,8 +2,9 @@ import { getServerUrl, getApiKey } from '../utils/config';
 import { ApiResponse } from './types';
 import { log } from '../views/outputChannel';
 
-/** Recursively convert first char of each key to uppercase (PascalCase) */
-function toPascalCaseKeys(obj: unknown): unknown {
+/** Recursively convert first char of each key to uppercase (PascalCase)
+ * @internal Exported for testing */
+export function toPascalCaseKeys(obj: unknown): unknown {
     if (obj === null || obj === undefined || typeof obj !== 'object') {
         return obj;
     }

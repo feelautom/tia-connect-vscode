@@ -66,7 +66,8 @@ export async function exportBlockXml(deviceName: string, blockName: string): Pro
     throw new Error(`No XML available for block ${blockName}.`);
 }
 
-function normalizeCompilationResult(data: any): CompilationResult {
+/** @internal Exported for testing */
+export function normalizeCompilationResult(data: any): CompilationResult {
     if (!data) {
         return { Success: false, ErrorCount: 0, WarningCount: 0, Messages: [] };
     }
@@ -80,7 +81,8 @@ function normalizeCompilationResult(data: any): CompilationResult {
     };
 }
 
-function flattenMessages(messages: any[]): CompilationMessage[] {
+/** @internal Exported for testing */
+export function flattenMessages(messages: any[]): CompilationMessage[] {
     const result: CompilationMessage[] = [];
     for (const msg of messages) {
         if (msg.Description || msg.description) {
@@ -99,7 +101,8 @@ function flattenMessages(messages: any[]): CompilationMessage[] {
     return result;
 }
 
-function mapState(state: string): 'Error' | 'Warning' | 'Info' {
+/** @internal Exported for testing */
+export function mapState(state: string): 'Error' | 'Warning' | 'Info' {
     if (!state) { return 'Info'; }
     const s = state.toLowerCase();
     if (s === 'error') { return 'Error'; }

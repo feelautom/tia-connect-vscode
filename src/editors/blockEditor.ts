@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
-import { getBlockContent, importAndGenerate, compileBlock, exportBlockXml } from '../api/blocks';
+import { getBlockContent, importAndGenerate, compileBlock } from '../api/blocks';
+import { openLadWebview } from './ladWebview';
 import { BlockFileManager } from './blockFileManager';
+import { BlockMetadata } from '../api/types';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
-import { getAutoReimport, getAutoCompile } from '../utils/config';
+import { getAutoReimport, getAutoCompile, getAutoSaveInterval } from '../utils/config';
 import { EDITABLE_LANGUAGES } from '../utils/constants';
 import { log, logError } from '../views/outputChannel';
 import { updateDiagnostics, clearDiagnostics } from '../views/diagnostics';
@@ -10,12 +12,59 @@ import { updateDiagnostics, clearDiagnostics } from '../views/diagnostics';
 export class BlockEditor {
     private fileManager = new BlockFileManager();
     private saveListener: vscode.Disposable | undefined;
+    private willSaveListener: vscode.Disposable | undefined;
+    private configListener: vscode.Disposable | undefined;
+    private reimportInProgress = new Set<string>();
+    private manualSavePaths = new Set<string>();
+    private autoSaveTimer: NodeJS.Timeout | undefined;
 
     activate(context: vscode.ExtensionContext): void {
+        // Track manual saves (Ctrl+S) vs auto-saves
+        this.willSaveListener = vscode.workspace.onWillSaveTextDocument((e) => {
+            if (e.reason === vscode.TextDocumentSaveReason.Manual) {
+                this.manualSavePaths.add(e.document.uri.fsPath);
+            }
+        });
         this.saveListener = vscode.workspace.onDidSaveTextDocument(
             (doc) => this.onDocumentSaved(doc)
         );
-        context.subscriptions.push(this.saveListener);
+        // React to setting changes
+        this.configListener = vscode.workspace.onDidChangeConfiguration((e) => {
+            if (e.affectsConfiguration('tiaConnect.autoSaveInterval')) {
+                this.startAutoSaveTimer();
+            }
+        });
+        context.subscriptions.push(this.willSaveListener, this.saveListener, this.configListener);
+        this.startAutoSaveTimer();
+    }
+
+    /** Start/restart the auto-save timer based on settings */
+    private startAutoSaveTimer(): void {
+        if (this.autoSaveTimer) {
+            clearInterval(this.autoSaveTimer);
+            this.autoSaveTimer = undefined;
+        }
+
+        const minutes = getAutoSaveInterval();
+        if (minutes <= 0) {
+            log('Auto-save disabled.');
+            return;
+        }
+
+        log(`Auto-save enabled: every ${minutes} minute(s).`);
+        this.autoSaveTimer = setInterval(() => {
+            this.autoSaveAllDirtyBlocks();
+        }, minutes * 60 * 1000);
+    }
+
+    /** Save all dirty managed block files (safety backup only, no reimport) */
+    private autoSaveAllDirtyBlocks(): void {
+        for (const doc of vscode.workspace.textDocuments) {
+            if (doc.isDirty && this.fileManager.isManagedFile(doc.uri.fsPath)) {
+                doc.save();
+                log(`Auto-saved ${doc.fileName}`);
+            }
+        }
     }
 
     /** Open a block for editing in VS Code */
@@ -72,43 +121,45 @@ export class BlockEditor {
         log(`Opened block ${item.blockName} from ${item.deviceName}`);
     }
 
-    /** Open LAD/FBD/GRAPH block as read-only XML */
+    /** Open LAD/FBD/GRAPH block as Webview with SVG rendering */
     private async openReadOnlyBlock(item: TiaTreeItem): Promise<void> {
-        const xml = await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: `Exporting ${item.blockName} (XML)...` },
-            () => exportBlockXml(item.deviceName!, item.blockName!)
-        );
-
-        const filePath = this.fileManager.writeBlock(
-            item.deviceName!,
-            item.blockName!,
-            'xml',
-            xml
-        );
-
-        const doc = await vscode.workspace.openTextDocument(filePath);
-        await vscode.window.showTextDocument(doc, { preview: true });
-        log(`Opened block ${item.blockName} as read-only XML`);
+        await openLadWebview(item.deviceName!, item.blockName!, item.language!);
     }
 
-    /** Handle document save — reimport into TIA Portal */
+    /** Handle document save — reimport into TIA Portal only on manual save (Ctrl+S) */
     private async onDocumentSaved(doc: vscode.TextDocument): Promise<void> {
         if (!getAutoReimport()) { return; }
-        if (!this.fileManager.isManagedFile(doc.uri.fsPath)) { return; }
 
-        const meta = this.fileManager.readMetadata(doc.uri.fsPath);
+        const key = doc.uri.fsPath;
+
+        // Only reimport on manual save (Ctrl+S), ignore auto-save and focus-out saves
+        if (!this.manualSavePaths.has(key)) { return; }
+        this.manualSavePaths.delete(key);
+
+        if (!this.fileManager.isManagedFile(key)) { return; }
+
+        const meta = this.fileManager.readMetadata(key);
         if (!meta) { return; }
-
-        // Only reimport editable languages
         if (!EDITABLE_LANGUAGES.includes(meta.language.toUpperCase() as any)) { return; }
 
+        // Skip if a reimport is already in progress for this file
+        if (this.reimportInProgress.has(key)) {
+            log(`Reimport already in progress for ${meta.blockName}, skipping.`);
+            return;
+        }
+
+        this.doReimport(doc, meta, key);
+    }
+
+    private async doReimport(doc: vscode.TextDocument, meta: BlockMetadata, key: string): Promise<void> {
+        this.reimportInProgress.add(key);
         log(`Reimporting ${meta.blockName} to ${meta.deviceName}...`);
 
         try {
             const content = doc.getText();
-            const result = await importAndGenerate(meta.deviceName, content, `${meta.blockName}_vscode`);
+            const res = await importAndGenerate(meta.deviceName, content, `${meta.blockName}_vscode`);
 
-            if (result.Success) {
+            if (res.Success) {
                 clearDiagnostics(doc.uri);
                 vscode.window.showInformationMessage(`Block ${meta.blockName} reimported successfully.`);
                 log(`Reimport OK: ${meta.blockName}`);
@@ -117,12 +168,14 @@ export class BlockEditor {
                     await this.autoCompile(meta.deviceName, meta.blockName, doc.uri);
                 }
             } else {
-                vscode.window.showWarningMessage(`Reimport warning: ${result.Message}`);
-                log(`Reimport warning: ${result.Message}`);
+                vscode.window.showWarningMessage(`Reimport warning: ${res.Message}`);
+                log(`Reimport warning: ${res.Message}`);
             }
         } catch (err) {
             logError(`Reimport failed for ${meta.blockName}`, err);
             vscode.window.showErrorMessage(`Reimport failed: ${err instanceof Error ? err.message : err}`);
+        } finally {
+            this.reimportInProgress.delete(key);
         }
     }
 
@@ -151,6 +204,9 @@ export class BlockEditor {
     }
 
     dispose(): void {
+        if (this.autoSaveTimer) { clearInterval(this.autoSaveTimer); }
+        this.configListener?.dispose();
+        this.willSaveListener?.dispose();
         this.saveListener?.dispose();
         this.fileManager.cleanup();
     }

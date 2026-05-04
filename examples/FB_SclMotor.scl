@@ -1,0 +1,54 @@
+FUNCTION_BLOCK "FB_SclMotor"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_INPUT
+    bStart : Bool;      // Start command
+    bStop : Bool;       // Stop command
+    iSpeedRef : Int;    // Speed reference (RPM)
+END_VAR
+
+VAR_OUTPUT
+    bRunning : Bool;    // Motor is running
+    bFault : Bool;      // Fault active
+    iSpeedAct : Int;    // Actual speed
+END_VAR
+
+VAR_STATIC
+    bLatched : Bool;    // Latched start
+    iRampValue : Int;   // Current ramp value
+END_VAR
+
+VAR_TEMP
+    iDelta : Int;       // Speed difference
+END_VAR
+
+BEGIN
+    // Start/Stop latch
+    IF #bStart AND NOT #bStop THEN
+        #bLatched := TRUE;
+    END_IF;
+
+    IF #bStop THEN
+        #bLatched := FALSE;
+    END_IF;
+
+    #bRunning := #bLatched;
+
+    // Speed ramp
+    #iDelta := #iSpeedRef - #iRampValue;
+
+    IF #iDelta > 0 THEN
+        #iRampValue := #iRampValue + 10;
+    ELSIF #iDelta < 0 THEN
+        #iRampValue := #iRampValue - 10;
+    END_IF;
+
+    // Clamp
+    #iRampValue := LIMIT(MN := 0, IN := #iRampValue, MX := #iSpeedRef);
+    #iSpeedAct := #iRampValue;
+
+    // Fault: running but no speed
+    #bFault := #bRunning AND (#iSpeedAct = 0);
+
+END_FUNCTION_BLOCK

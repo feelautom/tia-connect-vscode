@@ -1,0 +1,98 @@
+FUNCTION_BLOCK "FB_StlMotor"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_INPUT
+    bStart : Bool;      // Start command
+    bStop : Bool;       // Stop command
+    iSpeedRef : Int;    // Speed reference (RPM)
+END_VAR
+
+VAR_OUTPUT
+    bRunning : Bool;    // Motor is running
+    bFault : Bool;      // Fault active
+    iSpeedAct : Int;    // Actual speed
+END_VAR
+
+VAR_STATIC
+    bLatched : Bool;    // Latched start
+    iRampValue : Int;   // Current ramp value
+    tStartDelay : Time; // Startup delay
+END_VAR
+
+VAR_TEMP
+    bStartEdge : Bool;  // Edge detection
+    iDelta : Int;       // Speed difference
+END_VAR
+
+BEGIN
+    // ─── Network 1: Start/Stop latch ──────────────────
+    A     #bStart;          // Check start command
+    ON    #bStop;           // AND NOT stop
+    S     #bLatched;        // Set latch
+
+    A     #bStop;           // If stop pressed
+    R     #bLatched;        // Reset latch
+
+    // ─── Network 2: Assign running state ──────────────
+    A     #bLatched;
+    =     #bRunning;
+
+    // ─── Network 3: Speed ramp ────────────────────────
+    L     #iSpeedRef;       // Load reference speed
+    L     #iRampValue;      // Load current ramp
+    -I;                     // Delta = ref - ramp
+    T     #iDelta;          // Store delta
+
+    L     #iDelta;
+    L     0;
+    >I;                     // If delta > 0
+    JCN   RMPD;             // Jump if not (ramp down)
+
+    // Ramp up: increment by 10
+    L     #iRampValue;
+    L     10;
+    +I;
+    T     #iRampValue;
+    JU    RACT;
+
+RMPD: L     #iDelta;
+    L     0;
+    <I;                     // If delta < 0
+    JCN   RACT;
+
+    // Ramp down: decrement by 10
+    L     #iRampValue;
+    L     10;
+    -I;
+    T     #iRampValue;
+
+    // ─── Network 4: Clamp and output ──────────────────
+RACT: L     #iRampValue;
+    L     0;
+    >I;
+    JC    PCLP;
+    L     0;
+    T     #iRampValue;      // Clamp to 0 minimum
+
+PCLP: L     #iRampValue;
+    L     #iSpeedRef;
+    <I;
+    JCN   MCLP;
+    JU    DONE;
+
+MCLP: L     #iSpeedRef;
+    T     #iRampValue;      // Clamp to max
+
+DONE: L     #iRampValue;
+    T     #iSpeedAct;       // Output actual speed
+
+    // ─── Network 5: Fault detection ───────────────────
+    A     #bRunning;
+    L     #iSpeedAct;
+    L     0;
+    ==I;                    // Running but speed = 0
+    A     #bRunning;        // AND running
+    =     #bFault;          // Set fault
+
+END_FUNCTION_BLOCK

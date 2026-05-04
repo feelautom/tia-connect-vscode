@@ -10,6 +10,7 @@ import { createStatusBar, setConnected, disposeStatusBar } from './views/statusB
 import { createDiagnostics, disposeDiagnostics } from './views/diagnostics';
 import { getOutputChannel, log } from './views/outputChannel';
 import { CONTEXT_KEYS, ORIGINAL_SCHEME } from './utils/constants';
+import { registerLanguageProviders } from './language';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -79,6 +80,9 @@ export function activate(context: vscode.ExtensionContext): void {
     registerProjectCommands(context, treeProvider, scmProvider, testProvider);
     registerBlockCommands(context, blockEditor);
     registerPipelineCommands(context);
+
+    // Language features (SCL/STL: completion, symbols, go-to-def, hover)
+    registerLanguageProviders(context);
 
     // Output channel
     context.subscriptions.push(getOutputChannel());

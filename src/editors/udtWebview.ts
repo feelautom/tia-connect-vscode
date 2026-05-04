@@ -17,6 +17,18 @@ export async function openUdtWebview(
         return;
     }
 
+    // Load data BEFORE creating the panel to avoid service worker issues
+    let html: string;
+    try {
+        const udt = await getUdtDetails(deviceName, udtName);
+        html = renderUdtHtml(deviceName, udt);
+        log(`Opened UDT '${udtName}' (${udt.Members?.length ?? 0} members)`);
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logError(`Failed to load UDT '${udtName}'`, err);
+        html = errorHtml(udtName, msg);
+    }
+
     const panel = vscode.window.createWebviewPanel(
         'tiaUdt',
         `UDT: ${udtName}`,
@@ -26,18 +38,7 @@ export async function openUdtWebview(
 
     openPanels.set(panelKey, panel);
     panel.onDidDispose(() => openPanels.delete(panelKey));
-
-    panel.webview.html = loadingHtml(udtName);
-
-    try {
-        const udt = await getUdtDetails(deviceName, udtName);
-        panel.webview.html = renderUdtHtml(deviceName, udt);
-        log(`Opened UDT '${udtName}' (${udt.Members?.length ?? 0} members)`);
-    } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        logError(`Failed to load UDT '${udtName}'`, err);
-        panel.webview.html = errorHtml(udtName, msg);
-    }
+    panel.webview.html = html;
 }
 
 function renderUdtHtml(deviceName: string, udt: UdtDetail): string {
@@ -101,7 +102,8 @@ function getTypeClass(dataType: string): string {
 }
 
 function styles(): string {
-    return `<style>
+    return `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+    <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background: var(--vscode-editor-background, #1E1E1E);

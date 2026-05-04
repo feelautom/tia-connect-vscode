@@ -17,6 +17,18 @@ export async function openTagTableWebview(
         return;
     }
 
+    // Load data BEFORE creating the panel to avoid service worker issues
+    let html: string;
+    try {
+        const tags = await getTagsInTable(deviceName, tableName);
+        html = renderTagTableHtml(deviceName, tableName, tags);
+        log(`Opened tag table '${tableName}' (${tags.length} tags)`);
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logError(`Failed to load tags from '${tableName}'`, err);
+        html = errorHtml(tableName, msg);
+    }
+
     const panel = vscode.window.createWebviewPanel(
         'tiaTagTable',
         `Tags: ${tableName}`,
@@ -26,18 +38,7 @@ export async function openTagTableWebview(
 
     openPanels.set(panelKey, panel);
     panel.onDidDispose(() => openPanels.delete(panelKey));
-
-    panel.webview.html = loadingHtml(tableName);
-
-    try {
-        const tags = await getTagsInTable(deviceName, tableName);
-        panel.webview.html = renderTagTableHtml(deviceName, tableName, tags);
-        log(`Opened tag table '${tableName}' (${tags.length} tags)`);
-    } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        logError(`Failed to load tags from '${tableName}'`, err);
-        panel.webview.html = errorHtml(tableName, msg);
-    }
+    panel.webview.html = html;
 }
 
 function renderTagTableHtml(deviceName: string, tableName: string, tags: TagInfo[]): string {
@@ -97,7 +98,8 @@ function getTypeClass(dataType: string): string {
 }
 
 function styles(): string {
-    return `<style>
+    return `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
+    <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background: var(--vscode-editor-background, #1E1E1E);

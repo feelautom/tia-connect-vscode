@@ -22,32 +22,32 @@ export async function openLadWebview(
         return;
     }
 
+    // Load data BEFORE creating the panel to avoid service worker issues
+    let html: string;
+    try {
+        const details = await getBlockDetails(deviceName, blockName);
+        if (!details) {
+            html = errorHtml(blockName, 'No block details returned.');
+        } else {
+            html = renderBlockToHtml(details);
+            log(`Opened ${blockName} as ${language} Webview`);
+        }
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logError(`Failed to load ${blockName} for Webview`, err);
+        html = errorHtml(blockName, msg);
+    }
+
     const panel = vscode.window.createWebviewPanel(
         'tiaLadView',
         `${blockName} [${language}]`,
         vscode.ViewColumn.One,
-        { enableScripts: true, retainContextWhenHidden: false },
+        { enableScripts: false, retainContextWhenHidden: false },
     );
 
     openPanels.set(panelKey, panel);
     panel.onDidDispose(() => openPanels.delete(panelKey));
-
-    // Load content
-    panel.webview.html = loadingHtml(blockName);
-
-    try {
-        const details = await getBlockDetails(deviceName, blockName);
-        if (!details) {
-            panel.webview.html = errorHtml(blockName, 'No block details returned.');
-            return;
-        }
-        panel.webview.html = renderBlockToHtml(details);
-        log(`Opened ${blockName} as ${language} Webview`);
-    } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        logError(`Failed to load ${blockName} for Webview`, err);
-        panel.webview.html = errorHtml(blockName, msg);
-    }
+    panel.webview.html = html;
 }
 
 function loadingHtml(blockName: string): string {

@@ -17,6 +17,18 @@ export async function openCrossRefWebview(
         return;
     }
 
+    // Load data BEFORE creating the panel to avoid service worker issues
+    let html: string;
+    try {
+        const xref = await getCrossReferences(deviceName, blockName);
+        html = renderCrossRefHtml(blockName, xref);
+        log(`Opened cross-references for ${blockName}`);
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        logError(`Failed to load cross-references for ${blockName}`, err);
+        html = errorHtml(blockName, msg);
+    }
+
     const panel = vscode.window.createWebviewPanel(
         'tiaCrossRef',
         `Cross-Ref: ${blockName}`,
@@ -26,18 +38,7 @@ export async function openCrossRefWebview(
 
     openPanels.set(panelKey, panel);
     panel.onDidDispose(() => openPanels.delete(panelKey));
-
-    panel.webview.html = loadingHtml(blockName);
-
-    try {
-        const xref = await getCrossReferences(deviceName, blockName);
-        panel.webview.html = renderCrossRefHtml(blockName, xref);
-        log(`Opened cross-references for ${blockName}`);
-    } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        logError(`Failed to load cross-references for ${blockName}`, err);
-        panel.webview.html = errorHtml(blockName, msg);
-    }
+    panel.webview.html = html;
 }
 
 function renderCrossRefHtml(blockName: string, xref: CrossReferenceResult): string {

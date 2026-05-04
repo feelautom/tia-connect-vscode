@@ -50,6 +50,7 @@ export class TiaSourceControl implements vscode.Disposable {
     async refresh(): Promise<void> {
         try {
             const status = await vcsGetStatus();
+            log(`VCS status: initialized=${status.IsInitialized}, changes=${status.ChangedFilesCount ?? 0}`);
 
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsInitialized, status.IsInitialized);
 
@@ -87,6 +88,8 @@ export class TiaSourceControl implements vscode.Disposable {
             ];
         } catch (err) {
             logError('VCS refresh failed', err);
+            vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsInitialized, false);
+            vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, false);
         }
     }
 

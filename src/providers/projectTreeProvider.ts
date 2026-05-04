@@ -21,6 +21,10 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
     private _onDidChangeTreeData = new vscode.EventEmitter<TiaTreeItem | undefined>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
+    private _onProjectLoaded = new vscode.EventEmitter<string>();
+    /** Fires when a project is successfully loaded (emits project name) */
+    readonly onProjectLoaded = this._onProjectLoaded.event;
+
     private projectData: ProjectOverview | null = null;
     private blockTreeCache = new Map<string, BlockTreeNode[]>();
 
@@ -93,6 +97,7 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
                 return [];
             }
             log(`Project loaded: ${this.projectData.Name}`);
+            this._onProjectLoaded.fire(this.projectData.Name);
             return [{
                 type: 'project',
                 label: this.projectData.Name,

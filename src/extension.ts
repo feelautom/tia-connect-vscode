@@ -6,9 +6,10 @@ import { BlockEditor } from './editors/blockEditor';
 import { registerProjectCommands } from './commands/projectCommands';
 import { registerBlockCommands } from './commands/blockCommands';
 import { registerPipelineCommands } from './commands/pipelineCommands';
-import { createStatusBar, disposeStatusBar } from './views/statusBar';
+import { createStatusBar, setConnected, disposeStatusBar } from './views/statusBar';
 import { createDiagnostics, disposeDiagnostics } from './views/diagnostics';
 import { getOutputChannel, log } from './views/outputChannel';
+import { CONTEXT_KEYS } from './utils/constants';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -46,6 +47,15 @@ export function activate(context: vscode.ExtensionContext): void {
     testProvider = new TiaTestProvider();
     testProvider.activate(context);
     context.subscriptions.push(testProvider);
+
+    // When the tree loads a project, activate VCS + tests + status bar
+    treeProvider.onProjectLoaded((projectName) => {
+        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.connected, true);
+        setConnected(projectName);
+        scmProvider.refresh();
+        scmProvider.startAutoRefresh();
+        testProvider.discoverTests();
+    });
 
     // Register commands
     registerProjectCommands(context, treeProvider, scmProvider, testProvider);

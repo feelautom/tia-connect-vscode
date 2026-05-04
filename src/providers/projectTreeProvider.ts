@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { getProjectOverview } from '../api/project';
 import { getBlockTree } from '../api/blocks';
 import { getTagTables, getUdts } from '../api/tags';
@@ -39,6 +40,11 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
 
     private projectData: ProjectOverview | null = null;
     private blockTreeCache = new Map<string, BlockTreeNode[]>();
+    private iconsDir: string | undefined;
+
+    setExtensionPath(extensionPath: string): void {
+        this.iconsDir = path.join(extensionPath, 'resources', 'icons');
+    }
 
     refresh(): void {
         this.projectData = null;
@@ -296,7 +302,20 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
         }
     }
 
-    private getBlockIcon(blockType?: string, _language?: string): vscode.ThemeIcon {
+    private getBlockIcon(blockType?: string, _language?: string): vscode.ThemeIcon | { light: vscode.Uri; dark: vscode.Uri } {
+        if (this.iconsDir) {
+            const svgMap: Record<string, string> = {
+                'OB': 'block-ob.svg',
+                'FB': 'block-fb.svg',
+                'FC': 'block-fc.svg',
+                'DB': 'block-db.svg',
+            };
+            const svg = blockType ? svgMap[blockType] : undefined;
+            if (svg) {
+                const uri = vscode.Uri.file(path.join(this.iconsDir, svg));
+                return { light: uri, dark: uri };
+            }
+        }
         switch (blockType) {
             case 'OB': return new vscode.ThemeIcon('symbol-event');
             case 'FB': return new vscode.ThemeIcon('symbol-class');

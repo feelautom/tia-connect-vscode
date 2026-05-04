@@ -94,19 +94,19 @@ export class BlockEditor {
 
     /** Open SCL/STL block for editing */
     private async openEditableBlock(item: TiaTreeItem): Promise<void> {
-        const content = await vscode.window.withProgress(
+        const { content, modifiedDate } = await vscode.window.withProgress(
             { location: vscode.ProgressLocation.Notification, title: `Loading ${item.blockName}...` },
             async () => {
                 const dto = await getBlockContent(item.deviceName!, item.blockName!);
 
                 if (dto.SourceText) {
-                    return dto.SourceText;
+                    return { content: dto.SourceText, modifiedDate: dto.ModifiedDate };
                 }
 
                 // Fallback: try to extract SCL from RawXml
                 if (dto.RawXml) {
                     log(`No SourceText for ${item.blockName}, showing RawXml as fallback.`);
-                    return dto.RawXml;
+                    return { content: dto.RawXml, modifiedDate: dto.ModifiedDate };
                 }
 
                 throw new Error(`No source code available for ${item.blockName}. The block may need compilation first.`);
@@ -117,7 +117,8 @@ export class BlockEditor {
             item.deviceName!,
             item.blockName!,
             item.language!,
-            content
+            content,
+            modifiedDate
         );
 
         const doc = await vscode.workspace.openTextDocument(filePath);
@@ -184,6 +185,27 @@ export class BlockEditor {
                     log(`Reimport cancelled: name mismatch (source="${sourceBlockName}", expected="${meta.blockName}")`);
                     this.reimportInProgress.delete(key);
                     return;
+                }
+            }
+
+            // Check for concurrent modification in TIA Portal
+            if (meta.modifiedDate) {
+                try {
+                    const current = await getBlockContent(meta.deviceName, meta.blockName);
+                    if (current.ModifiedDate && current.ModifiedDate !== meta.modifiedDate) {
+                        const choice = await vscode.window.showWarningMessage(
+                            `Block "${meta.blockName}" was modified in TIA Portal since you opened it. Reimporting will overwrite those changes.`,
+                            'Overwrite',
+                            'Cancel'
+                        );
+                        if (choice !== 'Overwrite') {
+                            log(`Reimport cancelled: block modified in TIA Portal (opened: ${meta.modifiedDate}, current: ${current.ModifiedDate})`);
+                            this.reimportInProgress.delete(key);
+                            return;
+                        }
+                    }
+                } catch {
+                    // If we can't check, proceed anyway
                 }
             }
 

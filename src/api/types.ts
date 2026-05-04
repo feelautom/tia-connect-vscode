@@ -101,6 +101,7 @@ export interface BlockContentDto {
     IsProtected: boolean;
     IsKnowHowProtected: boolean;
     NeedsCompilation: boolean;
+    ModifiedDate?: string;
     RawXml: string;
     /** Plain-text source code (SCL/STL/DB) from GenerateSource */
     SourceText?: string;

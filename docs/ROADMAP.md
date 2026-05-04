@@ -105,12 +105,14 @@ Teste en conditions reelles le 2026-05-04 avec :
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
-| Icones custom SVG par type de bloc | TODO | Remplacer ThemeIcon par icones custom |
+| Icones custom SVG par type de bloc | DONE | OB (bleu), FB (vert), FC (orange), DB (violet) |
 | Rafraichir tree apres reimport | DONE | Event onBlockReimported → tree refresh |
-| Detection conflit (bloc modifie dans TIA en parallele) | TODO | Comparer ModifiedDate avant reimport |
+| Detection conflit (bloc modifie dans TIA en parallele) | DONE | Compare ModifiedDate, avertit avant ecrasement |
 | Keybinding pour compiler (Ctrl+Shift+B) | DONE | Auto-pick device si un seul, QuickPick sinon |
 | Notification groupee pour multi-erreurs | TODO | |
 | Setting pour desactiver auto-reimport par bloc | TODO | |
+
+**Statut global Phase 3 : QUASI TERMINEE (2 nice-to-have restants)**
 
 **Statut global Phase 3 : PIPELINES DONE, POLISH A FAIRE**
 

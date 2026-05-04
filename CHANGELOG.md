@@ -26,6 +26,8 @@ All notable changes to the T-IA Connect for VS Code extension will be documented
 
 - Keybinding Ctrl+Shift+B to compile device (auto-picks single device or shows QuickPick)
 - Project tree auto-refreshes after successful block reimport
+- Conflict detection: warns before reimporting if block was modified in TIA Portal
+- Custom SVG icons for block types: OB (blue), FB (green), FC (orange), DB (purple)
 
 ### Fixed
 - PascalCase normalization for license features and PLCSim status types

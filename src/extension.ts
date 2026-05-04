@@ -28,6 +28,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // Tree view provider
     const treeProvider = new ProjectTreeProvider();
+    treeProvider.setExtensionPath(context.extensionPath);
     const treeView = vscode.window.createTreeView('tiaProjectExplorer', {
         treeDataProvider: treeProvider,
         showCollapseAll: true,

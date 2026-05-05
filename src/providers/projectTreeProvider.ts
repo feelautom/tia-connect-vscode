@@ -11,7 +11,8 @@ export type TreeNodeType =
     | 'section'                          // "Program Blocks", "Tag Tables", "UDTs"
     | 'folder' | 'block'
     | 'tagTable'
-    | 'udt';
+    | 'udt'
+    | 'loading';
 
 export interface TiaTreeItem {
     type: TreeNodeType;
@@ -41,6 +42,7 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
     private projectData: ProjectOverview | null = null;
     private blockTreeCache = new Map<string, BlockTreeNode[]>();
     private iconsDir: string | undefined;
+    private busyMessage: string | null = null;
 
     setExtensionPath(extensionPath: string): void {
         this.iconsDir = path.join(extensionPath, 'resources', 'icons');
@@ -50,6 +52,15 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
         this.projectData = null;
         this.blockTreeCache.clear();
         this._onDidChangeTreeData.fire(undefined);
+    }
+
+    setBusy(message: string): void {
+        this.busyMessage = message;
+        this._onDidChangeTreeData.fire(undefined);
+    }
+
+    clearBusy(): void {
+        this.busyMessage = null;
     }
 
     getTreeItem(element: TiaTreeItem): vscode.TreeItem {
@@ -66,6 +77,10 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
         );
 
         switch (element.type) {
+            case 'loading':
+                item.iconPath = new vscode.ThemeIcon('loading~spin');
+                item.description = 'Please wait...';
+                break;
             case 'project':
                 item.iconPath = new vscode.ThemeIcon('project');
                 item.contextValue = 'project';
@@ -142,6 +157,13 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
     }
 
     private async getRootChildren(): Promise<TiaTreeItem[]> {
+        if (this.busyMessage) {
+            return [{
+                type: 'loading' as TreeNodeType,
+                label: this.busyMessage,
+            }];
+        }
+
         try {
             this.projectData = await getProjectOverview();
             if (!this.projectData?.Name) {

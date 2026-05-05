@@ -131,6 +131,9 @@ async function connect(
         // Step 3: Connected — activate everything
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.connected, true);
 
+        // Connect SignalR for real-time job notifications
+        getSignalRClient().connect();
+
         // Get project name for status bar
         try {
             const overview = await getProjectOverview();
@@ -212,34 +215,30 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
         showOutput();
         log(`Switching to project: ${selected.projectPath}`);
 
-        await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: 'Switching project...' },
-            async (progress) => {
-                // Close current project
-                try {
-                    progress.report({ message: 'Closing current project...' });
-                    const closeJobId = await closeProject();
-                    await pollJob(closeJobId, (s) => {
-                        log(`Close: ${s.Status}${s.Message ? ' - ' + s.Message : ''}`);
-                    });
-                } catch {
-                    // No project open — that's fine
-                    log('No project to close (or close failed — continuing).');
-                }
+        const projectName = selected.label.replace(/^\$\([^)]+\)\s*/, '');
+        treeProvider.setBusy(`Opening ${projectName}...`);
 
-                // Open new project
-                progress.report({ message: 'Opening project...' });
-                const openJobId = await openProject(selected.projectPath);
-                const result = await pollJob(openJobId, (s) => {
-                    log(`Open: ${s.Status}${s.Message ? ' - ' + s.Message : ''}`);
-                    if (s.Message) { progress.report({ message: s.Message }); }
+        try {
+            // Close current project
+            try {
+                const closeJobId = await closeProject();
+                await pollJob(closeJobId, (s) => {
+                    log(`Close: ${s.Status}${s.Message ? ' - ' + s.Message : ''}`);
                 });
-
-                if (result.Status === 'Failed') {
-                    throw new Error(result.Error || result.Message || 'Failed to open project.');
-                }
+            } catch {
+                log('No project to close (or close failed — continuing).');
             }
-        );
+
+            // Open new project
+            treeProvider.setBusy(`Connecting to TIA Portal...`);
+            const openJobId = await openProject(selected.projectPath);
+            await pollJob(openJobId, (s) => {
+                log(`Open: ${s.Status}${s.Message ? ' - ' + s.Message : ''}`);
+                if (s.Message) { treeProvider.setBusy(s.Message); }
+            });
+        } finally {
+            treeProvider.clearBusy();
+        }
 
         // Refresh tree — this triggers onProjectLoaded which activates everything
         treeProvider.refresh();
@@ -308,25 +307,26 @@ async function launchAndConnect(
         return;
     }
 
-    // Wait for the server to become reachable, then auto-connect
-    const started = await vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Notification, title: 'Starting T-IA Connect...' },
-        async () => {
-            for (let i = 0; i < 30; i++) {
-                await new Promise(r => setTimeout(r, 500));
-                if (await client.ping()) {
-                    log('T-IA Connect server is now reachable.');
-                    return true;
-                }
-            }
-            return false;
+    // Show loading in sidebar while waiting for server
+    treeProvider.setBusy('Starting T-IA Connect...');
+    vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, false);
+
+    let started = false;
+    for (let i = 0; i < 30; i++) {
+        await new Promise(r => setTimeout(r, 500));
+        if (await client.ping()) {
+            log('T-IA Connect server is now reachable.');
+            started = true;
+            break;
         }
-    );
+    }
+
+    treeProvider.clearBusy();
 
     if (started) {
-        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, false);
         await connect(treeProvider, scmProvider, testProvider);
     } else {
+        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, true);
         vscode.window.showErrorMessage('T-IA Connect server did not start in time. Check the executable path in settings.');
     }
 }

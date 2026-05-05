@@ -44,6 +44,20 @@ export async function importAndGenerate(deviceName: string, sclContent: string, 
     return res;
 }
 
+/** Generate and import a block via XML (LAD, FBD, GRAPH, DB) */
+export async function generateAndImportBlock(
+    deviceName: string,
+    blockType: string,
+    blockName: string,
+    language: string,
+): Promise<ApiResponse> {
+    const res = await client.post<unknown>(
+        `/api/devices/${enc(deviceName)}/blocks/generate-and-import`,
+        { BlockType: blockType, Name: blockName, Language: language }
+    );
+    return res;
+}
+
 /** Compile entire device (synchronous) */
 export async function compileDevice(deviceName: string): Promise<CompilationResult> {
     const res = await client.post<any>(

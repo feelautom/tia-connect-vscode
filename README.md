@@ -39,6 +39,16 @@ Double-click any SCL or STL block to open it in VS Code with full syntax highlig
 - Compilation diagnostics in the editor (errors and warnings from TIA Portal)
 - **LAD/FBD/GRAPH Webview** — graphical SVG rendering of LADDER networks (contacts, coils, boxes, wires, parallel branches) in a read-only webview panel
 
+### Create Blocks
+
+Create new blocks directly from VS Code — right-click any device in the Project Explorer and select **Create Block**.
+
+- Choose block type: **FB**, **FC**, **OB**, or **DB**
+- Choose language: **SCL**, **STL**, **LAD**, **FBD**, or **GRAPH**
+- Enter a name — the block is automatically created in TIA Portal
+- SCL/STL blocks get a ready-to-use code template; LAD/FBD/GRAPH are created via XML generation
+- The project tree refreshes to show the new block immediately
+
 ### Compile
 
 Compile a single block or an entire device directly from VS Code, with progress notifications and detailed error/warning output.
@@ -143,6 +153,7 @@ All commands are available via the Command Palette (`Ctrl+Shift+P`):
 | T-IA Connect: Compile Device | Compile all software on a device |
 | T-IA Connect: Compile Block | Compile a single block |
 | T-IA Connect: Export Block to File | Export block as SimaticML XML |
+| T-IA Connect: Create Block | Create a new FB/FC/OB/DB in SCL or STL |
 | T-IA Connect: Switch Project | Open a different project (recent + available) |
 | T-IA Connect VCS: Initialize VCS | Initialize source control repository |
 | T-IA Connect VCS: Export Preview | Export project and show changed files (without committing) |
@@ -176,6 +187,10 @@ The extension is a **lightweight REST + SignalR client**. All the heavy lifting 
 - **Multi-project**: switch between projects without leaving VS Code
 - **Multi-client**: VS Code + Cursor + scripts can connect simultaneously
 - **Remote-capable**: the server can run on a different machine or VM
+
+## Localisation
+
+The extension is fully translated in **French**. It automatically displays in French when VS Code is configured with `"locale": "fr"`. English is the default language.
 
 ## Compatibility
 

@@ -136,6 +136,8 @@ Teste en conditions reelles le 2026-05-04 avec :
 | Notifications push (SignalR) | DONE | Client SignalR legacy (longPolling), fallback HTTP polling auto |
 | Server launch depuis VS Code | DONE | Sidebar buttons Headless/GUI, auto-connect, Stop Server, loading spinner |
 | Hover documentation avec fallback API | DONE | System blocks (TON, CTU...) + server docs fallback |
+| Creation de blocs (FB, FC, OB, DB) | DONE | Clic droit device, choix type + langage (SCL/STL/LAD/FBD/GRAPH) + nom |
+| Loading spinner sidebar | DONE | Toutes les operations longues (compile, export, import, xref, open block) |
 | Publication Marketplace | TODO | Quand la v1 sera stable |
 | Localisation (i18n) | DONE | package.nls.json (EN/FR) + vscode.l10n (runtime FR) |
 

@@ -3,7 +3,7 @@ import { l10n } from 'vscode';
 import * as fs from 'fs';
 import { BlockEditor } from '../editors/blockEditor';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
-import { compileDevice, compileBlock, getBlockContent, exportBlockSource, importAndGenerate } from '../api/blocks';
+import { compileDevice, compileBlock, getBlockContent, exportBlockSource, importAndGenerate, generateAndImportBlock } from '../api/blocks';
 import { getProjectOverview } from '../api/project';
 import { openCrossRefWebview } from '../editors/crossRefWebview';
 import { openTagTableWebview } from '../editors/tagTableWebview';
@@ -312,12 +312,22 @@ async function doCreateBlock(item?: TiaTreeItem): Promise<void> {
     );
     if (!blockType) { return; }
 
-    // Pick language
-    const language = await vscode.window.showQuickPick(
-        ['SCL', 'STL'],
-        { placeHolder: l10n.t('Select programming language') }
-    );
-    if (!language) { return; }
+    // Pick language — all supported languages
+    const languageItems = blockType.value === 'DB'
+        ? [{ label: 'SCL', description: l10n.t('Editable in VS Code') }]
+        : [
+            { label: 'SCL', description: l10n.t('Editable in VS Code') },
+            { label: 'STL', description: l10n.t('Editable in VS Code') },
+            { label: 'LAD', description: l10n.t('Read-only graphical view') },
+            { label: 'FBD', description: l10n.t('Read-only graphical view') },
+            { label: 'GRAPH', description: l10n.t('Sequential Function Chart') },
+        ];
+
+    const langPick = await vscode.window.showQuickPick(languageItems, {
+        placeHolder: l10n.t('Select programming language'),
+    });
+    if (!langPick) { return; }
+    const language = langPick.label;
 
     // Enter block name
     const blockName = await vscode.window.showInputBox({
@@ -327,16 +337,22 @@ async function doCreateBlock(item?: TiaTreeItem): Promise<void> {
     });
     if (!blockName) { return; }
 
-    // Generate template source
-    const source = generateBlockTemplate(blockType.value, blockName, language);
-
     showOutput();
     log(`--- Creating ${blockType.value} "${blockName}" (${language}) on ${deviceName} ---`);
 
     try {
         await vscode.window.withProgress(
             { location: { viewId: 'tiaProjectExplorer' }, title: l10n.t('Creating {0}...', blockName) },
-            () => importAndGenerate(deviceName!, source, `${blockName}_create`)
+            async () => {
+                if (language === 'SCL' || language === 'STL') {
+                    // Text-based: use external source import
+                    const source = generateBlockTemplate(blockType.value, blockName, language);
+                    await importAndGenerate(deviceName!, source, `${blockName}_create`);
+                } else {
+                    // Graphical: use XML generation endpoint
+                    await generateAndImportBlock(deviceName!, blockType.value, blockName, language);
+                }
+            }
         );
 
         vscode.window.showInformationMessage(l10n.t('Block {0} created successfully.', blockName));

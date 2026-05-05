@@ -7,13 +7,14 @@ All notable changes to the T-IA Connect for VS Code extension will be documented
 ### Added
 - **Server Launch from VS Code**: when the server is not running, the sidebar offers "Launch Headless" or "Launch with GUI" buttons. Auto-connects after server starts. Loading spinner in sidebar shows real-time progress.
 - **Stop Server**: Disconnect menu now offers "Disconnect" (keep server) or "Stop Server" (shut down remotely)
+- **Create Block**: right-click a device to create a new block (FB, FC, OB, DB) in any language (SCL, STL, LAD, FBD, GRAPH). SCL/STL use code templates, LAD/FBD/GRAPH use XML generation.
 - **LAD/FBD/GRAPH Webview**: graphical SVG rendering of LADDER networks — contacts, coils, boxes (TON, CTU, MOVE, CMP...), wires, parallel branches, interface table
 - **Hover documentation fallback**: unknown symbols query the T-IA Connect documentation API, results cached
 - **System function blocks**: autocompletion and hover docs for TON, TOF, TP, R_TRIG, F_TRIG, CTU, CTD, CTUD, MOVE, NORM_X, SCALE_X, SEL, MUX with pin tables and code examples
-- **Loading spinner**: sidebar shows animated loading node during server launch and project open, with real-time status messages
+- **Loading spinner**: sidebar shows animated loading spinner for all operations (server launch, project open, block load, compile, export, import, cross-references)
+- **Localisation (i18n)**: full French translation — `package.nls.fr.json` for UI and `l10n/bundle.l10n.fr.json` for runtime messages. All user-facing strings are translatable.
 - Configurable server executable path (`tiaConnect.executablePath`)
 - SignalR connected early in connect() flow (fixes polling fallback during Switch Project)
-- **Localisation (i18n)**: French translation via `package.nls.fr.json` (settings, commands, views) and `l10n/bundle.l10n.fr.json` (runtime messages). All user-facing strings are now translatable.
 
 ### Changed
 - Requires T-IA Connect server v2.1.620+ (new endpoint: `POST /api/health/shutdown`)

@@ -2,7 +2,7 @@
   "name": "tia-connect-vscode",
   "displayName": "T-IA Connect for VS Code",
   "description": "Explore, edit SCL/STL, and compile Siemens TIA Portal projects from VS Code via T-IA Connect REST API",
-  "version": "0.1.0",
+  "version": "0.2.2",
   "publisher": "FEELAUTOM",
   "license": "MIT",
   "icon": "resources/icons/icon.png",
@@ -66,6 +66,11 @@
             "Every 15 minutes"
           ],
           "description": "Auto-save interval for open block files (in minutes). This is a safety backup — reimport to TIA only happens on manual Ctrl+S."
+        },
+        "tiaConnect.executablePath": {
+          "type": "string",
+          "default": "C:\\Program Files\\FeelAutomCorp\\TiaConnect\\TiaPortalApi.App.exe",
+          "description": "Path to the T-IA Connect server executable. Used to launch the server when it is not running."
         }
       }
     },
@@ -179,6 +184,12 @@
         "icon": "$(play)"
       },
       {
+        "command": "tiaConnect.testShowResult",
+        "title": "Show Test Results",
+        "category": "T-IA Connect Tests",
+        "icon": "$(open-preview)"
+      },
+      {
         "command": "tiaConnect.pipelineList",
         "title": "List Pipelines",
         "category": "T-IA Connect Pipelines",
@@ -221,10 +232,64 @@
         "icon": "$(symbol-struct)"
       },
       {
+        "command": "tiaConnect.importSourceFile",
+        "title": "Import SCL/STL File",
+        "category": "T-IA Connect",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "tiaConnect.switchProject",
+        "title": "Switch Project",
+        "category": "T-IA Connect",
+        "icon": "$(folder-opened)"
+      },
+      {
         "command": "tiaConnect.openSettings",
         "title": "Settings",
         "category": "T-IA Connect",
         "icon": "$(settings-gear)"
+      },
+      {
+        "command": "tiaConnect.vcsTreeRefresh",
+        "title": "Refresh",
+        "category": "T-IA Connect VCS",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "tiaConnect.vcsExportPreview",
+        "title": "Export Preview (detect changes)",
+        "category": "T-IA Connect VCS",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "tiaConnect.vcsTreeInit",
+        "title": "Initialize VCS",
+        "category": "T-IA Connect VCS",
+        "icon": "$(repo)"
+      },
+      {
+        "command": "tiaConnect.vcsTreeCommit",
+        "title": "Commit Changes",
+        "category": "T-IA Connect VCS",
+        "icon": "$(check)"
+      },
+      {
+        "command": "tiaConnect.vcsDiffFile",
+        "title": "Show Changes",
+        "category": "T-IA Connect VCS",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "tiaConnect.launchHeadless",
+        "title": "Launch Server (Headless)",
+        "category": "T-IA Connect",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "tiaConnect.launchGui",
+        "title": "Launch Server (GUI)",
+        "category": "T-IA Connect",
+        "icon": "$(window)"
       }
     ],
     "viewsContainers": {
@@ -243,6 +308,11 @@
           "name": "Project Explorer"
         },
         {
+          "id": "tiaVcsExplorer",
+          "name": "Source Control",
+          "when": "tiaConnect.connected"
+        },
+        {
           "id": "tiaTestExplorer",
           "name": "PLC Tests",
           "when": "tiaConnect.connected"
@@ -252,8 +322,13 @@
     "viewsWelcome": [
       {
         "view": "tiaProjectExplorer",
+        "contents": "T-IA Connect server is not running.\n\nLaunch the server and connect automatically:\n[Launch Headless](command:tiaConnect.launchHeadless)\n[Launch with GUI](command:tiaConnect.launchGui)\n\nOr connect to an already running server:\n[Connect to Server](command:tiaConnect.connect)\n[Open Settings](command:workbench.action.openSettings?%22tiaConnect%22)",
+        "when": "tiaConnect.serverNotRunning"
+      },
+      {
+        "view": "tiaProjectExplorer",
         "contents": "No connection to T-IA Connect server.\n\nMake sure the T-IA Connect server is running, then click Connect.\n[Connect to Server](command:tiaConnect.connect)\n\nYou can configure the server URL and API key in the extension settings.\n[Open Settings](command:workbench.action.openSettings?%22tiaConnect%22)",
-        "when": "!tiaConnect.connected"
+        "when": "!tiaConnect.connected && !tiaConnect.serverNotRunning"
       },
       {
         "view": "tiaProjectExplorer",
@@ -263,6 +338,21 @@
     ],
     "menus": {
       "view/title": [
+        {
+          "command": "tiaConnect.vcsExportPreview",
+          "when": "view == tiaVcsExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "tiaConnect.vcsTreeCommit",
+          "when": "view == tiaVcsExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "tiaConnect.vcsTreeRefresh",
+          "when": "view == tiaVcsExplorer",
+          "group": "navigation"
+        },
         {
           "command": "tiaConnect.testRunAll",
           "when": "view == tiaTestExplorer",
@@ -280,6 +370,11 @@
         },
         {
           "command": "tiaConnect.disconnect",
+          "when": "view == tiaProjectExplorer && tiaConnect.connected",
+          "group": "navigation"
+        },
+        {
+          "command": "tiaConnect.switchProject",
           "when": "view == tiaProjectExplorer && tiaConnect.connected",
           "group": "navigation"
         },
@@ -304,6 +399,11 @@
           "command": "tiaConnect.compileDevice",
           "when": "view == tiaProjectExplorer && viewItem == device",
           "group": "1_compile"
+        },
+        {
+          "command": "tiaConnect.importSourceFile",
+          "when": "view == tiaProjectExplorer && viewItem == device",
+          "group": "2_export"
         },
         {
           "command": "tiaConnect.compileBlock",

@@ -28,3 +28,36 @@ export async function getPlcSimStatus(): Promise<PlcSimStatus> {
     const res = await client.get<PlcSimStatus>('/api/simulation/status');
     return res.Data;
 }
+
+export interface ProjectFile {
+    Name: string;
+    Path: string;
+    Extension: string;
+    Size: number;
+    LastModified: string;
+}
+
+export interface ProjectHistoryEntry {
+    Path: string;
+    LastAccess: string;
+}
+
+export async function listProjectFiles(): Promise<ProjectFile[]> {
+    const res = await client.get<ProjectFile[]>('/api/projects/files');
+    return res.Data ?? [];
+}
+
+export async function getProjectHistory(): Promise<ProjectHistoryEntry[]> {
+    const res = await client.get<ProjectHistoryEntry[]>('/api/projects/history');
+    return res.Data ?? [];
+}
+
+export async function openProject(path: string): Promise<string> {
+    const res = await client.post<{ JobId: string }>('/api/projects/actions/open', { Path: path });
+    return res.Data.JobId;
+}
+
+export async function closeProject(): Promise<string> {
+    const res = await client.post<{ JobId: string }>('/api/projects/actions/close');
+    return res.Data.JobId;
+}

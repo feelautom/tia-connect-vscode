@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { getCrossReferences } from '../api/blocks';
 import { CrossReferenceResult } from '../api/types';
 import { log, logError } from '../views/outputChannel';
+import { createWebviewWithHeartbeat } from '../utils/webviewHelper';
 
 const openPanels = new Map<string, vscode.WebviewPanel>();
 
@@ -18,27 +19,27 @@ export async function openCrossRefWebview(
     }
 
     // Load data BEFORE creating the panel to avoid service worker issues
-    let html: string;
+    let contentHtml: string;
     try {
         const xref = await getCrossReferences(deviceName, blockName);
-        html = renderCrossRefHtml(blockName, xref);
+        contentHtml = renderCrossRefHtml(blockName, xref);
         log(`Opened cross-references for ${blockName}`);
     } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         logError(`Failed to load cross-references for ${blockName}`, err);
-        html = errorHtml(blockName, msg);
+        contentHtml = errorHtml(blockName, msg);
     }
 
-    const panel = vscode.window.createWebviewPanel(
+    const panel = await createWebviewWithHeartbeat(
         'tiaCrossRef',
         `Cross-Ref: ${blockName}`,
+        (nonce) => injectHeartbeat(contentHtml, nonce),
         vscode.ViewColumn.Beside,
-        { enableScripts: false, retainContextWhenHidden: false },
     );
+    if (!panel) { return; }
 
     openPanels.set(panelKey, panel);
     panel.onDidDispose(() => openPanels.delete(panelKey));
-    panel.webview.html = html;
 }
 
 function renderCrossRefHtml(blockName: string, xref: CrossReferenceResult): string {
@@ -198,6 +199,15 @@ function errorHtml(blockName: string, message: string): string {
         <h2>Failed to load cross-references for ${esc(blockName)}</h2>
         <p class="error">${esc(message)}</p>
     </body></html>`;
+}
+
+function injectHeartbeat(html: string, nonce: string): string {
+    html = html.replace(
+        /content="default-src 'none'; style-src 'unsafe-inline';?"/,
+        `content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';"`,
+    );
+    const heartbeat = `<script nonce="${nonce}">const vscode=acquireVsCodeApi();vscode.postMessage({type:'webview-ready'});</script>`;
+    return html.replace('</body>', `${heartbeat}</body>`);
 }
 
 function esc(s: string): string {

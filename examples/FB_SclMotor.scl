@@ -14,7 +14,7 @@ VAR_OUTPUT
     iSpeedAct : Int;    // Actual speed
 END_VAR
 
-VAR_STATIC
+VAR
     bLatched : Bool;    // Latched start
     iRampValue : Int;   // Current ramp value
 END_VAR

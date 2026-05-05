@@ -39,7 +39,13 @@
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
-| SCM Provider natif (panel Source Control) | DONE | `vscode.scm` API |
+| Panel Source Control dedie (sidebar T-IA Connect) | DONE | TreeDataProvider custom (remplace le SCM natif) |
+| Export Preview (detecter les changements) | DONE | Export sans commit, bouton oeil dans title bar |
+| Auto-export periodique (1 min) | DONE | Silencieux, met a jour le panneau automatiquement |
+| Export initial a la connexion | DONE | Lance automatiquement quand le projet se charge |
+| Diff side-by-side au clic (read-only) | DONE | `vscode.diff` via VcsContentProvider (scheme `tia-vcs`) |
+| Gestion Added/Modified/Removed | DONE | Added = contenu, Modified = diff, Removed = ancien contenu |
+| Verification licence `hasVcs` | DONE | Icone cadenas si pas inclus dans la licence |
 | Status des changements (Added/Modified/Removed) | DONE | Icones diff |
 | Commit avec message (export projet + git) | DONE | Job asynchrone avec polling |
 | Push vers remote | DONE | |
@@ -122,13 +128,13 @@ Teste en conditions reelles le 2026-05-04 avec :
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
-| Language Server SCL (autocompletion, go-to-definition) | TODO | LSP protocol, necessite un serveur dedie |
+| Language Server SCL (autocompletion, go-to-definition) | DONE | Signature help, cross-file go-to-def, diagnostics, rename |
 | Webview LAD (visualisation graphique lecture seule) | TODO | Rendering SVG/Canvas des reseaux LADDER |
-| Multi-projet (switch entre projets) | TODO | Quand T-IA Connect supportera multi-projet |
+| Multi-projet (switch entre projets) | DONE | QuickPick avec historique + projets disponibles, close/open via jobs |
 | Publication Marketplace | TODO | Quand la v1 sera stable |
-| QuickDiff pour VCS (diff inline dans editeur) | TODO | `quickDiffProvider` |
-| Webview pour resultats de test detailles | TODO | Plus lisible qu'un QuickPick |
-| Notifications push (SignalR/WebSocket) | TODO | Au lieu de polling |
+| QuickDiff pour VCS (diff inline dans editeur) | DONE | VcsContentProvider + VcsTreeProvider |
+| Webview pour resultats de test detailles | DONE | Steps, assertions, pass/fail badges, duree, timestamps |
+| Notifications push (SignalR) | DONE | Client SignalR legacy (longPolling), fallback HTTP polling auto |
 | Localisation (i18n) | TODO | Francais + Anglais |
 
 ---
@@ -161,6 +167,8 @@ Teste en conditions reelles le 2026-05-04 avec :
 | VCS branches | `GET/POST /api/source-control/branches` | 2 |
 | VCS push/pull | `POST /api/source-control/push` / `pull` | 2 |
 | VCS init | `POST /api/source-control/init` | 2 |
+| VCS export preview | `POST /api/source-control/export-preview` | 2 |
+| VCS file content | `GET /api/source-control/file-content` | 2 |
 | Tests list | `GET /api/testharness/tests` | 2 |
 | Test details | `GET /api/testharness/tests/{name}` | 2 |
 | Test run | `POST /api/testharness/run` | 2 |
@@ -178,3 +186,8 @@ Teste en conditions reelles le 2026-05-04 avec :
 | Tags list | `GET /api/devices/{d}/tag-tables/{t}/tags` | 3 |
 | UDTs list | `GET /api/devices/{d}/udts` | 3 |
 | UDT details | `GET /api/devices/{d}/udts/{u}` | 3 |
+| SignalR jobHub | `/signalr` (longPolling) | 4 |
+| Project files list | `GET /api/projects/files` | 4 |
+| Project history | `GET /api/projects/history` | 4 |
+| Open project | `POST /api/projects/actions/open` | 4 |
+| Close project | `POST /api/projects/actions/close` | 4 |

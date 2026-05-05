@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { parseSclDocument, parseStlDocument } from './sclParser';
-import { SCL_KEYWORDS, SCL_TYPES, SCL_FUNCTIONS, STL_INSTRUCTIONS, KeywordInfo } from './sclKeywords';
+import { SCL_KEYWORDS, SCL_TYPES, SCL_FUNCTIONS, SCL_SYSTEM_BLOCKS, STL_INSTRUCTIONS, KeywordInfo } from './sclKeywords';
 
 export class SclCompletionProvider implements vscode.CompletionItemProvider {
     provideCompletionItems(
@@ -44,6 +44,11 @@ export class SclCompletionProvider implements vscode.CompletionItemProvider {
         // Add built-in functions
         for (const fn of SCL_FUNCTIONS) {
             items.push(toCompletionItem(fn, '2'));
+        }
+
+        // Add system function blocks (TON, R_TRIG, CTU, etc.)
+        for (const sfb of SCL_SYSTEM_BLOCKS) {
+            items.push(toCompletionItem(sfb, '2'));
         }
 
         return items;

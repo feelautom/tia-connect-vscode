@@ -3,6 +3,9 @@ import { SclCompletionProvider, StlCompletionProvider } from './completionProvid
 import { SclDocumentSymbolProvider } from './symbolProvider';
 import { SclDefinitionProvider } from './definitionProvider';
 import { SclHoverProvider } from './hoverProvider';
+import { SclSignatureHelpProvider } from './signatureProvider';
+import { SclRenameProvider } from './renameProvider';
+import { createSclDiagnostics } from './sclDiagnostics';
 
 const SCL_SELECTOR: vscode.DocumentSelector = { language: 'scl' };
 const STL_SELECTOR: vscode.DocumentSelector = { language: 'stl' };
@@ -17,6 +20,8 @@ export function registerLanguageProviders(context: vscode.ExtensionContext): voi
         vscode.languages.registerDocumentSymbolProvider(SCL_SELECTOR, new SclDocumentSymbolProvider()),
         vscode.languages.registerDefinitionProvider(SCL_SELECTOR, new SclDefinitionProvider()),
         vscode.languages.registerHoverProvider(SCL_SELECTOR, new SclHoverProvider(false)),
+        vscode.languages.registerSignatureHelpProvider(SCL_SELECTOR, new SclSignatureHelpProvider(), '(', ','),
+        vscode.languages.registerRenameProvider(SCL_SELECTOR, new SclRenameProvider()),
     );
 
     // STL providers
@@ -26,4 +31,7 @@ export function registerLanguageProviders(context: vscode.ExtensionContext): voi
         vscode.languages.registerDefinitionProvider(STL_SELECTOR, new SclDefinitionProvider()),
         vscode.languages.registerHoverProvider(STL_SELECTOR, new SclHoverProvider(true)),
     );
+
+    // SCL syntax diagnostics (lightweight linting)
+    createSclDiagnostics(context);
 }

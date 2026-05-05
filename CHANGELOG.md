@@ -2,6 +2,41 @@
 
 All notable changes to the T-IA Connect for VS Code extension will be documented in this file.
 
+## [0.2.2] - 2026-05-05
+
+### Added
+- **Multi-project**: switch between TIA Portal projects from VS Code via `T-IA Connect: Switch Project` command. Shows recent projects (history) and available project files. Closes current project, opens selected one, refreshes everything automatically.
+- **Switch Project button** in the Project Explorer title bar (folder icon)
+- **SCL Signature Help**: shows function parameters when typing `(` — covers all 30+ built-in functions (math, string, conversion, bit operations)
+- **SCL Rename Symbol** (F2): rename a local variable across the entire file, handles `#prefix` references
+- **SCL Diagnostics**: lightweight syntax checking — detects unclosed VAR sections, missing END_IF/END_FOR/END_WHILE/END_CASE/END_REPEAT, unmatched parentheses, missing block END
+- **Cross-file Go-to-Definition**: Ctrl+click on a quoted block name (`"FB_Motor"`) opens that block via the T-IA Connect API
+
+## [0.2.1] - 2026-05-05
+
+### Added
+- **SignalR push notifications**: real-time job status updates via SignalR instead of HTTP polling. Automatic fallback to polling if SignalR is unavailable.
+- **Test result webview**: detailed test results panel with pass/fail badges, step cards, assertions table, duration, and timestamps. Opens automatically after test execution, re-openable by clicking on a completed test.
+- **Auto-export VCS**: automatic silent export every minute + on connect, keeps the Source Control panel up to date without manual action
+- **VCS license check**: Source Control panel verifies `hasVcs` license feature (shows lock icon if not licensed)
+
+### Changed
+- Job monitoring now uses SignalR (push) with HTTP polling fallback — faster response, less network traffic
+- Test failures now show explicit error messages (PLCSim not running, no instance, etc.)
+
+## [0.2.0] - 2026-05-05
+
+### Added
+- **Source Control panel**: dedicated tree view in the T-IA Connect sidebar (replaces the native SCM panel)
+- **Export Preview**: export project state without committing to detect changes first
+- **Diff viewer**: click any changed file to open a read-only side-by-side diff (XML blocks, tags, UDTs, hardware)
+- Handles Added (view content), Modified (side-by-side diff), and Removed (view previous content) files
+- Title bar actions: Export Preview (eye), Commit (checkmark), Refresh (arrows)
+
+### Changed
+- Source Control now uses a custom tree view instead of VS Code's native SCM panel
+- Requires T-IA Connect server v2.1.617+ (new endpoints: `export-preview`, `file-content`)
+
 ## [0.1.0] - 2026-05-04
 
 ### Added

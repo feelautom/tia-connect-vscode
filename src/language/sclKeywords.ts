@@ -156,6 +156,34 @@ export const SCL_FUNCTIONS: KeywordInfo[] = [
     { label: 'REPLACE', detail: 'Replace substring', documentation: 'REPLACE(IN1 := s, IN2 := new, L := count, P := start) : String', kind: 'function' },
 ];
 
+// ─── SCL System Function Blocks (Timers, Counters, Triggers) ────────
+
+export const SCL_SYSTEM_BLOCKS: KeywordInfo[] = [
+    // Timers (IEC)
+    { label: 'TON', detail: 'On-delay timer (IEC)', documentation: '**TON** — Timer On Delay\n\nStarts timing when `IN` goes TRUE. Output `Q` goes TRUE after `PT` time has elapsed.\n\n```scl\n#myTimer(IN := #start, PT := T#5s, Q => #done, ET => #elapsed);\n```\n\n| Pin | Type | Description |\n|-----|------|-------------|\n| IN | Bool | Start signal |\n| PT | Time | Preset time |\n| Q | Bool | Output (TRUE after PT elapsed) |\n| ET | Time | Elapsed time |', kind: 'function' },
+    { label: 'TOF', detail: 'Off-delay timer (IEC)', documentation: '**TOF** — Timer Off Delay\n\nOutput `Q` stays TRUE for `PT` time after `IN` goes FALSE.\n\n```scl\n#offTimer(IN := #signal, PT := T#3s, Q => #output, ET => #elapsed);\n```\n\n| Pin | Type | Description |\n|-----|------|-------------|\n| IN | Bool | Input signal |\n| PT | Time | Delay time |\n| Q | Bool | Output (stays TRUE for PT after IN goes FALSE) |\n| ET | Time | Elapsed time |', kind: 'function' },
+    { label: 'TP', detail: 'Pulse timer (IEC)', documentation: '**TP** — Timer Pulse\n\nGenerates a pulse of duration `PT` when `IN` has a rising edge.\n\n```scl\n#pulse(IN := #trigger, PT := T#500ms, Q => #output, ET => #elapsed);\n```\n\n| Pin | Type | Description |\n|-----|------|-------------|\n| IN | Bool | Trigger (rising edge starts pulse) |\n| PT | Time | Pulse duration |\n| Q | Bool | Output (TRUE for PT duration) |\n| ET | Time | Elapsed time |', kind: 'function' },
+    { label: 'TONR', detail: 'Accumulating on-delay timer', documentation: '**TONR** — Timer On Delay Retentive\n\nAccumulates time while `IN` is TRUE. Does not reset when `IN` goes FALSE. Use `R` to reset.\n\n```scl\n#retTimer(IN := #run, R := #reset, PT := T#10s, Q => #done, ET => #elapsed);\n```\n\n| Pin | Type | Description |\n|-----|------|-------------|\n| IN | Bool | Accumulate while TRUE |\n| R | Bool | Reset timer |\n| PT | Time | Preset time |\n| Q | Bool | TRUE when ET >= PT |\n| ET | Time | Accumulated time |', kind: 'function' },
+
+    // Edge detection
+    { label: 'R_TRIG', detail: 'Rising edge detection', documentation: '**R_TRIG** — Rising Edge Trigger\n\nDetects a 0→1 transition on `CLK`. Output `Q` is TRUE for one scan.\n\n```scl\n#risingEdge(CLK := #signal, Q => #pulse);\n```\n\n| Pin | Type | Description |\n|-----|------|-------------|\n| CLK | Bool | Input signal |\n| Q | Bool | TRUE for one scan on rising edge |', kind: 'function' },
+    { label: 'F_TRIG', detail: 'Falling edge detection', documentation: '**F_TRIG** — Falling Edge Trigger\n\nDetects a 1→0 transition on `CLK`. Output `Q` is TRUE for one scan.\n\n```scl\n#fallingEdge(CLK := #signal, Q => #pulse);\n```\n\n| Pin | Type | Description |\n|-----|------|-------------|\n| CLK | Bool | Input signal |\n| Q | Bool | TRUE for one scan on falling edge |', kind: 'function' },
+
+    // Counters (IEC)
+    { label: 'CTU', detail: 'Count up (IEC)', documentation: '**CTU** — Counter Up\n\nCounts up on each rising edge of `CU`. Resets on `R`.\n\n```scl\n#counter(CU := #countPulse, R := #reset, PV := 10, Q => #done, CV => #currentValue);\n```\n\n| Pin | Type | Description |\n|-----|------|-------------|\n| CU | Bool | Count up (rising edge) |\n| R | Bool | Reset counter to 0 |\n| PV | Int | Preset value |\n| Q | Bool | TRUE when CV >= PV |\n| CV | Int | Current count value |', kind: 'function' },
+    { label: 'CTD', detail: 'Count down (IEC)', documentation: '**CTD** — Counter Down\n\nCounts down on each rising edge of `CD`. Loads PV on `LD`.\n\n```scl\n#counter(CD := #countPulse, LD := #load, PV := 100, Q => #zero, CV => #currentValue);\n```\n\n| Pin | Type | Description |\n|-----|------|-------------|\n| CD | Bool | Count down (rising edge) |\n| LD | Bool | Load PV into CV |\n| PV | Int | Preset value |\n| Q | Bool | TRUE when CV <= 0 |\n| CV | Int | Current count value |', kind: 'function' },
+    { label: 'CTUD', detail: 'Count up/down (IEC)', documentation: '**CTUD** — Counter Up/Down\n\nCounts up on `CU` rising edge, down on `CD` rising edge.\n\n```scl\n#counter(CU := #up, CD := #down, R := #reset, LD := #load, PV := 50,\n         QU => #reachedMax, QD => #reachedZero, CV => #value);\n```\n\n| Pin | Type | Description |\n|-----|------|-------------|\n| CU | Bool | Count up (rising edge) |\n| CD | Bool | Count down (rising edge) |\n| R | Bool | Reset to 0 |\n| LD | Bool | Load PV |\n| PV | Int | Preset value |\n| QU | Bool | TRUE when CV >= PV |\n| QD | Bool | TRUE when CV <= 0 |\n| CV | Int | Current value |', kind: 'function' },
+
+    // Move/Convert
+    { label: 'MOVE', detail: 'Move value', documentation: '**MOVE** — Assign a value\n\nCopies `IN` to `OUT1` (and optionally OUT2..OUT8).\n\n```scl\nMOVE(IN := #source, OUT1 => #dest);\n```', kind: 'function' },
+    { label: 'NORM_X', detail: 'Normalize', documentation: '**NORM_X** — Normalize value to 0.0..1.0\n\nScales input value from [MIN..MAX] to [0.0..1.0].\n\n```scl\n#result := NORM_X(MIN := 0, VALUE := #rawValue, MAX := 27648);\n```\n\n| Pin | Type | Description |\n|-----|------|-------------|\n| MIN | any numeric | Lower bound |\n| VALUE | any numeric | Input value |\n| MAX | any numeric | Upper bound |\n| Return | Real | Normalized 0.0 to 1.0 |', kind: 'function' },
+    { label: 'SCALE_X', detail: 'Scale', documentation: '**SCALE_X** — Scale normalized value to range\n\nScales a normalized value (0.0..1.0) to [MIN..MAX].\n\n```scl\n#output := SCALE_X(MIN := 0.0, VALUE := #normalized, MAX := 100.0);\n```\n\n| Pin | Type | Description |\n|-----|------|-------------|\n| MIN | any numeric | Lower bound of output |\n| VALUE | Real | Normalized input (0.0..1.0) |\n| MAX | any numeric | Upper bound of output |\n| Return | same as MIN | Scaled value |', kind: 'function' },
+
+    // Comparison
+    { label: 'SEL', detail: 'Binary selection', documentation: '**SEL** — Select one of two values\n\nReturns `IN0` if `G`=FALSE, `IN1` if `G`=TRUE.\n\n```scl\n#result := SEL(G := #selector, IN0 := #valueA, IN1 := #valueB);\n```', kind: 'function' },
+    { label: 'MUX', detail: 'Multiplexer', documentation: '**MUX** — Select from multiple values by index\n\nReturns the value at position `K`.\n\n```scl\n#result := MUX(K := #index, IN0 := #val0, IN1 := #val1, IN2 := #val2);\n```', kind: 'function' },
+];
+
 // ─── STL Instructions ────────────────────────────────────────────────
 
 export const STL_INSTRUCTIONS: KeywordInfo[] = [

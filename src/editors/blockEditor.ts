@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getBlockContent, importAndGenerate, compileBlock } from '../api/blocks';
+import { getBlockContent, importAndGenerate, compileBlock, exportBlockSource } from '../api/blocks';
 import { openLadWebview } from './ladWebview';
 import { BlockFileManager } from './blockFileManager';
 import { BlockMetadata } from '../api/types';
@@ -111,8 +111,19 @@ export class BlockEditor {
                     return { content: dto.SourceText, modifiedDate: dto.ModifiedDate };
                 }
 
-                // Fallback: try to extract SCL from RawXml
-                if (dto.RawXml) {
+                // Fallback: try export-source endpoint (works for STL and some SCL blocks)
+                try {
+                    const source = await exportBlockSource(item.deviceName!, item.blockName!);
+                    if (source) {
+                        log(`Got source via export-source for ${item.blockName}`);
+                        return { content: source, modifiedDate: dto.ModifiedDate };
+                    }
+                } catch {
+                    log(`export-source not available for ${item.blockName}, trying RawXml fallback.`);
+                }
+
+                // Last resort: show RawXml (but not for STL — XML is not useful as STL source)
+                if (dto.RawXml && item.language!.toUpperCase() !== 'STL') {
                     log(`No SourceText for ${item.blockName}, showing RawXml as fallback.`);
                     return { content: dto.RawXml, modifiedDate: dto.ModifiedDate };
                 }

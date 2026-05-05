@@ -25,11 +25,18 @@ Double-click any SCL or STL block to open it in VS Code with full syntax highlig
 
 - **SCL** syntax highlighting with TextMate grammar
 - **STL** syntax highlighting with TextMate grammar
+- **Autocompletion** for keywords, types, variables, and built-in functions
+- **Signature Help** — parameter hints for 30+ SCL functions (math, string, conversion)
+- **Hover documentation** — type info for variables, docs for keywords/functions
+- **Go-to-Definition** — Ctrl+click on variables (local) or block names (cross-file via API)
+- **Rename Symbol** (F2) — rename variables across the file
+- **SCL Diagnostics** — detects unclosed sections, missing END_ keywords, unmatched parentheses
+- **Document Outline** — hierarchical view of blocks, sections, and variables
 - Reimport on **manual save only** (Ctrl+S) — VS Code auto-save is ignored
 - Safety auto-save timer (configurable: 5/10/15 minutes, saves to disk without reimporting)
 - Optional auto-compile after reimport
 - 15 SCL snippets (FB, FC, OB, DB, IF, FOR, CASE, TON, R_TRIG...)
-- Compilation diagnostics in the editor (errors and warnings)
+- Compilation diagnostics in the editor (errors and warnings from TIA Portal)
 - LAD/FBD/GRAPH blocks open as read-only XML
 
 ### Compile
@@ -38,13 +45,24 @@ Compile a single block or an entire device directly from VS Code, with progress 
 
 ### Source Control (VCS)
 
-Version your TIA Portal project using the native VS Code Source Control panel. Each commit exports the project (blocks, tags, UDTs, hardware) and creates a Git commit.
+Version your TIA Portal project with a dedicated **Source Control** panel in the T-IA Connect sidebar. Track changes to blocks, tags, UDTs, and hardware configuration with Git-based versioning.
 
-- Commit with message (async export + git commit)
+#### Workflow
+
+1. **Export Preview** — Click the eye icon to export the current project state and detect changes since the last commit
+2. **Review changes** — Changed files appear in the panel with status icons (Added, Modified, Removed). Click any file to open a **read-only side-by-side diff** showing exactly what changed
+3. **Commit** — Click the checkmark icon and enter a commit message to save the current state
+
+#### Features
+
+- **Diff viewer**: side-by-side comparison of XML exports (blocks, tags, UDTs, hardware) — read-only, no accidental edits
+- **Export Preview**: exports the project without committing, so you can review before saving
 - Push / Pull to remote repositories
 - Branch operations: create, switch, delete, merge
-- Commit log with diff viewer
+- Commit log with unified diff viewer
+- Auto-export every minute + on connect (keeps the panel up to date automatically)
 - Auto-refresh status every 30 seconds
+- License check: shows lock icon if VCS is not included in your license
 
 ### PLC Tests
 
@@ -53,8 +71,9 @@ Run PLC tests against PLCSim Advanced directly from the T-IA Connect sidebar.
 - **License and PLCSim checks**: verifies the Test Harness feature is enabled and PLCSim Advanced is available before showing tests
 - Discover tests from the T-IA Connect test harness
 - Run individual tests or the entire suite
-- Pass/fail results with detailed assertion messages
+- **Detailed results webview**: pass/fail badges, step cards with colored borders, assertions table (Tag, Expected, Actual, Message), duration and timestamps
 - Step-level breakdown in the test tree
+- Clear error messages when PLCSim instance is not available
 
 ### Cross-References
 
@@ -75,7 +94,7 @@ Define and run CI/CD pipelines for your TIA Portal projects.
 
 ## Requirements
 
-- **T-IA Connect** server running (v2.1.609+) — [t-ia-connect.com](https://t-ia-connect.com)
+- **T-IA Connect** server running (v2.1.617+) — [t-ia-connect.com](https://t-ia-connect.com)
 - **TIA Portal** V17-V21 installed on the same machine as the server
 - Network access to the server (default: `http://localhost:9000`)
 
@@ -109,8 +128,11 @@ All commands are available via the Command Palette (`Ctrl+Shift+P`):
 | T-IA Connect: Compile Device | Compile all software on a device |
 | T-IA Connect: Compile Block | Compile a single block |
 | T-IA Connect: Export Block to File | Export block as SimaticML XML |
-| T-IA Connect VCS: Initialize VCS Repository | Initialize source control |
-| T-IA Connect VCS: Commit | Export project and create a Git commit |
+| T-IA Connect: Switch Project | Open a different project (recent + available) |
+| T-IA Connect VCS: Initialize VCS | Initialize source control repository |
+| T-IA Connect VCS: Export Preview | Export project and show changed files (without committing) |
+| T-IA Connect VCS: Commit Changes | Export project and create a Git commit |
+| T-IA Connect VCS: Show Changes | Open a side-by-side diff for a changed file |
 | T-IA Connect VCS: Push | Push to remote repository |
 | T-IA Connect VCS: Pull | Pull from remote repository |
 | T-IA Connect VCS: Branch Operations | Create, switch, delete, or merge branches |
@@ -129,11 +151,13 @@ All commands are available via the Command Palette (`Ctrl+Shift+P`):
 ```
 VS Code Extension (this)          T-IA Connect Server          TIA Portal
    TypeScript/REST  ──HTTP──>   C# / .NET Framework 4.8  ──Openness──>  V17-V21
+              <──SignalR──  (push notifications for job status)
 ```
 
-The extension is a **lightweight REST client**. All the heavy lifting (Openness API calls, block compilation, PLCSim simulation) happens in the T-IA Connect server. This means:
+The extension is a **lightweight REST + SignalR client**. All the heavy lifting (Openness API calls, block compilation, PLCSim simulation) happens in the T-IA Connect server. This means:
 
 - **No TIA Portal dependency** in VS Code itself
+- **Multi-project**: switch between projects without leaving VS Code
 - **Multi-client**: VS Code + Cursor + scripts can connect simultaneously
 - **Remote-capable**: the server can run on a different machine or VM
 

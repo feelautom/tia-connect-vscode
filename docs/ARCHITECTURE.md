@@ -2,11 +2,12 @@
 
 ## Vue d'ensemble
 
-L'extension est un **client REST leger** qui communique avec le serveur T-IA Connect (C#/.NET) via HTTP. Toute la logique metier (Openness API, compilation, simulation) reste cote serveur. L'extension se concentre sur l'UX dans VS Code.
+L'extension est un **client REST + SignalR** qui communique avec le serveur T-IA Connect (C#/.NET) via HTTP et SignalR (push notifications). Toute la logique metier (Openness API, compilation, simulation) reste cote serveur. L'extension se concentre sur l'UX dans VS Code.
 
 ```
 VS Code Extension (TypeScript)     T-IA Connect Server (C#)        TIA Portal
    REST client ──── HTTP ────>   .NET Framework 4.8 / OWIN  ──Openness──>  V17-V21
+              <── SignalR ────  (real-time job status push)
 ```
 
 ## Structure des fichiers
@@ -36,16 +37,20 @@ tia-connect-vscode/
 │   │   ├── testHarness.ts          # Tests PLCSim: list, run, results
 │   │   ├── pipelines.ts            # Pipelines CI/CD: list, run, templates, history
 │   │   ├── tags.ts                 # Tag tables, tags, UDTs: list, details
-│   │   └── jobs.ts                 # Polling jobs asynchrones
+│   │   ├── jobs.ts                 # Job monitoring (SignalR push + HTTP polling fallback)
+│   │   └── signalr.ts             # Client SignalR legacy (ASP.NET SignalR, longPolling)
 │   ├── providers/
 │   │   ├── projectTreeProvider.ts  # TreeDataProvider (explorateur projet TIA)
-│   │   ├── scmProvider.ts          # SourceControl provider (panel SCM natif)
+│   │   ├── scmProvider.ts          # SourceControl provider (QuickDiff gutter)
+│   │   ├── vcsTreeProvider.ts      # TreeDataProvider (Source Control dans la sidebar)
+│   │   ├── vcsContentProvider.ts   # TextDocumentContentProvider (scheme tia-vcs, diff viewer)
+│   │   ├── originalContentProvider.ts # QuickDiff pour blocs en cours d'edition
 │   │   └── testTreeProvider.ts     # TreeDataProvider (PLC Tests dans la sidebar)
 │   ├── editors/
 │   │   ├── blockEditor.ts          # Ouverture, sauvegarde, reimport blocs SCL/STL
-│   │   └── blockFileManager.ts     # Fichiers temporaires + metadata .tia-meta.json
-│   ├── editors/
-│   │   └── crossRefWebview.ts      # Webview cross-references (sources, objets, locations)
+│   │   ├── blockFileManager.ts     # Fichiers temporaires + metadata .tia-meta.json
+│   │   ├── crossRefWebview.ts      # Webview cross-references (sources, objets, locations)
+│   │   └── testResultWebview.ts   # Webview resultats de tests (steps, assertions, pass/fail)
 │   ├── commands/
 │   │   ├── projectCommands.ts      # connect, disconnect, refresh (+ API key prompt)
 │   │   ├── blockCommands.ts        # openBlock, compileDevice, compileBlock, exportBlock, crossRefs
@@ -119,17 +124,31 @@ Gere le cycle de vie de l'edition des blocs SCL/STL.
 - Verrou `reimportInProgress` pour eviter les reimports concurrents sur le meme fichier.
 - Blocs LAD/FBD/GRAPH : ouverts en lecture seule (export XML).
 
-### 4. Source Control (`providers/scmProvider.ts`)
+### 4. Source Control (`providers/vcsTreeProvider.ts` + `vcsContentProvider.ts`)
 
-Utilise l'API native `vscode.scm` pour le panel Source Control.
+Panel dedie **Source Control** dans la sidebar T-IA Connect (pas le SCM natif de VS Code).
+
+**Workflow :**
+1. Export Preview (bouton oeil) → exporte le projet sans commiter
+2. Les fichiers changes apparaissent dans le tree (Added/Modified/Removed)
+3. Clic sur un fichier → diff side-by-side read-only
+4. Commit (bouton checkmark) → export + git commit
+
+**Composants :**
+- `vcsTreeProvider.ts` — TreeDataProvider : affiche les changements, verification licence `hasVcs`, auto-export periodique (1 min), export initial a la connexion
+- `vcsContentProvider.ts` — TextDocumentContentProvider pour le scheme `tia-vcs`. Recupere le contenu d'un fichier a un commit donne (HEAD, HEAD~1, WORKING) via `GET /api/source-control/file-content`
+- `scmProvider.ts` — QuickDiff gutter decorations pour les blocs en cours d'edition
 
 **Fonctionnalites :**
-- Status des changements (fichiers ajoutes/modifies/supprimes)
+- Diff side-by-side read-only au clic (Modified = diff, Added = contenu, Removed = ancien)
+- Export Preview sans commit (detecte les vrais changements)
+- Auto-export silencieux toutes les minutes
 - Commit (export projet + git commit, via job asynchrone)
 - Push / Pull vers remote
 - Branches : switch, create, delete, merge
 - Log de commits avec diff
-- Auto-refresh toutes les 30 secondes
+- Auto-refresh status toutes les 30 secondes
+- Verification licence `hasVcs` (cadenas si pas inclus)
 
 ### 5. PLC Tests (`providers/testTreeProvider.ts`)
 
@@ -144,7 +163,9 @@ Utilise l'API native `vscode.scm` pour le panel Source Control.
 - Arborescence : Test → Steps
 - Execution individuelle (bouton inline) ou globale (Run All)
 - Resultats pass/fail avec icones colorees et messages d'assertion detailles
-- Progression via polling de jobs
+- **Webview detaillee** (`editors/testResultWebview.ts`) : panel HTML avec badges pass/fail, step cards colorees, tableau d'assertions (Tag, Expected, Actual, Message), duree, timestamps. S'ouvre automatiquement apres execution, recliquable sur un test termine.
+- Progression via SignalR (temps reel) ou polling de jobs (fallback)
+- Messages d'erreur explicites quand PLCSim n'est pas disponible
 - Nodes de message (lock, warning, info) quand les pre-requis ne sont pas remplis
 
 ### 5b. Cross-References (`editors/crossRefWebview.ts`)
@@ -206,7 +227,19 @@ interface ApiResponse<T> {
 
 ### Jobs asynchrones
 
-Les operations longues (commit VCS, execution pipeline, tests) retournent un `JobId`. Le client poll `GET /api/jobs/{id}` jusqu'a completion.
+Les operations longues (commit VCS, execution pipeline, tests) retournent un `JobId`.
+
+**Mode principal : SignalR push** (`api/signalr.ts`)
+- Client SignalR legacy compatible ASP.NET SignalR (pas Core)
+- Transport `longPolling` (negotiate → start → poll loop)
+- Authentification via query string `?apiKey=xxx`
+- Recoit `jobStatusChanged(jobId, status, result, description)` et `jobProgressChanged(jobId, percent, message)` en temps reel
+- Reconnexion automatique en cas de perte de connexion
+- Se connecte au hub `jobHub` a la connexion au serveur
+
+**Fallback : HTTP polling** (`api/jobs.ts`)
+- Si SignalR n'est pas connecte, `pollJob()` bascule automatiquement sur le polling HTTP classique (`GET /api/jobs/{id}` toutes les secondes)
+- Transparent pour l'appelant : meme interface `pollJob(jobId, onProgress)`
 
 ## Settings VS Code
 
@@ -222,5 +255,5 @@ Les operations longues (commit VCS, execution pipeline, tests) retournent un `Jo
 
 - **VS Code** 1.85+
 - **Cursor**, **Windsurf** (meme API d'extension)
-- **T-IA Connect** v2.0+ (serveur)
+- **T-IA Connect** v2.1.617+ (serveur)
 - **TIA Portal** V17-V21 (via le serveur)

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { getBlockDetails } from '../api/blocks';
 import { renderBlockToHtml } from './ladRenderer';
 import { log, logError } from '../views/outputChannel';
+import { createWebviewWithHeartbeat } from '../utils/webviewHelper';
 
 const openPanels = new Map<string, vscode.WebviewPanel>();
 
@@ -23,31 +24,31 @@ export async function openLadWebview(
     }
 
     // Load data BEFORE creating the panel to avoid service worker issues
-    let html: string;
+    let contentHtml: string;
     try {
         const details = await getBlockDetails(deviceName, blockName);
         if (!details) {
-            html = errorHtml(blockName, 'No block details returned.');
+            contentHtml = errorHtml(blockName, 'No block details returned.');
         } else {
-            html = renderBlockToHtml(details);
+            contentHtml = renderBlockToHtml(details);
             log(`Opened ${blockName} as ${language} Webview`);
         }
     } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         logError(`Failed to load ${blockName} for Webview`, err);
-        html = errorHtml(blockName, msg);
+        contentHtml = errorHtml(blockName, msg);
     }
 
-    const panel = vscode.window.createWebviewPanel(
+    const panel = await createWebviewWithHeartbeat(
         'tiaLadView',
         `${blockName} [${language}]`,
+        (nonce) => injectHeartbeat(contentHtml, nonce),
         vscode.ViewColumn.One,
-        { enableScripts: false, retainContextWhenHidden: false },
     );
+    if (!panel) { return; }
 
     openPanels.set(panelKey, panel);
     panel.onDidDispose(() => openPanels.delete(panelKey));
-    panel.webview.html = html;
 }
 
 function loadingHtml(blockName: string): string {
@@ -59,6 +60,17 @@ function loadingHtml(blockName: string): string {
         .spinner { border: 3px solid #3E3E42; border-top: 3px solid #569CD6; border-radius: 50%; width: 32px; height: 32px; animation: spin 1s linear infinite; margin: 0 auto 12px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style></head><body><div class="loader"><div class="spinner"></div>Loading ${blockName}...</div></body></html>`;
+}
+
+function injectHeartbeat(html: string, nonce: string): string {
+    // Update CSP to allow our nonce script
+    html = html.replace(
+        /content="default-src 'none'; style-src 'unsafe-inline'(?:; img-src data:)?;?"/,
+        `content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; script-src 'nonce-${nonce}';"`,
+    );
+    // Inject heartbeat script before </body>
+    const heartbeat = `<script nonce="${nonce}">const vscode=acquireVsCodeApi();vscode.postMessage({type:'webview-ready'});</script>`;
+    return html.replace('</body>', `${heartbeat}</body>`);
 }
 
 function errorHtml(blockName: string, message: string): string {

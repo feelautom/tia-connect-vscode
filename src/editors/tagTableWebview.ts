@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { getTagsInTable } from '../api/tags';
 import { TagInfo } from '../api/types';
 import { log, logError } from '../views/outputChannel';
+import { createWebviewWithHeartbeat } from '../utils/webviewHelper';
 
 const openPanels = new Map<string, vscode.WebviewPanel>();
 
@@ -18,27 +19,27 @@ export async function openTagTableWebview(
     }
 
     // Load data BEFORE creating the panel to avoid service worker issues
-    let html: string;
+    let contentHtml: string;
     try {
         const tags = await getTagsInTable(deviceName, tableName);
-        html = renderTagTableHtml(deviceName, tableName, tags);
+        contentHtml = renderTagTableHtml(deviceName, tableName, tags);
         log(`Opened tag table '${tableName}' (${tags.length} tags)`);
     } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         logError(`Failed to load tags from '${tableName}'`, err);
-        html = errorHtml(tableName, msg);
+        contentHtml = errorHtml(tableName, msg);
     }
 
-    const panel = vscode.window.createWebviewPanel(
+    const panel = await createWebviewWithHeartbeat(
         'tiaTagTable',
         `Tags: ${tableName}`,
+        (nonce) => injectHeartbeat(contentHtml, nonce),
         vscode.ViewColumn.One,
-        { enableScripts: false, retainContextWhenHidden: false },
     );
+    if (!panel) { return; }
 
     openPanels.set(panelKey, panel);
     panel.onDidDispose(() => openPanels.delete(panelKey));
-    panel.webview.html = html;
 }
 
 function renderTagTableHtml(deviceName: string, tableName: string, tags: TagInfo[]): string {
@@ -191,6 +192,17 @@ function errorHtml(tableName: string, message: string): string {
         <h2>Failed to load tags from ${esc(tableName)}</h2>
         <p class="error">${esc(message)}</p>
     </body></html>`;
+}
+
+function injectHeartbeat(html: string, nonce: string): string {
+    // Update CSP to allow our nonce script
+    html = html.replace(
+        /content="default-src 'none'; style-src 'unsafe-inline';?"/,
+        `content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';"`,
+    );
+    // Inject heartbeat script before </body>
+    const heartbeat = `<script nonce="${nonce}">const vscode=acquireVsCodeApi();vscode.postMessage({type:'webview-ready'});</script>`;
+    return html.replace('</body>', `${heartbeat}</body>`);
 }
 
 function esc(s: string): string {

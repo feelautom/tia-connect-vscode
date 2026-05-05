@@ -4,6 +4,7 @@ import { getLicenseFeatures, getPlcSimStatus } from '../api/project';
 import { pollJob } from '../api/jobs';
 import { TestRunResult } from '../api/types';
 import { log, logError, showOutput } from '../views/outputChannel';
+import { openTestResultWebview } from '../editors/testResultWebview';
 
 type TestNodeType = 'test' | 'step' | 'message';
 
@@ -24,6 +25,7 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
 
     private tests: TestTreeItem[] = [];
     private testSteps = new Map<string, TestTreeItem[]>();
+    private testResults = new Map<string, TestRunResult>();
     private disposables: vscode.Disposable[] = [];
 
     activate(context: vscode.ExtensionContext): void {
@@ -38,6 +40,9 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
             vscode.commands.registerCommand('tiaConnect.testRunAll', () => this.runAll()),
             vscode.commands.registerCommand('tiaConnect.testRunSingle', (item: TestTreeItem) =>
                 this.runSingleTest(item)
+            ),
+            vscode.commands.registerCommand('tiaConnect.testShowResult', (item: TestTreeItem) =>
+                this.showResult(item)
             ),
         );
 
@@ -124,6 +129,13 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
 
         if (element.type === 'test') {
             item.description = this.getTestDescription(element);
+            if (this.testResults.has(element.testName)) {
+                item.command = {
+                    command: 'tiaConnect.testShowResult',
+                    title: 'Show Results',
+                    arguments: [element],
+                };
+            }
         }
 
         if (element.type === 'step' && element.error) {
@@ -189,11 +201,12 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
             });
 
             if (jobResult.Status === 'Failed') {
-                item.status = 'failed';
+                item.status = 'errored';
                 item.error = jobResult.Error || 'Test execution failed.';
-                log(`  FAILED: ${item.error}`);
+                log(`  ERROR: ${item.error}`);
                 for (const s of steps) { s.status = 'errored'; }
                 this._onDidChangeTreeData.fire(undefined);
+                vscode.window.showErrorMessage(`Test "${item.testName}": ${item.error}`);
                 return;
             }
 
@@ -233,10 +246,20 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
 
             this._onDidChangeTreeData.fire(undefined);
 
+            // Store and open detailed results webview
+            this.testResults.set(item.testName, testResult);
+            log(`  Opening test result webview for ${item.testName}...`);
+            try {
+                await openTestResultWebview(testResult);
+                log(`  Webview opened successfully.`);
+            } catch (webviewErr) {
+                log(`  ERROR opening webview: ${webviewErr}`);
+            }
+
             if (testResult.Passed) {
                 vscode.window.showInformationMessage(`Test "${item.testName}" PASSED (${testResult.DurationMs}ms)`);
             } else {
-                vscode.window.showWarningMessage(`Test "${item.testName}" FAILED. See Output for details.`);
+                vscode.window.showWarningMessage(`Test "${item.testName}" FAILED. See results panel.`);
             }
 
         } catch (err) {
@@ -246,6 +269,17 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
             for (const s of steps) { s.status = 'errored'; }
             this._onDidChangeTreeData.fire(undefined);
             logError(`Test ${item.testName} error`, err);
+            vscode.window.showErrorMessage(`Test "${item.testName}": ${item.error}`);
+        }
+    }
+
+    private async showResult(item: TestTreeItem): Promise<void> {
+        if (item.type !== 'test') { return; }
+        const result = this.testResults.get(item.testName);
+        if (result) {
+            await openTestResultWebview(result);
+        } else {
+            vscode.window.showInformationMessage(`No results yet for "${item.testName}". Run the test first.`);
         }
     }
 

@@ -27,6 +27,14 @@ export async function getBlockContent(deviceName: string, blockName: string): Pr
     return res.Data;
 }
 
+/** Generate source text (SCL/STL) via ExternalSourceGroup.GenerateSource */
+export async function exportBlockSource(deviceName: string, blockName: string): Promise<string> {
+    const res = await client.get<any>(
+        `/api/devices/${enc(deviceName)}/blocks/${enc(blockName)}/source`
+    );
+    return res.Data?.SourceText || '';
+}
+
 /** Reimport SCL/STL source into TIA Portal */
 export async function importAndGenerate(deviceName: string, sclContent: string, sourceName?: string): Promise<ApiResponse> {
     const res = await client.post<unknown>(

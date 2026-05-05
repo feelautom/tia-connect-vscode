@@ -16,6 +16,7 @@ export const COMMANDS = {
 
 export const CONTEXT_KEYS = {
     connected: 'tiaConnect.connected',
+    serverNotRunning: 'tiaConnect.serverNotRunning',
     vcsInitialized: 'tiaConnect.vcsInitialized',
     vcsHasRemote: 'tiaConnect.vcsHasRemote',
 } as const;

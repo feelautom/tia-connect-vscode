@@ -10,6 +10,7 @@ import { VcsFileChange } from '../api/types';
 import { log, logError } from '../views/outputChannel';
 import { CONTEXT_KEYS, ORIGINAL_SCHEME } from '../utils/constants';
 import { OriginalContentProvider } from './originalContentProvider';
+import { VcsContentProvider, VCS_SCHEME } from './vcsContentProvider';
 
 export class TiaSourceControl implements vscode.Disposable {
     private scm: vscode.SourceControl;
@@ -53,6 +54,7 @@ export class TiaSourceControl implements vscode.Disposable {
             vscode.commands.registerCommand('tiaConnect.vcsBranch', () => this.branchMenu()),
             vscode.commands.registerCommand('tiaConnect.vcsLog', () => this.showLog()),
             vscode.commands.registerCommand('tiaConnect.vcsRemote', () => this.remoteMenu()),
+            vscode.commands.registerCommand('tiaConnect.vcsDiffFile', (change: VcsFileChange) => this.diffFile(change)),
         ];
 
         context.subscriptions.push(...commands);
@@ -358,6 +360,33 @@ export class TiaSourceControl implements vscode.Disposable {
         }
     }
 
+    private async diffFile(change: VcsFileChange): Promise<void> {
+        try {
+            const filePath = change.FilePath;
+            const title = `${change.ItemName} (${change.Status})`;
+
+            if (change.Status === 'Added') {
+                // New file — show current working tree content
+                const uri = VcsContentProvider.toUri('WORKING', filePath);
+                const doc = await vscode.workspace.openTextDocument(uri);
+                await vscode.window.showTextDocument(doc, { preview: true });
+            } else if (change.Status === 'Removed' || change.Status === 'Deleted') {
+                // Deleted file — show last committed content
+                const uri = VcsContentProvider.toUri('HEAD', filePath);
+                const doc = await vscode.workspace.openTextDocument(uri);
+                await vscode.window.showTextDocument(doc, { preview: true });
+            } else {
+                // Modified/Renamed — side-by-side diff
+                const leftUri = VcsContentProvider.toUri('HEAD', filePath);
+                const rightUri = VcsContentProvider.toUri('WORKING', filePath);
+                await vscode.commands.executeCommand('vscode.diff', leftUri, rightUri, title);
+            }
+        } catch (err) {
+            logError('VCS diff failed', err);
+            vscode.window.showErrorMessage(`Diff failed: ${err instanceof Error ? err.message : err}`);
+        }
+    }
+
     private toResourceState(change: VcsFileChange): vscode.SourceControlResourceState {
         const uri = vscode.Uri.parse(`tia-vcs:/${change.FilePath}`);
         return {
@@ -366,6 +395,11 @@ export class TiaSourceControl implements vscode.Disposable {
                 strikeThrough: change.Status === 'Removed',
                 tooltip: `${change.Status}: ${change.Domain}/${change.ItemName}`,
                 iconPath: this.getStatusIcon(change.Status),
+            },
+            command: {
+                command: 'tiaConnect.vcsDiffFile',
+                title: 'Show Changes',
+                arguments: [change],
             },
         };
     }

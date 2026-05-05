@@ -81,6 +81,17 @@ export async function vcsRemoveRemote(name: string): Promise<void> {
     await client.delete(`${PREFIX}/remotes/${encodeURIComponent(name)}`);
 }
 
+/** Triggers an export without committing — returns a JobId */
+export async function vcsExportPreview(): Promise<string> {
+    const res = await client.post<{ JobId: string }>(`${PREFIX}/export-preview`);
+    return res.Data.JobId;
+}
+
+export async function vcsGetFileContent(commitSha: string, filePath: string): Promise<string | null> {
+    const res = await client.get<{ Content: string | null }>(`${PREFIX}/file-content?commitSha=${encodeURIComponent(commitSha)}&filePath=${encodeURIComponent(filePath)}`);
+    return res.Data.Content;
+}
+
 export async function vcsRestore(commitSha: string, filePath: string, deviceName?: string): Promise<string> {
     const res = await client.post<{ JobId: string }>(`${PREFIX}/restore`, { CommitSha: commitSha, FilePath: filePath, DeviceName: deviceName });
     return res.Data.JobId;

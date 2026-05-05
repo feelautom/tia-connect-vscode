@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { BlockEditor } from '../editors/blockEditor';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
-import { compileDevice, compileBlock, getBlockContent } from '../api/blocks';
+import { compileDevice, compileBlock, getBlockContent, exportBlockSource, importAndGenerate } from '../api/blocks';
 import { getProjectOverview } from '../api/project';
 import { openCrossRefWebview } from '../editors/crossRefWebview';
 import { openTagTableWebview } from '../editors/tagTableWebview';
@@ -34,6 +34,9 @@ export function registerBlockCommands(
         ),
         vscode.commands.registerCommand('tiaConnect.openUdt', (item: TiaTreeItem) =>
             doOpenUdt(item)
+        ),
+        vscode.commands.registerCommand('tiaConnect.importSourceFile', (item?: TiaTreeItem) =>
+            doImportSourceFile(item)
         ),
     );
 }
@@ -151,6 +154,17 @@ async function doExportBlock(item: TiaTreeItem): Promise<void> {
                 if (dto.SourceText) {
                     return dto.SourceText;
                 }
+
+                // Fallback: try export-source endpoint (works for STL and some SCL blocks)
+                try {
+                    const source = await exportBlockSource(item.deviceName!, item.blockName!);
+                    if (source) {
+                        return source;
+                    }
+                } catch {
+                    log(`export-source not available for ${item.blockName}`);
+                }
+
                 throw new Error(`No source code available for ${item.blockName}.`);
             }
         );
@@ -173,4 +187,79 @@ async function doOpenTagTable(item: TiaTreeItem): Promise<void> {
 async function doOpenUdt(item: TiaTreeItem): Promise<void> {
     if (!item.deviceName) { return; }
     await openUdtWebview(item.deviceName, item.label);
+}
+
+async function doImportSourceFile(item?: TiaTreeItem): Promise<void> {
+    let deviceName = item?.deviceName;
+
+    // If no device context, ask the user to pick one
+    if (!deviceName) {
+        try {
+            const overview = await getProjectOverview();
+            const devices = overview?.Devices;
+            if (!devices || devices.length === 0) {
+                vscode.window.showWarningMessage('No devices found in the project.');
+                return;
+            }
+            if (devices.length === 1) {
+                deviceName = devices[0].Name;
+            } else {
+                const pick = await vscode.window.showQuickPick(
+                    devices.map(d => d.Name),
+                    { placeHolder: 'Select target device for import' }
+                );
+                if (!pick) { return; }
+                deviceName = pick;
+            }
+        } catch (err) {
+            logError('Failed to list devices for import', err);
+            return;
+        }
+    }
+
+    if (!deviceName) { return; }
+
+    // Open file picker for SCL/STL files
+    const uris = await vscode.window.showOpenDialog({
+        canSelectMany: true,
+        filters: {
+            'SCL/STL Source': ['scl', 'stl'],
+            'All files': ['*'],
+        },
+        openLabel: 'Import',
+    });
+
+    if (!uris || uris.length === 0) { return; }
+
+    showOutput();
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const uri of uris) {
+        const fileName = uri.fsPath.split(/[\\/]/).pop() || uri.fsPath;
+        log(`--- Importing ${fileName} into ${deviceName} ---`);
+
+        try {
+            const content = fs.readFileSync(uri.fsPath, 'utf-8');
+
+            await vscode.window.withProgress(
+                { location: vscode.ProgressLocation.Notification, title: `Importing ${fileName}...` },
+                () => importAndGenerate(deviceName!, content)
+            );
+
+            log(`Imported ${fileName} successfully.`);
+            successCount++;
+        } catch (err) {
+            logError(`Import ${fileName} failed`, err);
+            vscode.window.showErrorMessage(`Import failed for ${fileName}: ${err instanceof Error ? err.message : err}`);
+            errorCount++;
+        }
+    }
+
+    if (successCount > 0) {
+        const msg = errorCount > 0
+            ? `Imported ${successCount} file(s) with ${errorCount} error(s).`
+            : `Imported ${successCount} file(s) successfully.`;
+        vscode.window.showInformationMessage(msg);
+    }
 }

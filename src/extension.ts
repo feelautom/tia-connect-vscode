@@ -10,11 +10,15 @@ import { createStatusBar, setConnected, disposeStatusBar } from './views/statusB
 import { createDiagnostics, disposeDiagnostics } from './views/diagnostics';
 import { getOutputChannel, log } from './views/outputChannel';
 import { CONTEXT_KEYS, ORIGINAL_SCHEME } from './utils/constants';
+import { VcsContentProvider, VCS_SCHEME } from './providers/vcsContentProvider';
+import { VcsTreeProvider } from './providers/vcsTreeProvider';
 import { registerLanguageProviders } from './language';
+import { getSignalRClient, disposeSignalR } from './api/signalr';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
 let testProvider: TestTreeProvider;
+let vcsTreeProvider: VcsTreeProvider;
 
 export function activate(context: vscode.ExtensionContext): void {
     log('T-IA Connect for VS Code activating...');
@@ -54,8 +58,24 @@ export function activate(context: vscode.ExtensionContext): void {
         )
     );
 
+    // Register VCS content provider for SCM diff (file content at commit)
+    context.subscriptions.push(
+        vscode.workspace.registerTextDocumentContentProvider(
+            VCS_SCHEME,
+            new VcsContentProvider()
+        )
+    );
+
     // Connect block editor to QuickDiff provider
     blockEditor.setOriginalContentProvider(scmProvider.originalContentProvider);
+
+    // VCS Tree View (our own Source Control panel)
+    vcsTreeProvider = new VcsTreeProvider();
+    vcsTreeProvider.activate(context);
+    const vcsTreeView = vscode.window.createTreeView('tiaVcsExplorer', {
+        treeDataProvider: vcsTreeProvider,
+    });
+    context.subscriptions.push(vcsTreeView, vcsTreeProvider);
 
     // Test Explorer (integrated in sidebar)
     testProvider = new TestTreeProvider();
@@ -73,7 +93,12 @@ export function activate(context: vscode.ExtensionContext): void {
         setConnected(projectName);
         scmProvider.refresh();
         scmProvider.startAutoRefresh();
+        vcsTreeProvider.refresh();
+        vcsTreeProvider.startAutoRefresh();
+        vcsTreeProvider.startAutoExport();
         testProvider.discoverTests();
+        // Connect SignalR for real-time job notifications
+        getSignalRClient().connect();
     });
 
     // Register commands
@@ -91,8 +116,10 @@ export function activate(context: vscode.ExtensionContext): void {
 }
 
 export function deactivate(): void {
+    disposeSignalR();
     blockEditor?.dispose();
     scmProvider?.dispose();
+    vcsTreeProvider?.dispose();
     testProvider?.dispose();
     disposeDiagnostics();
     disposeStatusBar();

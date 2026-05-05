@@ -406,6 +406,11 @@
           "group": "navigation"
         },
         {
+          "command": "tiaConnect.logout",
+          "when": "view == tiaProjectExplorer && tiaConnect.authenticated",
+          "group": "navigation"
+        },
+        {
           "command": "tiaConnect.connect",
           "when": "view == tiaProjectExplorer && !tiaConnect.connected",
           "group": "navigation"

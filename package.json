@@ -238,6 +238,12 @@
         "icon": "$(cloud-upload)"
       },
       {
+        "command": "tiaConnect.createBlock",
+        "title": "%command.createBlock%",
+        "category": "T-IA Connect",
+        "icon": "$(file-add)"
+      },
+      {
         "command": "tiaConnect.switchProject",
         "title": "%command.switchProject%",
         "category": "T-IA Connect",
@@ -399,6 +405,11 @@
           "command": "tiaConnect.compileDevice",
           "when": "view == tiaProjectExplorer && viewItem == device",
           "group": "1_compile"
+        },
+        {
+          "command": "tiaConnect.createBlock",
+          "when": "view == tiaProjectExplorer && viewItem == device",
+          "group": "0_create"
         },
         {
           "command": "tiaConnect.importSourceFile",

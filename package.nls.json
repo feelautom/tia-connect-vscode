@@ -38,6 +38,7 @@
   "command.showCrossReferences": "Show Cross-References",
   "command.openTagTable": "Open Tag Table",
   "command.openUdt": "Open UDT",
+  "command.createBlock": "Create Block",
   "command.importSourceFile": "Import SCL/STL File",
   "command.switchProject": "Switch Project",
   "command.openSettings": "Settings",

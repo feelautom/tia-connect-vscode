@@ -39,6 +39,9 @@ export function registerBlockCommands(
         vscode.commands.registerCommand('tiaConnect.importSourceFile', (item?: TiaTreeItem) =>
             doImportSourceFile(item)
         ),
+        vscode.commands.registerCommand('tiaConnect.createBlock', (item?: TiaTreeItem) =>
+            doCreateBlock(item)
+        ),
     );
 }
 
@@ -265,5 +268,228 @@ async function doImportSourceFile(item?: TiaTreeItem): Promise<void> {
             ? `Imported ${successCount} file(s) with ${errorCount} error(s).`
             : `Imported ${successCount} file(s) successfully.`;
         vscode.window.showInformationMessage(msg);
+    }
+}
+
+async function doCreateBlock(item?: TiaTreeItem): Promise<void> {
+    let deviceName = item?.deviceName;
+
+    if (!deviceName) {
+        try {
+            const overview = await getProjectOverview();
+            const devices = overview?.Devices;
+            if (!devices || devices.length === 0) {
+                vscode.window.showWarningMessage(l10n.t('No devices found in the project.'));
+                return;
+            }
+            if (devices.length === 1) {
+                deviceName = devices[0].Name;
+            } else {
+                const pick = await vscode.window.showQuickPick(
+                    devices.map(d => d.Name),
+                    { placeHolder: l10n.t('Select the target device') }
+                );
+                if (!pick) { return; }
+                deviceName = pick;
+            }
+        } catch (err) {
+            logError('Failed to list devices', err);
+            return;
+        }
+    }
+
+    if (!deviceName) { return; }
+
+    // Pick block type
+    const blockType = await vscode.window.showQuickPick(
+        [
+            { label: 'Function Block (FB)', value: 'FB' },
+            { label: 'Function (FC)', value: 'FC' },
+            { label: 'Organization Block (OB)', value: 'OB' },
+            { label: 'Data Block (DB)', value: 'DB' },
+        ],
+        { placeHolder: l10n.t('Select block type') }
+    );
+    if (!blockType) { return; }
+
+    // Pick language
+    const language = await vscode.window.showQuickPick(
+        ['SCL', 'STL'],
+        { placeHolder: l10n.t('Select programming language') }
+    );
+    if (!language) { return; }
+
+    // Enter block name
+    const blockName = await vscode.window.showInputBox({
+        prompt: l10n.t('Enter block name'),
+        placeHolder: blockType.value === 'OB' ? 'Main' : `${blockType.value}_MyBlock`,
+        validateInput: (v) => v.trim() ? undefined : l10n.t('Block name is required'),
+    });
+    if (!blockName) { return; }
+
+    // Generate template source
+    const source = generateBlockTemplate(blockType.value, blockName, language);
+
+    showOutput();
+    log(`--- Creating ${blockType.value} "${blockName}" (${language}) on ${deviceName} ---`);
+
+    try {
+        await vscode.window.withProgress(
+            { location: { viewId: 'tiaProjectExplorer' }, title: l10n.t('Creating {0}...', blockName) },
+            () => importAndGenerate(deviceName!, source, `${blockName}_create`)
+        );
+
+        vscode.window.showInformationMessage(l10n.t('Block {0} created successfully.', blockName));
+        log(`Block "${blockName}" created.`);
+
+        // Refresh the tree to show the new block
+        vscode.commands.executeCommand('tiaConnect.refreshProject');
+    } catch (err) {
+        logError(`Create block ${blockName} failed`, err);
+        vscode.window.showErrorMessage(l10n.t('Failed to create block: {0}', err instanceof Error ? err.message : String(err)));
+    }
+}
+
+function generateBlockTemplate(type: string, name: string, language: string): string {
+    if (language === 'STL') {
+        return generateStlTemplate(type, name);
+    }
+    return generateSclTemplate(type, name);
+}
+
+function generateSclTemplate(type: string, name: string): string {
+    switch (type) {
+        case 'FB':
+            return `FUNCTION_BLOCK "${name}"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_INPUT
+END_VAR
+
+VAR_OUTPUT
+END_VAR
+
+VAR
+END_VAR
+
+BEGIN
+\t;
+END_FUNCTION_BLOCK
+`;
+        case 'FC':
+            return `FUNCTION "${name}" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+VAR_INPUT
+END_VAR
+
+VAR_OUTPUT
+END_VAR
+
+VAR_TEMP
+END_VAR
+
+BEGIN
+\t;
+END_FUNCTION
+`;
+        case 'OB':
+            return `ORGANIZATION_BLOCK "${name}"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+BEGIN
+\t;
+END_ORGANIZATION_BLOCK
+`;
+        case 'DB':
+            return `DATA_BLOCK "${name}"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+
+NON_RETAIN
+
+VAR
+\tMyVar : Int;
+END_VAR
+
+BEGIN
+
+END_DATA_BLOCK
+`;
+        default:
+            return '';
+    }
+}
+
+function generateStlTemplate(type: string, name: string): string {
+    switch (type) {
+        case 'FB':
+            return `FUNCTION_BLOCK "${name}"
+VERSION : 0.1
+
+VAR_INPUT
+END_VAR
+
+VAR_OUTPUT
+END_VAR
+
+VAR
+END_VAR
+
+BEGIN
+NETWORK
+TITLE =
+\tNOP 0;
+END_FUNCTION_BLOCK
+`;
+        case 'FC':
+            return `FUNCTION "${name}" : VOID
+VERSION : 0.1
+
+VAR_INPUT
+END_VAR
+
+VAR_OUTPUT
+END_VAR
+
+VAR_TEMP
+END_VAR
+
+BEGIN
+NETWORK
+TITLE =
+\tNOP 0;
+END_FUNCTION
+`;
+        case 'OB':
+            return `ORGANIZATION_BLOCK "${name}"
+VERSION : 0.1
+
+VAR_TEMP
+END_VAR
+
+BEGIN
+NETWORK
+TITLE =
+\tNOP 0;
+END_ORGANIZATION_BLOCK
+`;
+        case 'DB':
+            return `DATA_BLOCK "${name}"
+VERSION : 0.1
+
+VAR
+\tMyVar : INT;
+END_VAR
+
+BEGIN
+
+END_DATA_BLOCK
+`;
+        default:
+            return '';
     }
 }

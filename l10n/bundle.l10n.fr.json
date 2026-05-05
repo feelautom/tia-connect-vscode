@@ -90,5 +90,12 @@
   "Select remote to remove": "Sélectionner le dépôt distant à supprimer",
   "Select remote operation": "Sélectionner l'opération remote",
   "{0} changed file(s) detected.": "{0} fichier(s) modifié(s) détecté(s).",
-  "No changes detected.": "Aucun changement détecté."
+  "No changes detected.": "Aucun changement détecté.",
+  "Select block type": "Sélectionner le type de bloc",
+  "Select programming language": "Sélectionner le langage de programmation",
+  "Enter block name": "Entrez le nom du bloc",
+  "Block name is required": "Le nom du bloc est requis",
+  "Creating {0}...": "Création de {0}...",
+  "Block {0} created successfully.": "Bloc {0} créé avec succès.",
+  "Failed to create block: {0}": "Échec de la création du bloc : {0}"
 }

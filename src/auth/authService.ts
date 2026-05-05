@@ -5,6 +5,8 @@ import { setApiKey } from '../utils/config';
 
 const TOKEN_KEY = 'tiaConnect.authToken';
 const AUTH_BASE_URL = 'https://t-ia-connect.com';
+const POLL_INTERVAL_MS = 3000;
+const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 export interface UserProfile {
     id: string;
@@ -22,6 +24,7 @@ export class AuthService implements vscode.Disposable {
     private profile: UserProfile | null = null;
     private _onDidChangeAuth = new vscode.EventEmitter<boolean>();
     readonly onDidChangeAuth = this._onDidChangeAuth.event;
+    private pollTimer: ReturnType<typeof setInterval> | undefined;
 
     constructor(context: vscode.ExtensionContext) {
         this.secrets = context.secrets;
@@ -38,18 +41,11 @@ export class AuthService implements vscode.Disposable {
         return this.secrets.get(TOKEN_KEY);
     }
 
-    /** Store token received from OAuth callback */
-    async handleAuthCallback(token: string, state: string, expectedState: string): Promise<boolean> {
-        if (state !== expectedState) {
-            logError('Auth callback state mismatch — possible CSRF attack');
-            vscode.window.showErrorMessage('Authentication failed: invalid state parameter.');
-            return false;
-        }
-
+    /** Store token and fetch profile (used by both polling and URI callback) */
+    async handleToken(token: string): Promise<boolean> {
         await this.secrets.store(TOKEN_KEY, token);
         log('Auth token stored successfully.');
 
-        // Fetch profile and set API key
         const profile = await this.fetchProfile(token);
         if (profile) {
             this.profile = profile;
@@ -63,28 +59,53 @@ export class AuthService implements vscode.Disposable {
         return false;
     }
 
-    /** Initiate login by opening the browser */
-    async login(): Promise<string> {
-        const state = generateState();
-        const redirectUri = 'vscode://feelautom.tia-connect-vscode/auth-callback';
-        const url = `${AUTH_BASE_URL}/auth/vscode?state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    /** Store token received from OAuth URI callback (fallback) */
+    async handleAuthCallback(token: string, state: string, expectedState: string): Promise<boolean> {
+        if (state !== expectedState) {
+            logError('Auth callback state mismatch — possible CSRF attack');
+            vscode.window.showErrorMessage('Authentication failed: invalid state parameter.');
+            return false;
+        }
 
-        await vscode.env.openExternal(vscode.Uri.parse(url));
-        log('Opened browser for authentication...');
-        return state;
+        this.stopPolling();
+        return this.handleToken(token);
     }
 
-    /** Open the registration page */
-    async register(): Promise<void> {
-        const url = `${AUTH_BASE_URL}/auth/vscode?mode=register`;
+    /** Initiate login */
+    async login(): Promise<string> {
+        return this.openAuthPage('login');
+    }
+
+    /** Initiate registration */
+    async register(): Promise<string> {
+        return this.openAuthPage('register');
+    }
+
+    /** Open auth page in the external browser */
+    private async openAuthPage(mode: 'login' | 'register'): Promise<string> {
+        // Already polling → don't open another browser tab
+        if (this.pollTimer) {
+            vscode.window.showInformationMessage('T-IA Connect: Authentication in progress — check your browser.');
+            return '';
+        }
+
+        const state = generateState();
+        const redirectUri = 'vscode://feelautom.tia-connect-vscode/auth-callback';
+        const modeParam = mode === 'register' ? '&mode=register' : '';
+        const url = `${AUTH_BASE_URL}/auth/vscode?state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}${modeParam}`;
+
         await vscode.env.openExternal(vscode.Uri.parse(url));
-        log('Opened browser for registration...');
+        log(`Opened ${mode} page in external browser.`);
+
+        this.startPolling(state);
+        return state;
     }
 
     /** Logout — clear token and profile */
     async logout(): Promise<void> {
         await this.secrets.delete(TOKEN_KEY);
         this.profile = null;
+        this.stopPolling();
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, false);
         this._onDidChangeAuth.fire(false);
         log('Logged out.');
@@ -116,7 +137,6 @@ export class AuthService implements vscode.Disposable {
                 return false;
             }
 
-            // Token is valid — fetch profile
             const profile = await this.fetchProfile(token);
             if (profile) {
                 this.profile = profile;
@@ -128,7 +148,6 @@ export class AuthService implements vscode.Disposable {
 
             return false;
         } catch {
-            // Network error — don't logout, just can't validate right now
             log('Cannot reach auth server to validate token (offline?)');
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, true);
             this._onDidChangeAuth.fire(true);
@@ -139,6 +158,77 @@ export class AuthService implements vscode.Disposable {
     /** Get cached profile */
     getProfile(): UserProfile | null {
         return this.profile;
+    }
+
+    /** Poll the server for a completed auth token */
+    private startPolling(state: string): void {
+        this.stopPolling();
+        const startTime = Date.now();
+        const shortState = state.substring(0, 8);
+
+        log(`Polling for auth token (state=${shortState}...)...`);
+
+        // Show a progress notification so the user knows polling is active
+        vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: 'T-IA Connect: Waiting for authentication...',
+                cancellable: true,
+            },
+            (_progress, cancellationToken) => {
+                return new Promise<void>((resolve) => {
+                    cancellationToken.onCancellationRequested(() => {
+                        log('Auth polling cancelled by user.');
+                        this.stopPolling();
+                        resolve();
+                    });
+
+                    this.pollTimer = setInterval(async () => {
+                        if (Date.now() - startTime > POLL_TIMEOUT_MS) {
+                            log('Auth polling timed out after 5 minutes.');
+                            this.stopPolling();
+                            vscode.window.showWarningMessage('T-IA Connect: Authentication timed out. Please try again.');
+                            resolve();
+                            return;
+                        }
+
+                        const pollUrl = `${AUTH_BASE_URL}/api/auth/vscode-poll?state=${encodeURIComponent(state)}`;
+                        try {
+                            const resp = await fetch(pollUrl);
+                            const text = await resp.text();
+                            log(`Poll response (state=${shortState}): ${resp.status} ${text}`);
+
+                            if (!resp.ok) return;
+
+                            const data = JSON.parse(text) as { status: string; token?: string };
+
+                            if (data.status === 'complete' && data.token) {
+                                log('Auth token received via polling.');
+                                this.stopPolling();
+
+                                const success = await this.handleToken(data.token);
+                                if (success) {
+                                    const name = this.profile?.name || this.profile?.email || '';
+                                    vscode.window.showInformationMessage(`T-IA Connect: Connected as ${name}`);
+                                } else {
+                                    vscode.window.showErrorMessage('Authentication failed. Please try again.');
+                                }
+                                resolve();
+                            }
+                        } catch (err) {
+                            log(`Poll error (state=${shortState}): ${err}`);
+                        }
+                    }, POLL_INTERVAL_MS);
+                });
+            },
+        );
+    }
+
+    private stopPolling(): void {
+        if (this.pollTimer) {
+            clearInterval(this.pollTimer);
+            this.pollTimer = undefined;
+        }
     }
 
     private async fetchProfile(token: string): Promise<UserProfile | null> {
@@ -160,6 +250,7 @@ export class AuthService implements vscode.Disposable {
     }
 
     dispose(): void {
+        this.stopPolling();
         this._onDidChangeAuth.dispose();
     }
 }

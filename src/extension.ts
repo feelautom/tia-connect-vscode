@@ -62,9 +62,15 @@ export function activate(context: vscode.ExtensionContext): void {
     const treeProvider = new ProjectTreeProvider();
     treeProvider.setExtensionPath(context.extensionPath);
 
-    // Sync tree auth state when auth changes
-    authService.onDidChangeAuth((authenticated) => {
+    // Sync tree auth state when auth changes + re-detect server
+    authService.onDidChangeAuth(async (authenticated) => {
         treeProvider.setAuthenticated(authenticated);
+        if (authenticated) {
+            // Re-run server detection so welcome views update
+            const server = await detectServer();
+            vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotInstalled, !server.installed);
+            vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, !server.running);
+        }
     });
 
     const treeView = vscode.window.createTreeView('tiaProjectExplorer', {

@@ -77,7 +77,7 @@ async function doCompileDevice(item?: TiaTreeItem): Promise<void> {
 
     try {
         const result = await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: l10n.t('Compiling {0}...', deviceName!) },
+            { location: { viewId: 'tiaProjectExplorer' }, title: l10n.t('Compiling {0}...', deviceName!) },
             () => compileDevice(deviceName!)
         );
 
@@ -107,7 +107,7 @@ async function doCompileBlock(item: TiaTreeItem): Promise<void> {
 
     try {
         const result = await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: l10n.t('Compiling {0}...', item.blockName!) },
+            { location: { viewId: 'tiaProjectExplorer' }, title: l10n.t('Compiling {0}...', item.blockName!) },
             () => compileBlock(item.deviceName!, item.blockName!)
         );
 
@@ -131,7 +131,10 @@ async function doCompileBlock(item: TiaTreeItem): Promise<void> {
 
 async function doShowCrossReferences(item: TiaTreeItem): Promise<void> {
     if (!item.deviceName || !item.blockName) { return; }
-    await openCrossRefWebview(item.deviceName, item.blockName);
+    await vscode.window.withProgress(
+        { location: { viewId: 'tiaProjectExplorer' }, title: l10n.t('Loading {0}...', item.blockName!) },
+        () => openCrossRefWebview(item.deviceName!, item.blockName!)
+    );
 }
 
 async function doExportBlock(item: TiaTreeItem): Promise<void> {
@@ -149,7 +152,7 @@ async function doExportBlock(item: TiaTreeItem): Promise<void> {
 
     try {
         const content = await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: l10n.t('Loading {0}...', item.blockName!) },
+            { location: { viewId: 'tiaProjectExplorer' }, title: l10n.t('Loading {0}...', item.blockName!) },
             async () => {
                 const dto = await getBlockContent(item.deviceName!, item.blockName!);
                 if (dto.SourceText) {
@@ -244,7 +247,7 @@ async function doImportSourceFile(item?: TiaTreeItem): Promise<void> {
             const content = fs.readFileSync(uri.fsPath, 'utf-8');
 
             await vscode.window.withProgress(
-                { location: vscode.ProgressLocation.Notification, title: l10n.t('Loading {0}...', fileName) },
+                { location: { viewId: 'tiaProjectExplorer' }, title: l10n.t('Loading {0}...', fileName) },
                 () => importAndGenerate(deviceName!, content)
             );
 

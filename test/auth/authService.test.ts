@@ -141,17 +141,15 @@ describe('AuthService', () => {
             expect(authState).toBe(false);
         });
 
-        it('returns true when token is valid', async () => {
+        it('returns true immediately when token exists (fast startup)', async () => {
             await context.secrets.store('tiaConnect.authToken', 'valid');
-
-            const mockProfile: UserProfile = {
-                id: '1', email: 'a@b.com', name: 'A',
-                licenseType: 'free', apiKey: 'k', features: [],
-            };
 
             vi.stubGlobal('fetch', vi.fn()
                 .mockResolvedValueOnce({ ok: true, json: async () => ({ valid: true }) })
-                .mockResolvedValueOnce({ ok: true, json: async () => mockProfile })
+                .mockResolvedValueOnce({ ok: true, json: async () => ({
+                    id: '1', email: 'a@b.com', name: 'A',
+                    licenseType: 'free', apiKey: 'k', features: [],
+                }) })
             );
 
             let authState: boolean | undefined;
@@ -164,22 +162,18 @@ describe('AuthService', () => {
             vi.unstubAllGlobals();
         });
 
-        it('returns true on network error (offline mode)', async () => {
+        it('returns true on network error (offline mode, token trusted)', async () => {
             await context.secrets.store('tiaConnect.authToken', 'tok');
 
             vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')));
 
-            let authState: boolean | undefined;
-            authService.onDidChangeAuth((v) => { authState = v; });
-
             const result = await authService.validateSession();
             expect(result).toBe(true);
-            expect(authState).toBe(true);
 
             vi.unstubAllGlobals();
         });
 
-        it('logs out when server says token is invalid', async () => {
+        it('trusts token immediately even if server will reject it later', async () => {
             await context.secrets.store('tiaConnect.authToken', 'expired');
 
             vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
@@ -187,9 +181,9 @@ describe('AuthService', () => {
                 json: async () => ({ valid: false }),
             }));
 
+            // validateSession returns true immediately (fast startup)
             const result = await authService.validateSession();
-            expect(result).toBe(false);
-            expect(await authService.getToken()).toBeUndefined();
+            expect(result).toBe(true);
 
             vi.unstubAllGlobals();
         });

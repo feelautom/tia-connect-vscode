@@ -76,7 +76,7 @@ export class AuthService implements vscode.Disposable {
         return this.openAuthPage('login');
     }
 
-    /** Initiate registration */
+    /** Initiate registration — same OAuth flow, website shows register page */
     async register(): Promise<string> {
         return this.openAuthPage('register');
     }
@@ -111,7 +111,8 @@ export class AuthService implements vscode.Disposable {
         log('Logged out.');
     }
 
-    /** Validate stored token and refresh profile on startup */
+    /** Validate stored token and refresh profile on startup.
+     *  If a token exists, trust it immediately (fast UI) and validate in background. */
     async validateSession(): Promise<boolean> {
         const token = await this.getToken();
         if (!token) {
@@ -120,38 +121,47 @@ export class AuthService implements vscode.Disposable {
             return false;
         }
 
+        // Token exists → trust immediately for fast startup
+        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, true);
+        this._onDidChangeAuth.fire(true);
+        log('Token found — authenticated (validating in background...)');
+
+        // Validate + fetch profile in background (don't block startup)
+        this.validateTokenInBackground(token);
+        return true;
+    }
+
+    /** Background validation — logout only if server explicitly rejects the token */
+    private async validateTokenInBackground(token: string): Promise<void> {
         try {
             const resp = await fetch(`${AUTH_BASE_URL}/api/auth/validate-token`, {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
             if (!resp.ok) {
-                log('Stored token is invalid or expired. Please login again.');
+                log('Stored token is invalid or expired.');
                 await this.logout();
-                return false;
+                vscode.window.showWarningMessage('T-IA Connect: Session expired. Please sign in again.');
+                return;
             }
 
             const data = await resp.json() as { valid: boolean };
             if (!data.valid) {
+                log('Token rejected by server.');
                 await this.logout();
-                return false;
+                vscode.window.showWarningMessage('T-IA Connect: Session expired. Please sign in again.');
+                return;
             }
 
+            // Fetch profile and set API key
             const profile = await this.fetchProfile(token);
             if (profile) {
                 this.profile = profile;
                 await setApiKey(profile.apiKey);
-                vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, true);
-                this._onDidChangeAuth.fire(true);
-                return true;
+                log(`Profile loaded: ${profile.email} (${profile.licenseType})`);
             }
-
-            return false;
         } catch {
-            log('Cannot reach auth server to validate token (offline?)');
-            vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, true);
-            this._onDidChangeAuth.fire(true);
-            return true;
+            log('Cannot reach auth server (offline?) — keeping session.');
         }
     }
 

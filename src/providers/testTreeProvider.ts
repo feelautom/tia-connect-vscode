@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { l10n } from 'vscode';
 import { listTests, getTest, runTest } from '../api/testHarness';
 import { getLicenseFeatures, getPlcSimStatus } from '../api/project';
 import { pollJob } from '../api/jobs';
@@ -257,9 +258,9 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
             }
 
             if (testResult.Passed) {
-                vscode.window.showInformationMessage(`Test "${item.testName}" PASSED (${testResult.DurationMs}ms)`);
+                vscode.window.showInformationMessage(l10n.t('Test "{0}" PASSED ({1}ms)', item.testName, String(testResult.DurationMs)));
             } else {
-                vscode.window.showWarningMessage(`Test "${item.testName}" FAILED. See results panel.`);
+                vscode.window.showWarningMessage(l10n.t('Test "{0}" FAILED. See results panel.', item.testName));
             }
 
         } catch (err) {
@@ -279,7 +280,7 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
         if (result) {
             await openTestResultWebview(result);
         } else {
-            vscode.window.showInformationMessage(`No results yet for "${item.testName}". Run the test first.`);
+            vscode.window.showInformationMessage(l10n.t('No results yet for "{0}". Run the test first.', item.testName));
         }
     }
 

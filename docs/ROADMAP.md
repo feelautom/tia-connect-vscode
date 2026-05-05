@@ -137,7 +137,7 @@ Teste en conditions reelles le 2026-05-04 avec :
 | Server launch depuis VS Code | DONE | Sidebar buttons Headless/GUI, auto-connect, Stop Server, loading spinner |
 | Hover documentation avec fallback API | DONE | System blocks (TON, CTU...) + server docs fallback |
 | Publication Marketplace | TODO | Quand la v1 sera stable |
-| Localisation (i18n) | SKIPPED | Peu utile (VS Code generalement en anglais) |
+| Localisation (i18n) | DONE | package.nls.json (EN/FR) + vscode.l10n (runtime FR) |
 
 ---
 

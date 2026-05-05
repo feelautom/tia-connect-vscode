@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { l10n } from 'vscode';
 import { client } from '../api/client';
 import { getProjectOverview, listProjectFiles, getProjectHistory, openProject, closeProject } from '../api/project';
 import { pollJob } from '../api/jobs';
@@ -32,7 +33,7 @@ export function registerProjectCommands(
 
 async function promptApiKey(): Promise<string | undefined> {
     return vscode.window.showInputBox({
-        prompt: 'Enter your T-IA Connect API Key',
+        prompt: l10n.t('Enter your T-IA Connect API Key'),
         placeHolder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
         password: true,
         ignoreFocusOut: true,
@@ -75,12 +76,12 @@ async function ensureApiKey(): Promise<boolean> {
 
     // Key is invalid — ask again
     const retry = await vscode.window.showWarningMessage(
-        'The API key is invalid or rejected by the server. Enter a new key?',
-        'Enter New Key',
-        'Cancel',
+        l10n.t('The API key is invalid or rejected by the server. Enter a new key?'),
+        l10n.t('Enter New Key'),
+        l10n.t('Cancel'),
     );
 
-    if (retry !== 'Enter New Key') {
+    if (retry !== l10n.t('Enter New Key')) {
         return false;
     }
 
@@ -93,7 +94,7 @@ async function ensureApiKey(): Promise<boolean> {
     // Validate again
     const result2 = await validateApiKey();
     if (!result2.valid) {
-        vscode.window.showErrorMessage('API key still invalid. Check your key in T-IA Connect settings.');
+        vscode.window.showErrorMessage(l10n.t('API key still invalid. Check your key in T-IA Connect settings.'));
         return false;
     }
 
@@ -152,7 +153,7 @@ async function connect(
     } catch (err) {
         logError('Connection failed', err);
         setError('Connection failed');
-        vscode.window.showErrorMessage(`Connection failed: ${err instanceof Error ? err.message : err}`);
+        vscode.window.showErrorMessage(l10n.t('Connection failed: {0}', err instanceof Error ? err.message : String(err)));
     }
 }
 
@@ -165,7 +166,7 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
         ]);
 
         if (files.length === 0 && history.length === 0) {
-            vscode.window.showInformationMessage('No projects found on the server.');
+            vscode.window.showInformationMessage(l10n.t('No projects found on the server.'));
             return;
         }
 
@@ -179,7 +180,7 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
         const items: ProjectQuickPickItem[] = [];
 
         if (history.length > 0) {
-            items.push({ label: 'Recent Projects', kind: vscode.QuickPickItemKind.Separator, projectPath: '' } as ProjectQuickPickItem);
+            items.push({ label: l10n.t('Recent Projects'), kind: vscode.QuickPickItemKind.Separator, projectPath: '' } as ProjectQuickPickItem);
             for (const h of history) {
                 const name = h.Path.replace(/\\/g, '/').split('/').pop()?.replace(/\.ap\d+$/, '') || h.Path;
                 items.push({
@@ -194,7 +195,7 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
         // Add available files not in history
         const nonHistoryFiles = files.filter(f => !historyPaths.has(f.Path));
         if (nonHistoryFiles.length > 0) {
-            items.push({ label: 'Available Projects', kind: vscode.QuickPickItemKind.Separator, projectPath: '' } as ProjectQuickPickItem);
+            items.push({ label: l10n.t('Available Projects'), kind: vscode.QuickPickItemKind.Separator, projectPath: '' } as ProjectQuickPickItem);
             for (const f of nonHistoryFiles) {
                 items.push({
                     label: `$(file) ${f.Name}`,
@@ -206,7 +207,7 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
         }
 
         const selected = await vscode.window.showQuickPick(items, {
-            placeHolder: 'Select a project to open',
+            placeHolder: l10n.t('Select a project to open'),
             matchOnDetail: true,
         });
 
@@ -216,7 +217,7 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
         log(`Switching to project: ${selected.projectPath}`);
 
         const projectName = selected.label.replace(/^\$\([^)]+\)\s*/, '');
-        treeProvider.setBusy(`Opening ${projectName}...`);
+        treeProvider.setBusy(l10n.t('Opening {0}...', projectName));
 
         try {
             // Close current project
@@ -230,7 +231,7 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
             }
 
             // Open new project
-            treeProvider.setBusy(`Connecting to TIA Portal...`);
+            treeProvider.setBusy(l10n.t('Connecting to TIA Portal...'));
             const openJobId = await openProject(selected.projectPath);
             await pollJob(openJobId, (s) => {
                 log(`Open: ${s.Status}${s.Message ? ' - ' + s.Message : ''}`);
@@ -243,21 +244,21 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
         // Refresh tree — this triggers onProjectLoaded which activates everything
         treeProvider.refresh();
         log('Project switched successfully.');
-        vscode.window.showInformationMessage(`Project opened: ${selected.detail}`);
+        vscode.window.showInformationMessage(l10n.t('Project opened: {0}', selected.detail!));
 
     } catch (err) {
         logError('Switch project failed', err);
-        vscode.window.showErrorMessage(`Failed to switch project: ${err instanceof Error ? err.message : err}`);
+        vscode.window.showErrorMessage(l10n.t('Failed to switch project: {0}', err instanceof Error ? err.message : String(err)));
     }
 }
 
 async function disconnect(treeProvider: ProjectTreeProvider, scmProvider: TiaSourceControl): Promise<void> {
     const pick = await vscode.window.showQuickPick(
         [
-            { label: '$(debug-disconnect) Disconnect', description: 'Disconnect from the server (keep it running)', action: 'disconnect' },
-            { label: '$(stop) Stop Server', description: 'Shut down the T-IA Connect server', action: 'stop' },
+            { label: `$(debug-disconnect) ${l10n.t('Disconnect')}`, description: l10n.t('Disconnect from the server (keep it running)'), action: 'disconnect' },
+            { label: `$(stop) ${l10n.t('Stop Server')}`, description: l10n.t('Shut down the T-IA Connect server'), action: 'stop' },
         ],
-        { placeHolder: 'Disconnect or stop the server?' }
+        { placeHolder: l10n.t('Disconnect or stop the server?') }
     );
 
     if (!pick) { return; }
@@ -303,12 +304,12 @@ async function launchAndConnect(
         const child = spawn(exePath, args, { detached: true, stdio: 'ignore' });
         child.unref();
     } catch (err) {
-        vscode.window.showErrorMessage(`Failed to launch T-IA Connect: ${err instanceof Error ? err.message : err}`);
+        vscode.window.showErrorMessage(l10n.t('Failed to launch T-IA Connect: {0}', err instanceof Error ? err.message : String(err)));
         return;
     }
 
     // Show loading in sidebar while waiting for server
-    treeProvider.setBusy('Starting T-IA Connect...');
+    treeProvider.setBusy(l10n.t('Starting T-IA Connect...'));
     vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, false);
 
     let started = false;
@@ -327,6 +328,6 @@ async function launchAndConnect(
         await connect(treeProvider, scmProvider, testProvider);
     } else {
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, true);
-        vscode.window.showErrorMessage('T-IA Connect server did not start in time. Check the executable path in settings.');
+        vscode.window.showErrorMessage(l10n.t('T-IA Connect server did not start in time. Check the executable path in settings.'));
     }
 }

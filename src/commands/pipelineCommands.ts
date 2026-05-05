@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { l10n } from 'vscode';
 import {
     listPipelines, getPipeline, runPipeline,
     getExecutionHistory, listTemplates, instantiateTemplate,
@@ -20,7 +21,7 @@ async function showPipelineList(): Promise<void> {
     try {
         const names = await listPipelines();
         if (!names.length) {
-            vscode.window.showInformationMessage('No pipelines defined. Create one from a template.');
+            vscode.window.showInformationMessage(l10n.t('No pipelines defined. Create one from a template.'));
             return;
         }
 
@@ -46,7 +47,7 @@ async function runPipelineCommand(): Promise<void> {
     try {
         const names = await listPipelines();
         if (!names.length) {
-            vscode.window.showInformationMessage('No pipelines to run.');
+            vscode.window.showInformationMessage(l10n.t('No pipelines to run.'));
             return;
         }
 
@@ -73,18 +74,18 @@ async function runPipelineCommand(): Promise<void> {
                 if (result.Status === 'Completed') {
                     const execution = result.Result as PipelineExecution | undefined;
                     const summary = formatExecutionSummary(execution);
-                    vscode.window.showInformationMessage(`Pipeline '${selected}' completed. ${summary}`);
+                    vscode.window.showInformationMessage(l10n.t("Pipeline '{0}' completed. {1}", selected, summary));
                     log(`Pipeline '${selected}' completed. ${summary}`);
                 } else {
                     vscode.window.showErrorMessage(
-                        `Pipeline '${selected}' failed: ${result.Error || result.Message}`
+                        l10n.t("Pipeline '{0}' failed: {1}", selected, result.Error || result.Message || '')
                     );
                 }
             }
         );
     } catch (err) {
         logError('Pipeline run failed', err);
-        vscode.window.showErrorMessage(`Pipeline failed: ${err instanceof Error ? err.message : err}`);
+        vscode.window.showErrorMessage(l10n.t('Pipeline failed: {0}', err instanceof Error ? err.message : String(err)));
     }
 }
 
@@ -92,7 +93,7 @@ async function showPipelineHistory(): Promise<void> {
     try {
         const executions = await getExecutionHistory(undefined, 30);
         if (!executions.length) {
-            vscode.window.showInformationMessage('No pipeline execution history.');
+            vscode.window.showInformationMessage(l10n.t('No pipeline execution history.'));
             return;
         }
 
@@ -140,7 +141,7 @@ async function createFromTemplate(): Promise<void> {
     try {
         const templates = await listTemplates();
         if (!templates.length) {
-            vscode.window.showInformationMessage('No pipeline templates available.');
+            vscode.window.showInformationMessage(l10n.t('No pipeline templates available.'));
             return;
         }
 
@@ -164,7 +165,7 @@ async function createFromTemplate(): Promise<void> {
         if (!pipelineName) { return; }
 
         const pipeline = await instantiateTemplate((selected as any).id, pipelineName);
-        vscode.window.showInformationMessage(`Pipeline '${pipelineName}' created from template.`);
+        vscode.window.showInformationMessage(l10n.t("Pipeline '{0}' created from template.", pipelineName));
         log(`Pipeline '${pipelineName}' created from template '${selected.label}'.`);
 
         // Show the created pipeline

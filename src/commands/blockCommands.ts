@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { l10n } from 'vscode';
 import * as fs from 'fs';
 import { BlockEditor } from '../editors/blockEditor';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
@@ -50,7 +51,7 @@ async function doCompileDevice(item?: TiaTreeItem): Promise<void> {
             const overview = await getProjectOverview();
             const devices = overview?.Devices;
             if (!devices || devices.length === 0) {
-                vscode.window.showWarningMessage('No devices found in the project.');
+                vscode.window.showWarningMessage(l10n.t('No devices found in the project.'));
                 return;
             }
             if (devices.length === 1) {
@@ -58,7 +59,7 @@ async function doCompileDevice(item?: TiaTreeItem): Promise<void> {
             } else {
                 const pick = await vscode.window.showQuickPick(
                     devices.map(d => d.Name),
-                    { placeHolder: 'Select a device to compile' }
+                    { placeHolder: l10n.t('Select the target device') }
                 );
                 if (!pick) { return; }
                 deviceName = pick;
@@ -76,7 +77,7 @@ async function doCompileDevice(item?: TiaTreeItem): Promise<void> {
 
     try {
         const result = await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: `Compiling ${deviceName}...` },
+            { location: vscode.ProgressLocation.Notification, title: l10n.t('Compiling {0}...', deviceName!) },
             () => compileDevice(deviceName!)
         );
 
@@ -94,7 +95,7 @@ async function doCompileDevice(item?: TiaTreeItem): Promise<void> {
         }
     } catch (err) {
         logError('Compilation failed', err);
-        vscode.window.showErrorMessage(`Compilation failed: ${err instanceof Error ? err.message : err}`);
+        vscode.window.showErrorMessage(l10n.t('Compilation failed: {0}', err instanceof Error ? err.message : String(err)));
     }
 }
 
@@ -106,7 +107,7 @@ async function doCompileBlock(item: TiaTreeItem): Promise<void> {
 
     try {
         const result = await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: `Compiling ${item.blockName}...` },
+            { location: vscode.ProgressLocation.Notification, title: l10n.t('Compiling {0}...', item.blockName!) },
             () => compileBlock(item.deviceName!, item.blockName!)
         );
 
@@ -124,7 +125,7 @@ async function doCompileBlock(item: TiaTreeItem): Promise<void> {
         }
     } catch (err) {
         logError(`Compile block ${item.blockName} failed`, err);
-        vscode.window.showErrorMessage(`Compilation failed: ${err instanceof Error ? err.message : err}`);
+        vscode.window.showErrorMessage(l10n.t('Compilation failed: {0}', err instanceof Error ? err.message : String(err)));
     }
 }
 
@@ -148,7 +149,7 @@ async function doExportBlock(item: TiaTreeItem): Promise<void> {
 
     try {
         const content = await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: `Exporting ${item.blockName}...` },
+            { location: vscode.ProgressLocation.Notification, title: l10n.t('Loading {0}...', item.blockName!) },
             async () => {
                 const dto = await getBlockContent(item.deviceName!, item.blockName!);
                 if (dto.SourceText) {
@@ -171,11 +172,11 @@ async function doExportBlock(item: TiaTreeItem): Promise<void> {
 
         fs.writeFileSync(uri.fsPath, content, 'utf-8');
 
-        vscode.window.showInformationMessage(`Block ${item.blockName} exported to ${uri.fsPath}`);
+        vscode.window.showInformationMessage(l10n.t('Block {0} exported to {1}', item.blockName!, uri.fsPath));
         log(`Exported ${item.blockName} to ${uri.fsPath}`);
     } catch (err) {
         logError(`Export block ${item.blockName} failed`, err);
-        vscode.window.showErrorMessage(`Export failed: ${err instanceof Error ? err.message : err}`);
+        vscode.window.showErrorMessage(l10n.t('Export failed: {0}', err instanceof Error ? err.message : String(err)));
     }
 }
 
@@ -198,7 +199,7 @@ async function doImportSourceFile(item?: TiaTreeItem): Promise<void> {
             const overview = await getProjectOverview();
             const devices = overview?.Devices;
             if (!devices || devices.length === 0) {
-                vscode.window.showWarningMessage('No devices found in the project.');
+                vscode.window.showWarningMessage(l10n.t('No devices found in the project.'));
                 return;
             }
             if (devices.length === 1) {
@@ -206,7 +207,7 @@ async function doImportSourceFile(item?: TiaTreeItem): Promise<void> {
             } else {
                 const pick = await vscode.window.showQuickPick(
                     devices.map(d => d.Name),
-                    { placeHolder: 'Select target device for import' }
+                    { placeHolder: l10n.t('Select the target device') }
                 );
                 if (!pick) { return; }
                 deviceName = pick;
@@ -243,7 +244,7 @@ async function doImportSourceFile(item?: TiaTreeItem): Promise<void> {
             const content = fs.readFileSync(uri.fsPath, 'utf-8');
 
             await vscode.window.withProgress(
-                { location: vscode.ProgressLocation.Notification, title: `Importing ${fileName}...` },
+                { location: vscode.ProgressLocation.Notification, title: l10n.t('Loading {0}...', fileName) },
                 () => importAndGenerate(deviceName!, content)
             );
 
@@ -251,7 +252,7 @@ async function doImportSourceFile(item?: TiaTreeItem): Promise<void> {
             successCount++;
         } catch (err) {
             logError(`Import ${fileName} failed`, err);
-            vscode.window.showErrorMessage(`Import failed for ${fileName}: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Import failed for {0}: {1}', fileName, err instanceof Error ? err.message : String(err)));
             errorCount++;
         }
     }

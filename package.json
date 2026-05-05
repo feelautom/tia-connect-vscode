@@ -1,7 +1,7 @@
 {
   "name": "tia-connect-vscode",
-  "displayName": "T-IA Connect for VS Code",
-  "description": "Explore, edit SCL/STL, and compile Siemens TIA Portal projects from VS Code via T-IA Connect REST API",
+  "displayName": "%displayName%",
+  "description": "%description%",
   "version": "0.2.2",
   "publisher": "FEELAUTOM",
   "license": "MIT",
@@ -28,27 +28,27 @@
   "main": "./dist/extension.js",
   "contributes": {
     "configuration": {
-      "title": "T-IA Connect",
+      "title": "%config.title%",
       "properties": {
         "tiaConnect.serverUrl": {
           "type": "string",
           "default": "http://localhost:9000",
-          "description": "T-IA Connect server URL"
+          "description": "%config.serverUrl.description%"
         },
         "tiaConnect.apiKey": {
           "type": "string",
           "default": "",
-          "description": "API key for authentication (X-API-Key header)"
+          "description": "%config.apiKey.description%"
         },
         "tiaConnect.autoReimportOnSave": {
           "type": "boolean",
           "default": true,
-          "description": "Automatically reimport SCL/STL blocks into TIA Portal on save"
+          "description": "%config.autoReimportOnSave.description%"
         },
         "tiaConnect.autoCompileOnReimport": {
           "type": "boolean",
           "default": false,
-          "description": "Automatically compile after reimporting a block"
+          "description": "%config.autoCompileOnReimport.description%"
         },
         "tiaConnect.autoSaveInterval": {
           "type": "number",
@@ -60,234 +60,234 @@
             15
           ],
           "enumDescriptions": [
-            "Disabled",
-            "Every 5 minutes",
-            "Every 10 minutes",
-            "Every 15 minutes"
+            "%config.autoSaveInterval.disabled%",
+            "%config.autoSaveInterval.5min%",
+            "%config.autoSaveInterval.10min%",
+            "%config.autoSaveInterval.15min%"
           ],
-          "description": "Auto-save interval for open block files (in minutes). This is a safety backup — reimport to TIA only happens on manual Ctrl+S."
+          "description": "%config.autoSaveInterval.description%"
         },
         "tiaConnect.executablePath": {
           "type": "string",
           "default": "C:\\Program Files\\FeelAutomCorp\\TiaConnect\\TiaPortalApi.App.exe",
-          "description": "Path to the T-IA Connect server executable. Used to launch the server when it is not running."
+          "description": "%config.executablePath.description%"
         }
       }
     },
     "commands": [
       {
         "command": "tiaConnect.connect",
-        "title": "Connect to Server",
+        "title": "%command.connect%",
         "category": "T-IA Connect",
         "icon": "$(plug)"
       },
       {
         "command": "tiaConnect.disconnect",
-        "title": "Disconnect from Server",
+        "title": "%command.disconnect%",
         "category": "T-IA Connect",
         "icon": "$(debug-disconnect)"
       },
       {
         "command": "tiaConnect.refreshProject",
-        "title": "Refresh Project Tree",
+        "title": "%command.refreshProject%",
         "category": "T-IA Connect",
         "icon": "$(refresh)"
       },
       {
         "command": "tiaConnect.openBlock",
-        "title": "Open Block",
+        "title": "%command.openBlock%",
         "category": "T-IA Connect",
         "icon": "$(go-to-file)"
       },
       {
         "command": "tiaConnect.compileDevice",
-        "title": "Compile Device",
+        "title": "%command.compileDevice%",
         "category": "T-IA Connect",
         "icon": "$(gear)"
       },
       {
         "command": "tiaConnect.compileBlock",
-        "title": "Compile Block",
+        "title": "%command.compileBlock%",
         "category": "T-IA Connect",
         "icon": "$(check)"
       },
       {
         "command": "tiaConnect.exportBlock",
-        "title": "Export Block to File",
+        "title": "%command.exportBlock%",
         "category": "T-IA Connect",
         "icon": "$(desktop-download)"
       },
       {
         "command": "tiaConnect.vcsCommit",
-        "title": "Commit",
+        "title": "%command.vcsCommit%",
         "category": "T-IA Connect VCS",
         "icon": "$(check)"
       },
       {
         "command": "tiaConnect.vcsRefresh",
-        "title": "Refresh VCS Status",
+        "title": "%command.vcsRefresh%",
         "category": "T-IA Connect VCS",
         "icon": "$(refresh)"
       },
       {
         "command": "tiaConnect.vcsInit",
-        "title": "Initialize VCS Repository",
+        "title": "%command.vcsInit%",
         "category": "T-IA Connect VCS",
         "icon": "$(repo)"
       },
       {
         "command": "tiaConnect.vcsPush",
-        "title": "Push",
+        "title": "%command.vcsPush%",
         "category": "T-IA Connect VCS",
         "icon": "$(cloud-upload)"
       },
       {
         "command": "tiaConnect.vcsPull",
-        "title": "Pull",
+        "title": "%command.vcsPull%",
         "category": "T-IA Connect VCS",
         "icon": "$(cloud-download)"
       },
       {
         "command": "tiaConnect.vcsRemote",
-        "title": "Configure Remote",
+        "title": "%command.vcsRemote%",
         "category": "T-IA Connect VCS",
         "icon": "$(remote)"
       },
       {
         "command": "tiaConnect.vcsBranch",
-        "title": "Branch Operations",
+        "title": "%command.vcsBranch%",
         "category": "T-IA Connect VCS",
         "icon": "$(git-branch)"
       },
       {
         "command": "tiaConnect.vcsLog",
-        "title": "Show Commit Log",
+        "title": "%command.vcsLog%",
         "category": "T-IA Connect VCS",
         "icon": "$(history)"
       },
       {
         "command": "tiaConnect.testRefresh",
-        "title": "Refresh PLC Tests",
+        "title": "%command.testRefresh%",
         "category": "T-IA Connect Tests",
         "icon": "$(refresh)"
       },
       {
         "command": "tiaConnect.testRunAll",
-        "title": "Run All PLC Tests",
+        "title": "%command.testRunAll%",
         "category": "T-IA Connect Tests",
         "icon": "$(run-all)"
       },
       {
         "command": "tiaConnect.testRunSingle",
-        "title": "Run Test",
+        "title": "%command.testRunSingle%",
         "category": "T-IA Connect Tests",
         "icon": "$(play)"
       },
       {
         "command": "tiaConnect.testShowResult",
-        "title": "Show Test Results",
+        "title": "%command.testShowResult%",
         "category": "T-IA Connect Tests",
         "icon": "$(open-preview)"
       },
       {
         "command": "tiaConnect.pipelineList",
-        "title": "List Pipelines",
+        "title": "%command.pipelineList%",
         "category": "T-IA Connect Pipelines",
         "icon": "$(list-flat)"
       },
       {
         "command": "tiaConnect.pipelineRun",
-        "title": "Run Pipeline",
+        "title": "%command.pipelineRun%",
         "category": "T-IA Connect Pipelines",
         "icon": "$(play)"
       },
       {
         "command": "tiaConnect.pipelineHistory",
-        "title": "Pipeline History",
+        "title": "%command.pipelineHistory%",
         "category": "T-IA Connect Pipelines",
         "icon": "$(history)"
       },
       {
         "command": "tiaConnect.pipelineFromTemplate",
-        "title": "Create Pipeline from Template",
+        "title": "%command.pipelineFromTemplate%",
         "category": "T-IA Connect Pipelines",
         "icon": "$(file-add)"
       },
       {
         "command": "tiaConnect.showCrossReferences",
-        "title": "Show Cross-References",
+        "title": "%command.showCrossReferences%",
         "category": "T-IA Connect",
         "icon": "$(references)"
       },
       {
         "command": "tiaConnect.openTagTable",
-        "title": "Open Tag Table",
+        "title": "%command.openTagTable%",
         "category": "T-IA Connect",
         "icon": "$(table)"
       },
       {
         "command": "tiaConnect.openUdt",
-        "title": "Open UDT",
+        "title": "%command.openUdt%",
         "category": "T-IA Connect",
         "icon": "$(symbol-struct)"
       },
       {
         "command": "tiaConnect.importSourceFile",
-        "title": "Import SCL/STL File",
+        "title": "%command.importSourceFile%",
         "category": "T-IA Connect",
         "icon": "$(cloud-upload)"
       },
       {
         "command": "tiaConnect.switchProject",
-        "title": "Switch Project",
+        "title": "%command.switchProject%",
         "category": "T-IA Connect",
         "icon": "$(folder-opened)"
       },
       {
         "command": "tiaConnect.openSettings",
-        "title": "Settings",
+        "title": "%command.openSettings%",
         "category": "T-IA Connect",
         "icon": "$(settings-gear)"
       },
       {
         "command": "tiaConnect.vcsTreeRefresh",
-        "title": "Refresh",
+        "title": "%command.vcsTreeRefresh%",
         "category": "T-IA Connect VCS",
         "icon": "$(refresh)"
       },
       {
         "command": "tiaConnect.vcsExportPreview",
-        "title": "Export Preview (detect changes)",
+        "title": "%command.vcsExportPreview%",
         "category": "T-IA Connect VCS",
         "icon": "$(eye)"
       },
       {
         "command": "tiaConnect.vcsTreeInit",
-        "title": "Initialize VCS",
+        "title": "%command.vcsTreeInit%",
         "category": "T-IA Connect VCS",
         "icon": "$(repo)"
       },
       {
         "command": "tiaConnect.vcsTreeCommit",
-        "title": "Commit Changes",
+        "title": "%command.vcsTreeCommit%",
         "category": "T-IA Connect VCS",
         "icon": "$(check)"
       },
       {
         "command": "tiaConnect.vcsDiffFile",
-        "title": "Show Changes",
+        "title": "%command.vcsDiffFile%",
         "category": "T-IA Connect VCS",
         "icon": "$(diff)"
       },
       {
         "command": "tiaConnect.launchHeadless",
-        "title": "Launch Server (Headless)",
+        "title": "%command.launchHeadless%",
         "category": "T-IA Connect",
         "icon": "$(terminal)"
       },
       {
         "command": "tiaConnect.launchGui",
-        "title": "Launch Server (GUI)",
+        "title": "%command.launchGui%",
         "category": "T-IA Connect",
         "icon": "$(window)"
       }
@@ -305,16 +305,16 @@
       "tiaConnect": [
         {
           "id": "tiaProjectExplorer",
-          "name": "Project Explorer"
+          "name": "%view.projectExplorer%"
         },
         {
           "id": "tiaVcsExplorer",
-          "name": "Source Control",
+          "name": "%view.vcsExplorer%",
           "when": "tiaConnect.connected"
         },
         {
           "id": "tiaTestExplorer",
-          "name": "PLC Tests",
+          "name": "%view.testExplorer%",
           "when": "tiaConnect.connected"
         }
       ]
@@ -322,17 +322,17 @@
     "viewsWelcome": [
       {
         "view": "tiaProjectExplorer",
-        "contents": "T-IA Connect server is not running.\n\nLaunch the server and connect automatically:\n[Launch Headless](command:tiaConnect.launchHeadless)\n[Launch with GUI](command:tiaConnect.launchGui)\n\nOr connect to an already running server:\n[Connect to Server](command:tiaConnect.connect)\n[Open Settings](command:workbench.action.openSettings?%22tiaConnect%22)",
+        "contents": "%welcome.serverNotRunning%",
         "when": "tiaConnect.serverNotRunning"
       },
       {
         "view": "tiaProjectExplorer",
-        "contents": "No connection to T-IA Connect server.\n\nMake sure the T-IA Connect server is running, then click Connect.\n[Connect to Server](command:tiaConnect.connect)\n\nYou can configure the server URL and API key in the extension settings.\n[Open Settings](command:workbench.action.openSettings?%22tiaConnect%22)",
+        "contents": "%welcome.notConnected%",
         "when": "!tiaConnect.connected && !tiaConnect.serverNotRunning"
       },
       {
         "view": "tiaProjectExplorer",
-        "contents": "Connected but no project found.\n\nOpen a TIA Portal project in T-IA Connect, then refresh.\n[Refresh](command:tiaConnect.refreshProject)",
+        "contents": "%welcome.noProject%",
         "when": "tiaConnect.connected"
       }
     ],
@@ -530,6 +530,7 @@
     "typescript-eslint": "^8.59.1",
     "vitest": "^4.1.5"
   },
+  "l10n": "./l10n",
   "repository": {
     "type": "git",
     "url": "https://github.com/feelautomcorp/tia-connect-vscode"

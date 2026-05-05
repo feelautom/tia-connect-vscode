@@ -13,6 +13,7 @@ All notable changes to the T-IA Connect for VS Code extension will be documented
 - **Loading spinner**: sidebar shows animated loading node during server launch and project open, with real-time status messages
 - Configurable server executable path (`tiaConnect.executablePath`)
 - SignalR connected early in connect() flow (fixes polling fallback during Switch Project)
+- **Localisation (i18n)**: French translation via `package.nls.fr.json` (settings, commands, views) and `l10n/bundle.l10n.fr.json` (runtime messages). All user-facing strings are now translatable.
 
 ### Changed
 - Requires T-IA Connect server v2.1.620+ (new endpoint: `POST /api/health/shutdown`)

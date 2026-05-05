@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { l10n } from 'vscode';
 import {
     vcsGetStatus, vcsCommit, vcsGetLog, vcsGetDiff,
     vcsListBranches, vcsCreateBranch, vcsCheckoutBranch,
@@ -122,12 +123,12 @@ export class TiaSourceControl implements vscode.Disposable {
     private async init(): Promise<void> {
         try {
             await vcsInit();
-            vscode.window.showInformationMessage('VCS repository initialized.');
+            vscode.window.showInformationMessage(l10n.t('VCS repository initialized.'));
             log('VCS initialized.');
             await this.refresh();
         } catch (err) {
             logError('VCS init failed', err);
-            vscode.window.showErrorMessage(`VCS init failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('VCS init failed: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 
@@ -160,12 +161,12 @@ export class TiaSourceControl implements vscode.Disposable {
                 }
             );
 
-            vscode.window.showInformationMessage(`Committed: ${message}`);
+            vscode.window.showInformationMessage(l10n.t('Committed: {0}', message));
             log(`Committed: ${message}`);
             await this.refresh();
         } catch (err) {
             logError('VCS commit failed', err);
-            vscode.window.showErrorMessage(`Commit failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Commit failed: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 
@@ -179,7 +180,7 @@ export class TiaSourceControl implements vscode.Disposable {
             log(`Push: ${msg}`);
         } catch (err) {
             logError('VCS push failed', err);
-            vscode.window.showErrorMessage(`Push failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Push failed: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 
@@ -194,21 +195,21 @@ export class TiaSourceControl implements vscode.Disposable {
             await this.refresh();
         } catch (err) {
             logError('VCS pull failed', err);
-            vscode.window.showErrorMessage(`Pull failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Pull failed: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 
     private async branchMenu(): Promise<void> {
         const pick = await vscode.window.showQuickPick(
-            ['Switch Branch', 'Create Branch', 'Delete Branch', 'Merge Branch'],
-            { placeHolder: 'Branch operation' }
+            [l10n.t('Switch Branch'), l10n.t('Create Branch'), l10n.t('Delete Branch'), l10n.t('Merge Branch')],
+            { placeHolder: l10n.t('Select branch operation') }
         );
 
         if (!pick) { return; }
 
         try {
             switch (pick) {
-                case 'Switch Branch': {
+                case l10n.t('Switch Branch'): {
                     const branches = await vcsListBranches();
                     const selected = await vscode.window.showQuickPick(
                         branches.map(b => ({
@@ -220,21 +221,21 @@ export class TiaSourceControl implements vscode.Disposable {
                     );
                     if (selected) {
                         await vcsCheckoutBranch(selected.label);
-                        vscode.window.showInformationMessage(`Switched to ${selected.label}`);
+                        vscode.window.showInformationMessage(l10n.t('Switched to {0}', selected.label));
                         await this.refresh();
                     }
                     break;
                 }
-                case 'Create Branch': {
+                case l10n.t('Create Branch'): {
                     const name = await vscode.window.showInputBox({ prompt: 'Branch name' });
                     if (name) {
                         await vcsCreateBranch(name);
-                        vscode.window.showInformationMessage(`Branch '${name}' created.`);
+                        vscode.window.showInformationMessage(l10n.t("Branch '{0}' created.", name));
                         await this.refresh();
                     }
                     break;
                 }
-                case 'Delete Branch': {
+                case l10n.t('Delete Branch'): {
                     const branches = await vcsListBranches();
                     const nonCurrent = branches.filter(b => !b.IsCurrentBranch && !b.IsRemote);
                     const selected = await vscode.window.showQuickPick(
@@ -243,12 +244,12 @@ export class TiaSourceControl implements vscode.Disposable {
                     );
                     if (selected) {
                         await vcsDeleteBranch(selected.label);
-                        vscode.window.showInformationMessage(`Branch '${selected.label}' deleted.`);
+                        vscode.window.showInformationMessage(l10n.t("Branch '{0}' deleted.", selected.label));
                         await this.refresh();
                     }
                     break;
                 }
-                case 'Merge Branch': {
+                case l10n.t('Merge Branch'): {
                     const branches = await vcsListBranches();
                     const nonCurrent = branches.filter(b => !b.IsCurrentBranch);
                     const selected = await vscode.window.showQuickPick(
@@ -265,7 +266,7 @@ export class TiaSourceControl implements vscode.Disposable {
             }
         } catch (err) {
             logError('Branch operation failed', err);
-            vscode.window.showErrorMessage(`Branch operation failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Branch operation failed: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 
@@ -298,7 +299,7 @@ export class TiaSourceControl implements vscode.Disposable {
             }
         } catch (err) {
             logError('VCS log failed', err);
-            vscode.window.showErrorMessage(`Log failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Log failed: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 
@@ -342,21 +343,21 @@ export class TiaSourceControl implements vscode.Disposable {
                 if (!url) { return; }
 
                 await vcsAddRemote(name, url);
-                vscode.window.showInformationMessage(`Remote "${name}" added: ${url}`);
+                vscode.window.showInformationMessage(l10n.t('Remote "{0}" added: {1}', name, url));
                 log(`Remote added: ${name} → ${url}`);
                 await this.refresh();
             } else if (pick.label.startsWith('$(trash)')) {
                 const remoteName = pick.label.match(/Remove "(.+)"/)?.[1];
                 if (remoteName) {
                     await vcsRemoveRemote(remoteName);
-                    vscode.window.showInformationMessage(`Remote "${remoteName}" removed.`);
+                    vscode.window.showInformationMessage(l10n.t('Remote "{0}" removed.', remoteName));
                     log(`Remote removed: ${remoteName}`);
                     await this.refresh();
                 }
             }
         } catch (err) {
             logError('Remote operation failed', err);
-            vscode.window.showErrorMessage(`Remote operation failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Remote operation failed: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 
@@ -383,7 +384,7 @@ export class TiaSourceControl implements vscode.Disposable {
             }
         } catch (err) {
             logError('VCS diff failed', err);
-            vscode.window.showErrorMessage(`Diff failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Diff failed: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { l10n } from 'vscode';
 import { vcsGetStatus, vcsExportPreview, vcsInit, vcsCommit } from '../api/sourceControl';
 import { getLicenseFeatures } from '../api/project';
 import { pollJob } from '../api/jobs';
@@ -205,11 +206,11 @@ export class VcsTreeProvider implements vscode.TreeDataProvider<VcsTreeItem>, vs
     private async init(): Promise<void> {
         try {
             await vcsInit();
-            vscode.window.showInformationMessage('VCS repository initialized.');
+            vscode.window.showInformationMessage(l10n.t('VCS repository initialized.'));
             await this.refresh();
         } catch (err) {
             logError('VCS init failed', err);
-            vscode.window.showErrorMessage(`VCS init failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('VCS init failed: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 
@@ -232,11 +233,11 @@ export class VcsTreeProvider implements vscode.TreeDataProvider<VcsTreeItem>, vs
             await this.refresh();
             const count = this.changes.length;
             vscode.window.showInformationMessage(
-                count > 0 ? `${count} changed file(s) detected.` : 'No changes detected.'
+                count > 0 ? l10n.t('{0} changed file(s) detected.', String(count)) : l10n.t('No changes detected.')
             );
         } catch (err) {
             logError('Export preview failed', err);
-            vscode.window.showErrorMessage(`Export preview failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Export preview failed: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 
@@ -262,11 +263,11 @@ export class VcsTreeProvider implements vscode.TreeDataProvider<VcsTreeItem>, vs
                 }
             );
 
-            vscode.window.showInformationMessage(`Committed: ${message}`);
+            vscode.window.showInformationMessage(l10n.t('Committed: {0}', message));
             await this.refresh();
         } catch (err) {
             logError('VCS commit failed', err);
-            vscode.window.showErrorMessage(`Commit failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Commit failed: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 

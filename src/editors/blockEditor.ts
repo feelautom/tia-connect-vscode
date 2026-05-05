@@ -9,6 +9,7 @@ import { getAutoReimport, getAutoCompile, getAutoSaveInterval } from '../utils/c
 import { EDITABLE_LANGUAGES } from '../utils/constants';
 import { log, logError, showOutput } from '../views/outputChannel';
 import { updateDiagnostics, clearDiagnostics } from '../views/diagnostics';
+import { l10n } from 'vscode';
 
 export class BlockEditor {
     private fileManager = new BlockFileManager();
@@ -82,28 +83,33 @@ export class BlockEditor {
     /** Open a block for editing in VS Code */
     async openBlock(item: TiaTreeItem): Promise<void> {
         if (!item.deviceName || !item.blockName || !item.language) {
-            vscode.window.showErrorMessage('Cannot open this block: missing metadata.');
+            vscode.window.showErrorMessage(l10n.t('Cannot open this block: missing metadata.'));
             return;
         }
 
         const isEditable = EDITABLE_LANGUAGES.includes(item.language.toUpperCase() as any);
 
         try {
-            if (isEditable) {
-                await this.openEditableBlock(item);
-            } else {
-                await this.openReadOnlyBlock(item);
-            }
+            await vscode.window.withProgress(
+                { location: { viewId: 'tiaProjectExplorer' }, title: l10n.t('Loading {0}...', item.blockName) },
+                async () => {
+                    if (isEditable) {
+                        await this.openEditableBlock(item);
+                    } else {
+                        await this.openReadOnlyBlock(item);
+                    }
+                }
+            );
         } catch (err) {
             logError(`Failed to open block ${item.blockName}`, err);
-            vscode.window.showErrorMessage(`Failed to open block: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Failed to open block: {0}', err instanceof Error ? err.message : String(err)));
         }
     }
 
     /** Open SCL/STL block for editing */
     private async openEditableBlock(item: TiaTreeItem): Promise<void> {
         const { content, modifiedDate } = await vscode.window.withProgress(
-            { location: vscode.ProgressLocation.Notification, title: `Loading ${item.blockName}...` },
+            { location: vscode.ProgressLocation.Notification, title: l10n.t('Loading {0}...', item.blockName!) },
             async () => {
                 const dto = await getBlockContent(item.deviceName!, item.blockName!);
 
@@ -198,12 +204,11 @@ export class BlockEditor {
             const sourceBlockName = this.extractBlockNameFromSource(content);
             if (sourceBlockName && sourceBlockName !== meta.blockName) {
                 const choice = await vscode.window.showWarningMessage(
-                    `Block name mismatch: source declares "${sourceBlockName}" but you are editing "${meta.blockName}". ` +
-                    `Reimporting will create a NEW block "${sourceBlockName}" instead of updating "${meta.blockName}".`,
-                    'Reimport Anyway',
-                    'Cancel'
+                    l10n.t('Block name mismatch: source declares "{0}" but you are editing "{1}". Reimporting will create a NEW block "{0}" instead of updating "{1}".', sourceBlockName, meta.blockName),
+                    l10n.t('Reimport Anyway'),
+                    l10n.t('Cancel')
                 );
-                if (choice !== 'Reimport Anyway') {
+                if (choice !== l10n.t('Reimport Anyway')) {
                     log(`Reimport cancelled: name mismatch (source="${sourceBlockName}", expected="${meta.blockName}")`);
                     this.reimportInProgress.delete(key);
                     return;
@@ -216,11 +221,11 @@ export class BlockEditor {
                     const current = await getBlockContent(meta.deviceName, meta.blockName);
                     if (current.ModifiedDate && current.ModifiedDate !== meta.modifiedDate) {
                         const choice = await vscode.window.showWarningMessage(
-                            `Block "${meta.blockName}" was modified in TIA Portal since you opened it. Reimporting will overwrite those changes.`,
-                            'Overwrite',
-                            'Cancel'
+                            l10n.t('Block "{0}" was modified in TIA Portal since you opened it. Reimporting will overwrite those changes.', meta.blockName),
+                            l10n.t('Overwrite'),
+                            l10n.t('Cancel')
                         );
-                        if (choice !== 'Overwrite') {
+                        if (choice !== l10n.t('Overwrite')) {
                             log(`Reimport cancelled: block modified in TIA Portal (opened: ${meta.modifiedDate}, current: ${current.ModifiedDate})`);
                             this.reimportInProgress.delete(key);
                             return;
@@ -235,7 +240,7 @@ export class BlockEditor {
 
             if (res.Success) {
                 clearDiagnostics(doc.uri);
-                vscode.window.showInformationMessage(`Block ${meta.blockName} reimported successfully.`);
+                vscode.window.showInformationMessage(l10n.t('Block {0} reimported successfully.', meta.blockName));
                 log(`Reimport OK: ${meta.blockName}`);
                 // Update QuickDiff original to current content (now synced with TIA)
                 this.originalProvider?.setOriginal(key, content);
@@ -245,13 +250,13 @@ export class BlockEditor {
                     await this.autoCompile(meta.deviceName, meta.blockName, doc.uri);
                 }
             } else {
-                vscode.window.showWarningMessage(`Reimport warning: ${res.Message}`);
+                vscode.window.showWarningMessage(l10n.t('Reimport warning: {0}', res.Message));
                 log(`Reimport warning: ${res.Message}`);
             }
         } catch (err) {
             logError(`Reimport failed for ${meta.blockName}`, err);
             showOutput();
-            vscode.window.showErrorMessage(`Reimport failed: ${err instanceof Error ? err.message : err}`);
+            vscode.window.showErrorMessage(l10n.t('Reimport failed: {0}', err instanceof Error ? err.message : String(err)));
         } finally {
             this.reimportInProgress.delete(key);
         }

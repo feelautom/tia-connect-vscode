@@ -304,6 +304,24 @@
         "title": "%command.launchGui%",
         "category": "T-IA Connect",
         "icon": "$(window)"
+      },
+      {
+        "command": "tiaConnect.login",
+        "title": "%command.login%",
+        "category": "T-IA Connect",
+        "icon": "$(sign-in)"
+      },
+      {
+        "command": "tiaConnect.register",
+        "title": "%command.register%",
+        "category": "T-IA Connect",
+        "icon": "$(person-add)"
+      },
+      {
+        "command": "tiaConnect.logout",
+        "title": "%command.logout%",
+        "category": "T-IA Connect",
+        "icon": "$(sign-out)"
       }
     ],
     "viewsContainers": {
@@ -336,13 +354,23 @@
     "viewsWelcome": [
       {
         "view": "tiaProjectExplorer",
+        "contents": "%welcome.notAuthenticated%",
+        "when": "!tiaConnect.authenticated"
+      },
+      {
+        "view": "tiaProjectExplorer",
+        "contents": "%welcome.serverNotInstalled%",
+        "when": "tiaConnect.authenticated && tiaConnect.serverNotInstalled"
+      },
+      {
+        "view": "tiaProjectExplorer",
         "contents": "%welcome.serverNotRunning%",
-        "when": "tiaConnect.serverNotRunning"
+        "when": "tiaConnect.authenticated && tiaConnect.serverNotRunning && !tiaConnect.serverNotInstalled"
       },
       {
         "view": "tiaProjectExplorer",
         "contents": "%welcome.notConnected%",
-        "when": "!tiaConnect.connected && !tiaConnect.serverNotRunning"
+        "when": "tiaConnect.authenticated && !tiaConnect.connected && !tiaConnect.serverNotRunning"
       },
       {
         "view": "tiaProjectExplorer",
@@ -530,6 +558,10 @@
         "path": "./syntaxes/stl.tmLanguage.json"
       }
     ]
+  },
+  "extensionDependencies": [],
+  "capabilities": {
+    "uriHandler": true
   },
   "scripts": {
     "vscode:prepublish": "npm run build",

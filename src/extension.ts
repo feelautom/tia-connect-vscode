@@ -14,14 +14,41 @@ import { VcsContentProvider, VCS_SCHEME } from './providers/vcsContentProvider';
 import { VcsTreeProvider } from './providers/vcsTreeProvider';
 import { registerLanguageProviders } from './language';
 import { getSignalRClient, disposeSignalR } from './api/signalr';
+import { AuthService } from './auth/authService';
+import { TiaUriHandler } from './auth/uriHandler';
+import { detectServer } from './install/serverDetector';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
 let testProvider: TestTreeProvider;
 let vcsTreeProvider: VcsTreeProvider;
+let authService: AuthService;
 
 export function activate(context: vscode.ExtensionContext): void {
     log('T-IA Connect for VS Code activating...');
+
+    // Auth service + URI handler
+    authService = new AuthService(context);
+    context.subscriptions.push(authService);
+
+    const uriHandler = new TiaUriHandler(authService);
+    context.subscriptions.push(vscode.window.registerUriHandler(uriHandler));
+
+    // Auth commands
+    context.subscriptions.push(
+        vscode.commands.registerCommand('tiaConnect.login', async () => {
+            const state = await authService.login();
+            uriHandler.setPendingState(state);
+        }),
+        vscode.commands.registerCommand('tiaConnect.register', () => authService.register()),
+        vscode.commands.registerCommand('tiaConnect.logout', async () => {
+            await authService.logout();
+            vscode.window.showInformationMessage('T-IA Connect: Logged out.');
+        }),
+    );
+
+    // Validate session and detect server on startup
+    initAuthAndServer(context);
 
     // Status bar
     const statusBar = createStatusBar();
@@ -123,4 +150,25 @@ export function deactivate(): void {
     testProvider?.dispose();
     disposeDiagnostics();
     disposeStatusBar();
+}
+
+/** Validate stored auth session and detect server status on startup */
+async function initAuthAndServer(_context: vscode.ExtensionContext): Promise<void> {
+    // 1. Validate auth session (non-blocking for the rest of activation)
+    const isAuthenticated = await authService.validateSession();
+    log(`Auth session: ${isAuthenticated ? 'valid' : 'none'}`);
+
+    // 2. Detect server installation and running status
+    const server = await detectServer();
+
+    if (!server.installed) {
+        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotInstalled, true);
+        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, true);
+    } else if (!server.running) {
+        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotInstalled, false);
+        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, true);
+    } else {
+        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotInstalled, false);
+        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, false);
+    }
 }

@@ -139,6 +139,58 @@ Teste en conditions reelles le 2026-05-04 avec :
 | Publication Marketplace | TODO | Quand la v1 sera stable |
 | Localisation (i18n) | DONE | package.nls.json (EN/FR) + vscode.l10n (runtime FR) |
 
+**Statut global Phase 4 : TERMINEE** (sauf Publication Marketplace)
+
+---
+
+## Phase 5 — Authentification et onboarding integre
+
+**Objectif :** Un utilisateur installe l'extension depuis le Marketplace et peut se connecter, telecharger, installer T-IA Connect et commencer a travailler sans quitter VS Code.
+
+**Spec complete :** [docs/research/feature-auth-onboarding.md](research/feature-auth-onboarding.md)
+
+### Phase 5a — Welcome view + detection serveur (sans endpoint web)
+
+| Fonctionnalite | Statut | Notes |
+|----------------|--------|-------|
+| Welcome view multi-etats (non auth, auth, serveur absent, serveur arrete) | TODO | Context keys conditionnels |
+| Bouton "Se connecter" → ouvre navigateur t-ia-connect.com | TODO | `vscode.env.openExternal` |
+| Bouton "Creer un compte" → ouvre navigateur | TODO | Lien direct vers page inscription |
+| Detection serveur T-IA Connect (ping + fichier + registre) | TODO | `serverDetector.ts` |
+| Message guide si serveur absent + lien telechargement | TODO | Welcome view conditionnel |
+| Brider l'extension si pas connecte (context keys) | TODO | Toutes les vues cachees sauf welcome |
+
+### Phase 5b — OAuth callback (necessite endpoint cote site web)
+
+| Fonctionnalite | Statut | Notes |
+|----------------|--------|-------|
+| URI handler `vscode://feelautom.tia-connect-vscode/auth-callback` | TODO | `vscode.window.registerUriHandler` |
+| Stockage token JWT dans SecretStorage | TODO | Keyring OS (Windows Credential Manager) |
+| Auto-remplissage API key depuis le token | TODO | Plus besoin de copier-coller |
+| Verification session au demarrage | TODO | Token expire → re-login |
+| Bouton "Se deconnecter" | TODO | Supprime token + reset context keys |
+| Affichage compte dans status bar | TODO | Nom + type licence |
+
+### Phase 5c — Auto-installation T-IA Connect
+
+| Fonctionnalite | Statut | Notes |
+|----------------|--------|-------|
+| Endpoint `/api/downloads/latest` (site web) | TODO | Pre-requis cote site web |
+| Telechargement MSI avec barre de progression VS Code | TODO | `fetch` stream + `progress.report` |
+| Lancement installeur silencieux (`msiexec /quiet`) | TODO | UAC popup Windows automatique |
+| Detection post-installation | TODO | Retry ping apres installation |
+| Demarrage automatique apres installation | TODO | Enchaine avec server launch existant |
+| Flow complet zero-config | TODO | Install extension → login → download → install → ready |
+
+### Pre-requis cote site web (t-ia-connect.com)
+
+| Endpoint | Methode | Statut | Description |
+|----------|---------|--------|-------------|
+| `/auth/vscode` | GET | TODO | Page login avec redirect vers callback URI |
+| `/api/auth/validate-token` | GET | TODO | Verification JWT |
+| `/api/account/profile` | GET | TODO | Infos compte (nom, email, licence) |
+| `/api/downloads/latest` | GET | TODO | URL + version + taille derniere release |
+
 ---
 
 ## Bugs connus
@@ -196,3 +248,7 @@ Teste en conditions reelles le 2026-05-04 avec :
 | Server shutdown | `POST /api/health/shutdown` | 4 |
 | Docs search | `GET /api/docs/search` | 4 |
 | Block source gen | `GET /api/devices/{d}/blocks/{b}/source` | 4 |
+| Auth page (site web) | `GET /auth/vscode` | 5 |
+| Validate token (site web) | `GET /api/auth/validate-token` | 5 |
+| Account profile (site web) | `GET /api/account/profile` | 5 |
+| Download latest (site web) | `GET /api/downloads/latest` | 5 |

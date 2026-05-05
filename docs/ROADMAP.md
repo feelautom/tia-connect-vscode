@@ -105,7 +105,7 @@ Teste en conditions reelles le 2026-05-04 avec :
 | Tag tables dans le TreeView (sous chaque device) | DONE | Liste tables + tags en lecture seule |
 | UDTs dans le TreeView (sous chaque device) | DONE | Liste UDTs en lecture seule |
 | Detail tag (type + adresse dans description) | DONE | DataType + LogicalAddress inline |
-| Detail UDT au clic | TODO | Structure et membres (webview) |
+| Detail UDT au clic | DONE | Structure et membres (webview) |
 
 ### Polish UX
 
@@ -115,12 +115,10 @@ Teste en conditions reelles le 2026-05-04 avec :
 | Rafraichir tree apres reimport | DONE | Event onBlockReimported → tree refresh |
 | Detection conflit (bloc modifie dans TIA en parallele) | DONE | Compare ModifiedDate, avertit avant ecrasement |
 | Keybinding pour compiler (Ctrl+Shift+B) | DONE | Auto-pick device si un seul, QuickPick sinon |
-| Notification groupee pour multi-erreurs | TODO | |
-| Setting pour desactiver auto-reimport par bloc | TODO | |
+| Notification groupee pour multi-erreurs | DONE | Resume + 3 premieres erreurs inline + bouton Show Output |
+| Setting pour desactiver auto-reimport par bloc | DONE | `tiaConnect.excludeFromReimport` — liste de noms de blocs |
 
-**Statut global Phase 3 : QUASI TERMINEE (2 nice-to-have restants)**
-
-**Statut global Phase 3 : PIPELINES DONE, POLISH A FAIRE**
+**Statut global Phase 3 : TERMINEE**
 
 ---
 

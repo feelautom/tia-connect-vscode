@@ -11,6 +11,7 @@
   "config.autoSaveInterval.5min": "Every 5 minutes",
   "config.autoSaveInterval.10min": "Every 10 minutes",
   "config.autoSaveInterval.15min": "Every 15 minutes",
+  "config.excludeFromReimport.description": "List of block names to exclude from auto-reimport on save. These blocks will still be saved to disk but not reimported into TIA Portal.",
   "config.executablePath.description": "Path to the T-IA Connect server executable. Used to launch the server when it is not running.",
   "command.connect": "Connect to Server",
   "command.disconnect": "Disconnect from Server",

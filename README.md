@@ -137,6 +137,7 @@ Define and run CI/CD pipelines for your TIA Portal projects.
 | `tiaConnect.autoReimportOnSave` | `true` | Reimport SCL/STL blocks on manual save (Ctrl+S) |
 | `tiaConnect.autoCompileOnReimport` | `false` | Compile after reimport |
 | `tiaConnect.autoSaveInterval` | `5` | Safety auto-save interval in minutes (0 = disabled, 5/10/15) |
+| `tiaConnect.excludeFromReimport` | `[]` | Block names to exclude from auto-reimport (e.g. `["Main", "FB_Legacy"]`) |
 | `tiaConnect.executablePath` | `C:\Program Files\...` | Path to the T-IA Connect server executable |
 
 ## Commands

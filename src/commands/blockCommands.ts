@@ -84,18 +84,7 @@ async function doCompileDevice(item?: TiaTreeItem): Promise<void> {
             () => compileDevice(deviceName!)
         );
 
-        const msg = `Compilation: ${result.ErrorCount} error(s), ${result.WarningCount} warning(s)`;
-        log(msg);
-
-        for (const m of result.Messages) {
-            log(`  [${m.ErrorLevel}] ${m.Path}: ${m.Description}`);
-        }
-
-        if (result.ErrorCount === 0) {
-            vscode.window.showInformationMessage(msg);
-        } else {
-            vscode.window.showErrorMessage(msg);
-        }
+        showCompilationResult(result, deviceName!);
     } catch (err) {
         logError('Compilation failed', err);
         vscode.window.showErrorMessage(l10n.t('Compilation failed: {0}', err instanceof Error ? err.message : String(err)));
@@ -114,21 +103,38 @@ async function doCompileBlock(item: TiaTreeItem): Promise<void> {
             () => compileBlock(item.deviceName!, item.blockName!)
         );
 
-        const msg = `${item.blockName}: ${result.ErrorCount} error(s), ${result.WarningCount} warning(s)`;
-        log(msg);
-
-        for (const m of result.Messages) {
-            log(`  [${m.ErrorLevel}] ${m.Path}: ${m.Description}`);
-        }
-
-        if (result.ErrorCount === 0) {
-            vscode.window.showInformationMessage(msg);
-        } else {
-            vscode.window.showErrorMessage(msg);
-        }
+        showCompilationResult(result, item.blockName!);
     } catch (err) {
         logError(`Compile block ${item.blockName} failed`, err);
         vscode.window.showErrorMessage(l10n.t('Compilation failed: {0}', err instanceof Error ? err.message : String(err)));
+    }
+}
+
+function showCompilationResult(result: any, label: string): void {
+    const msg = `${label}: ${result.ErrorCount} error(s), ${result.WarningCount} warning(s)`;
+    log(msg);
+
+    for (const m of result.Messages) {
+        log(`  [${m.ErrorLevel}] ${m.Path}: ${m.Description}`);
+    }
+
+    if (result.ErrorCount === 0 && result.WarningCount === 0) {
+        vscode.window.showInformationMessage(msg);
+    } else if (result.ErrorCount === 0) {
+        vscode.window.showWarningMessage(msg, l10n.t('Show Output')).then(choice => {
+            if (choice) { showOutput(); }
+        });
+    } else {
+        // Group errors: show summary + first 3 errors inline + "Show Output" button
+        const errors = result.Messages.filter((m: any) => m.ErrorLevel === 'Error');
+        const preview = errors.slice(0, 3).map((m: any) => m.Description).join(' | ');
+        const detail = errors.length > 3
+            ? `${msg} — ${preview} (+${errors.length - 3} more)`
+            : `${msg} — ${preview}`;
+
+        vscode.window.showErrorMessage(detail, l10n.t('Show Output')).then(choice => {
+            if (choice) { showOutput(); }
+        });
     }
 }
 

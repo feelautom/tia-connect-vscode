@@ -98,6 +98,7 @@
   "Creating {0}...": "Création de {0}...",
   "Block {0} created successfully.": "Bloc {0} créé avec succès.",
   "Failed to create block: {0}": "Échec de la création du bloc : {0}",
+  "Show Output": "Afficher la sortie",
   "Editable in VS Code": "Éditable dans VS Code",
   "Read-only graphical view": "Vue graphique en lecture seule",
   "Sequential Function Chart": "Graphe séquentiel (SFC)"

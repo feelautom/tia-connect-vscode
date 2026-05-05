@@ -24,3 +24,8 @@ export function getAutoCompile(): boolean {
 export function getAutoSaveInterval(): number {
     return vscode.workspace.getConfiguration('tiaConnect').get<number>('autoSaveInterval', 5);
 }
+
+/** List of block names excluded from auto-reimport */
+export function getExcludeFromReimport(): string[] {
+    return vscode.workspace.getConfiguration('tiaConnect').get<string[]>('excludeFromReimport', []);
+}

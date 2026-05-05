@@ -67,6 +67,12 @@
           ],
           "description": "%config.autoSaveInterval.description%"
         },
+        "tiaConnect.excludeFromReimport": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "%config.excludeFromReimport.description%"
+        },
         "tiaConnect.executablePath": {
           "type": "string",
           "default": "C:\\Program Files\\FeelAutomCorp\\TiaConnect\\TiaPortalApi.App.exe",

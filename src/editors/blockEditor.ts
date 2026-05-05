@@ -5,7 +5,7 @@ import { BlockFileManager } from './blockFileManager';
 import { BlockMetadata } from '../api/types';
 import { OriginalContentProvider } from '../providers/originalContentProvider';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
-import { getAutoReimport, getAutoCompile, getAutoSaveInterval } from '../utils/config';
+import { getAutoReimport, getAutoCompile, getAutoSaveInterval, getExcludeFromReimport } from '../utils/config';
 import { EDITABLE_LANGUAGES } from '../utils/constants';
 import { log, logError, showOutput } from '../views/outputChannel';
 import { updateDiagnostics, clearDiagnostics } from '../views/diagnostics';
@@ -174,6 +174,13 @@ export class BlockEditor {
         const meta = this.fileManager.readMetadata(key);
         if (!meta) { return; }
         if (!EDITABLE_LANGUAGES.includes(meta.language.toUpperCase() as any)) { return; }
+
+        // Skip if block is excluded from reimport
+        const excluded = getExcludeFromReimport();
+        if (excluded.some(name => name.toLowerCase() === meta.blockName.toLowerCase())) {
+            log(`Block "${meta.blockName}" is excluded from auto-reimport (setting).`);
+            return;
+        }
 
         // Skip if a reimport is already in progress for this file
         if (this.reimportInProgress.has(key)) {

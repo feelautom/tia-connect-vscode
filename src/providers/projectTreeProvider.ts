@@ -43,9 +43,16 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
     private blockTreeCache = new Map<string, BlockTreeNode[]>();
     private iconsDir: string | undefined;
     private busyMessage: string | null = null;
+    private _authenticated = false;
 
     setExtensionPath(extensionPath: string): void {
         this.iconsDir = path.join(extensionPath, 'resources', 'icons');
+    }
+
+    /** Update authenticated state — tree won't load data until true */
+    setAuthenticated(value: boolean): void {
+        this._authenticated = value;
+        this._onDidChangeTreeData.fire(undefined);
     }
 
     refresh(): void {
@@ -162,6 +169,11 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
                 type: 'loading' as TreeNodeType,
                 label: this.busyMessage,
             }];
+        }
+
+        // Don't try to load if not authenticated — let welcome view show
+        if (!this._authenticated) {
+            return [];
         }
 
         try {

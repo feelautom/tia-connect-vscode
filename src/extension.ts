@@ -61,6 +61,12 @@ export function activate(context: vscode.ExtensionContext): void {
     // Tree view provider
     const treeProvider = new ProjectTreeProvider();
     treeProvider.setExtensionPath(context.extensionPath);
+
+    // Sync tree auth state when auth changes
+    authService.onDidChangeAuth((authenticated) => {
+        treeProvider.setAuthenticated(authenticated);
+    });
+
     const treeView = vscode.window.createTreeView('tiaProjectExplorer', {
         treeDataProvider: treeProvider,
         showCollapseAll: true,

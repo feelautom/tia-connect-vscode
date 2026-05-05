@@ -375,7 +375,7 @@
       {
         "view": "tiaProjectExplorer",
         "contents": "%welcome.noProject%",
-        "when": "tiaConnect.connected"
+        "when": "tiaConnect.authenticated && tiaConnect.connected"
       }
     ],
     "menus": {

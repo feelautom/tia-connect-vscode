@@ -95,6 +95,7 @@ export class AuthService implements vscode.Disposable {
         const token = await this.getToken();
         if (!token) {
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, false);
+            this._onDidChangeAuth.fire(false);
             return false;
         }
 
@@ -130,6 +131,7 @@ export class AuthService implements vscode.Disposable {
             // Network error — don't logout, just can't validate right now
             log('Cannot reach auth server to validate token (offline?)');
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, true);
+            this._onDidChangeAuth.fire(true);
             return true;
         }
     }

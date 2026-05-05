@@ -37,7 +37,7 @@ Double-click any SCL or STL block to open it in VS Code with full syntax highlig
 - Optional auto-compile after reimport
 - 15 SCL snippets (FB, FC, OB, DB, IF, FOR, CASE, TON, R_TRIG...)
 - Compilation diagnostics in the editor (errors and warnings from TIA Portal)
-- LAD/FBD/GRAPH blocks open as read-only XML
+- **LAD/FBD/GRAPH Webview** — graphical SVG rendering of LADDER networks (contacts, coils, boxes, wires, parallel branches) in a read-only webview panel
 
 ### Compile
 
@@ -75,6 +75,17 @@ Run PLC tests against PLCSim Advanced directly from the T-IA Connect sidebar.
 - Step-level breakdown in the test tree
 - Clear error messages when PLCSim instance is not available
 
+### Server Launch
+
+Launch the T-IA Connect server directly from VS Code when it's not running.
+
+- **Sidebar prompt**: when the server is unreachable, the sidebar offers "Launch Headless" or "Launch with GUI" buttons
+- **Headless mode**: runs silently in the background (no window), auto-shuts down after 5 minutes of inactivity
+- **GUI mode**: opens the full T-IA Connect desktop application
+- **Auto-connect**: waits for the server to start, then connects automatically
+- **Stop Server**: available from the Disconnect menu — shuts down the server remotely
+- Configurable executable path (`tiaConnect.executablePath`)
+
 ### Cross-References
 
 View cross-references for any block (SCL, STL, LAD, FBD, GRAPH) in a dedicated webview panel.
@@ -94,7 +105,7 @@ Define and run CI/CD pipelines for your TIA Portal projects.
 
 ## Requirements
 
-- **T-IA Connect** server running (v2.1.617+) — [t-ia-connect.com](https://t-ia-connect.com)
+- **T-IA Connect** server running (v2.1.620+) — [t-ia-connect.com](https://t-ia-connect.com) (or let the extension launch it for you)
 - **TIA Portal** V17-V21 installed on the same machine as the server
 - Network access to the server (default: `http://localhost:9000`)
 
@@ -102,9 +113,10 @@ Define and run CI/CD pipelines for your TIA Portal projects.
 
 1. Install the extension
 2. Click the **T-IA Connect** icon in the Activity Bar (left sidebar)
-3. Click the **Connect** button in the panel toolbar
-4. Enter the **API Key** when prompted (configured in T-IA Connect server)
-5. The project tree loads automatically once connected
+3. If the server is not running, click **Launch Headless** or **Launch with GUI** in the sidebar
+4. Otherwise, click the **Connect** button in the panel toolbar
+5. Enter the **API Key** when prompted (configured in T-IA Connect server)
+6. The project tree loads automatically once connected
 
 ## Extension Settings
 
@@ -115,6 +127,7 @@ Define and run CI/CD pipelines for your TIA Portal projects.
 | `tiaConnect.autoReimportOnSave` | `true` | Reimport SCL/STL blocks on manual save (Ctrl+S) |
 | `tiaConnect.autoCompileOnReimport` | `false` | Compile after reimport |
 | `tiaConnect.autoSaveInterval` | `5` | Safety auto-save interval in minutes (0 = disabled, 5/10/15) |
+| `tiaConnect.executablePath` | `C:\Program Files\...` | Path to the T-IA Connect server executable |
 
 ## Commands
 
@@ -123,7 +136,9 @@ All commands are available via the Command Palette (`Ctrl+Shift+P`):
 | Command | Description |
 |---------|-------------|
 | T-IA Connect: Connect to Server | Connect and authenticate |
-| T-IA Connect: Disconnect from Server | Disconnect and clear tree |
+| T-IA Connect: Disconnect from Server | Disconnect or stop the server |
+| T-IA Connect: Launch Server (Headless) | Start server in background |
+| T-IA Connect: Launch Server (GUI) | Start server with desktop UI |
 | T-IA Connect: Refresh Project Tree | Reload project structure |
 | T-IA Connect: Compile Device | Compile all software on a device |
 | T-IA Connect: Compile Block | Compile a single block |
@@ -142,6 +157,7 @@ All commands are available via the Command Palette (`Ctrl+Shift+P`):
 | T-IA Connect Pipelines: Pipeline History | View past pipeline executions |
 | T-IA Connect Pipelines: Create Pipeline from Template | Create pipeline from template |
 | T-IA Connect: Show Cross-References | Show cross-references for a block |
+| T-IA Connect: Import SCL/STL File | Import an external source file |
 | T-IA Connect Tests: Refresh PLC Tests | Refresh PLC test discovery |
 | T-IA Connect Tests: Run All PLC Tests | Run all discovered tests |
 | T-IA Connect Tests: Run Test | Run a single test |

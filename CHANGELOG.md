@@ -2,6 +2,22 @@
 
 All notable changes to the T-IA Connect for VS Code extension will be documented in this file.
 
+## [0.3.0] - 2026-05-05
+
+### Added
+- **Server Launch from VS Code**: when the server is not running, the sidebar offers "Launch Headless" or "Launch with GUI" buttons. Auto-connects after server starts. Loading spinner in sidebar shows real-time progress.
+- **Stop Server**: Disconnect menu now offers "Disconnect" (keep server) or "Stop Server" (shut down remotely)
+- **LAD/FBD/GRAPH Webview**: graphical SVG rendering of LADDER networks — contacts, coils, boxes (TON, CTU, MOVE, CMP...), wires, parallel branches, interface table
+- **Hover documentation fallback**: unknown symbols query the T-IA Connect documentation API, results cached
+- **System function blocks**: autocompletion and hover docs for TON, TOF, TP, R_TRIG, F_TRIG, CTU, CTD, CTUD, MOVE, NORM_X, SCALE_X, SEL, MUX with pin tables and code examples
+- **Loading spinner**: sidebar shows animated loading node during server launch and project open, with real-time status messages
+- Configurable server executable path (`tiaConnect.executablePath`)
+- SignalR connected early in connect() flow (fixes polling fallback during Switch Project)
+
+### Changed
+- Requires T-IA Connect server v2.1.620+ (new endpoint: `POST /api/health/shutdown`)
+- LicenseGate logs reduced to verbose-only (removes 20+ lines at startup)
+
 ## [0.2.2] - 2026-05-05
 
 ### Added

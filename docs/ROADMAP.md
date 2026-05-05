@@ -129,13 +129,15 @@ Teste en conditions reelles le 2026-05-04 avec :
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
 | Language Server SCL (autocompletion, go-to-definition) | DONE | Signature help, cross-file go-to-def, diagnostics, rename |
-| Webview LAD (visualisation graphique lecture seule) | TODO | Rendering SVG/Canvas des reseaux LADDER |
+| Webview LAD (visualisation graphique lecture seule) | DONE | Rendering SVG des reseaux LADDER (contacts, coils, boxes, wires, branches) |
 | Multi-projet (switch entre projets) | DONE | QuickPick avec historique + projets disponibles, close/open via jobs |
-| Publication Marketplace | TODO | Quand la v1 sera stable |
 | QuickDiff pour VCS (diff inline dans editeur) | DONE | VcsContentProvider + VcsTreeProvider |
 | Webview pour resultats de test detailles | DONE | Steps, assertions, pass/fail badges, duree, timestamps |
 | Notifications push (SignalR) | DONE | Client SignalR legacy (longPolling), fallback HTTP polling auto |
-| Localisation (i18n) | TODO | Francais + Anglais |
+| Server launch depuis VS Code | DONE | Sidebar buttons Headless/GUI, auto-connect, Stop Server, loading spinner |
+| Hover documentation avec fallback API | DONE | System blocks (TON, CTU...) + server docs fallback |
+| Publication Marketplace | TODO | Quand la v1 sera stable |
+| Localisation (i18n) | SKIPPED | Peu utile (VS Code generalement en anglais) |
 
 ---
 
@@ -191,3 +193,6 @@ Teste en conditions reelles le 2026-05-04 avec :
 | Project history | `GET /api/projects/history` | 4 |
 | Open project | `POST /api/projects/actions/open` | 4 |
 | Close project | `POST /api/projects/actions/close` | 4 |
+| Server shutdown | `POST /api/health/shutdown` | 4 |
+| Docs search | `GET /api/docs/search` | 4 |
+| Block source gen | `GET /api/devices/{d}/blocks/{b}/source` | 4 |

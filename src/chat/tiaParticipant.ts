@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { ProjectTreeProvider } from '../providers/projectTreeProvider';
+import { getLicenseFeatures } from '../api/project';
 import { log } from '../views/outputChannel';
 
 const SYSTEM_PROMPT = `You are the T-IA Connect automation assistant for Siemens TIA Portal.
@@ -44,6 +45,18 @@ export function registerChatParticipant(
                     '**No TIA Portal project connected.** Open the T-IA Connect panel in the sidebar to connect to a project first.'
                 );
                 return;
+            }
+
+            // Check AI license
+            try {
+                const license = await getLicenseFeatures();
+                const aiFeature = license.Features?.find(f => f.Key === 'ai' || f.Key === 'copilot' || f.Key === 'assistant');
+                if (aiFeature && !aiFeature.Enabled) {
+                    response.markdown('**This feature requires an AI-enabled license.** Upgrade your T-IA Connect license to use the @tia assistant.');
+                    return;
+                }
+            } catch {
+                // License check failed — continue anyway
             }
 
             const projectContext = `Current TIA Portal project: "${overview.Name}"\nDevices: ${overview.Devices?.map(d => `${d.Name} (${d.TypeIdentifier || 'PLC'})`).join(', ') || 'none'}`;

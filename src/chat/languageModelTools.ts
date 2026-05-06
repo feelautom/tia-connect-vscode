@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { client } from '../api/client';
+import { getLicenseFeatures } from '../api/project';
 import { log } from '../views/outputChannel';
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -17,8 +18,30 @@ function enc(s: string): string {
     return encodeURIComponent(s);
 }
 
+// License check cache (avoid checking on every tool call)
+let aiLicenseChecked = false;
+let aiLicenseAllowed = true;
+
+async function checkAiLicense(): Promise<boolean> {
+    if (aiLicenseChecked) { return aiLicenseAllowed; }
+    try {
+        const license = await getLicenseFeatures();
+        const aiFeature = license.Features?.find(f => f.Key === 'ai' || f.Key === 'copilot' || f.Key === 'assistant');
+        aiLicenseAllowed = !aiFeature || aiFeature.Enabled;
+        aiLicenseChecked = true;
+        // Reset cache after 5 minutes
+        setTimeout(() => { aiLicenseChecked = false; }, 5 * 60 * 1000);
+    } catch {
+        // License check failed — allow
+    }
+    return aiLicenseAllowed;
+}
+
 async function safeCall<T>(fn: () => Promise<T>): Promise<vscode.LanguageModelToolResult> {
     try {
+        if (!await checkAiLicense()) {
+            return errorResult('This feature requires an AI-enabled license. Upgrade your T-IA Connect license to use AI tools.');
+        }
         const result = await fn();
         return jsonResult({ success: true, data: result });
     } catch (err: unknown) {

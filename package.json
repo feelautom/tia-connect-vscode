@@ -2,7 +2,7 @@
   "name": "tia-connect-vscode",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.4.26",
+  "version": "0.4.27",
   "publisher": "FEELAUTOM",
   "license": "MIT",
   "icon": "resources/icons/icon.png",

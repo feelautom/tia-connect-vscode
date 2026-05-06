@@ -8,6 +8,7 @@ import { getProjectOverview } from '../api/project';
 import { openCrossRefWebview } from '../editors/crossRefWebview';
 import { openTagTableWebview } from '../editors/tagTableWebview';
 import { openUdtWebview } from '../editors/udtWebview';
+import { openWatchTableWebview } from '../editors/watchTableWebview';
 import { log, logError, showOutput } from '../views/outputChannel';
 
 export function registerBlockCommands(
@@ -35,6 +36,9 @@ export function registerBlockCommands(
         ),
         vscode.commands.registerCommand('tiaConnect.openUdt', (item: TiaTreeItem) =>
             doOpenUdt(item)
+        ),
+        vscode.commands.registerCommand('tiaConnect.openWatchTable', (item: TiaTreeItem) =>
+            doOpenWatchTable(item)
         ),
         vscode.commands.registerCommand('tiaConnect.importSourceFile', (item?: TiaTreeItem) =>
             doImportSourceFile(item)
@@ -200,6 +204,11 @@ async function doOpenTagTable(item: TiaTreeItem): Promise<void> {
 async function doOpenUdt(item: TiaTreeItem): Promise<void> {
     if (!item.deviceName) { return; }
     await openUdtWebview(item.deviceName, item.label);
+}
+
+async function doOpenWatchTable(item: TiaTreeItem): Promise<void> {
+    if (!item.deviceName || !item.watchTableName) { return; }
+    await openWatchTableWebview(item.deviceName, item.watchTableName);
 }
 
 async function doImportSourceFile(item?: TiaTreeItem): Promise<void> {

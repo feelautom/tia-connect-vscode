@@ -1,5 +1,5 @@
 import { client } from './client';
-import { TagTableInfo, TagInfo, UdtSummary, UdtDetail, WatchTableInfo } from './types';
+import { TagTableInfo, TagInfo, UdtSummary, UdtDetail, WatchTableInfo, WatchTableDetail } from './types';
 
 // ─── Tag Tables ──────────────────────────────────────────────────
 
@@ -27,12 +27,12 @@ export async function getTagsInTable(deviceName: string, tableName: string): Pro
 
 /** Export a tag table to CSV */
 export async function exportTagTableCsv(deviceName: string, tableName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/export-csv-sync`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/export-csv-sync`, { exportPath: filePath });
 }
 
 /** Export a tag table to XLSX */
 export async function exportTagTableXlsx(deviceName: string, tableName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/export-excel-sync`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/export-excel-sync`, { exportPath: filePath });
 }
 
 /** Export a tag table to XML — uses GET endpoint */
@@ -44,12 +44,12 @@ export async function exportTagTableXml(deviceName: string, tableName: string, f
 
 /** Import tags from a CSV file */
 export async function importTagsCsv(deviceName: string, tableName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/import-csv-sync`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/import-csv-sync`, { filePath: filePath });
 }
 
 /** Import tags from an XLSX file */
 export async function importTagsXlsx(deviceName: string, tableName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/import-xlsx-sync`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/import-xlsx-sync`, { filePath: filePath });
 }
 
 // ─── UDTs ────────────────────────────────────────────────────────
@@ -75,12 +75,12 @@ export async function getUdtDetails(deviceName: string, udtName: string): Promis
 
 /** Export a UDT to XML */
 export async function exportUdtXml(deviceName: string, udtName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/udts/${enc(udtName)}/actions/export`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/udts/${enc(udtName)}/actions/export`, { exportPath: filePath });
 }
 
 /** Import a UDT from XML */
 export async function importUdtXml(deviceName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/udts/actions/import`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/udts/actions/import`, { importFilePath: filePath });
 }
 
 // ─── Watch Tables ────────────────────────────────────────────────
@@ -96,9 +96,17 @@ export async function getWatchTables(deviceName: string): Promise<WatchTableInfo
     return [];
 }
 
+/** Get watch table details (entries) */
+export async function getWatchTableDetails(deviceName: string, tableName: string): Promise<WatchTableDetail> {
+    const res = await client.get<WatchTableDetail>(
+        `/api/devices/${enc(deviceName)}/watch-tables/${enc(tableName)}`
+    );
+    return res.Data;
+}
+
 /** Export a watch table to XML */
 export async function exportWatchTableXml(deviceName: string, tableName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/watch-tables/${enc(tableName)}/actions/export`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/watch-tables/${enc(tableName)}/actions/export`, { exportPath: filePath });
 }
 
 function enc(s: string): string {

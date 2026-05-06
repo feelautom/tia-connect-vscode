@@ -357,6 +357,22 @@ export interface WatchTableInfo {
     EntryCount: number;
 }
 
+export interface WatchTableDetail {
+    Name: string;
+    IsConsistent: boolean;
+    EntryCount: number;
+    Entries: WatchTableEntry[];
+}
+
+export interface WatchTableEntry {
+    Name: string;
+    Address: string;
+    DisplayFormat: string;
+    MonitorTrigger: string;
+    ModifyValue: string;
+    ModifyIntention: boolean;
+}
+
 // ─── Tag & UDT types ──────────────────────────────────────────────
 
 export interface TagTableInfo {

@@ -93,10 +93,15 @@ export class TiaClient {
 
             const text = await resp.text();
             let raw: any;
-            try {
-                raw = JSON.parse(text);
-            } catch {
-                throw new Error(`Invalid JSON response from ${path}: ${text.substring(0, 200)}`);
+            if (!text || text.trim() === '') {
+                // Empty response (e.g. server-side file export) — treat as success
+                raw = { Success: resp.ok, Message: '' };
+            } else {
+                try {
+                    raw = JSON.parse(text);
+                } catch {
+                    throw new Error(`Invalid JSON response from ${path}: ${text.substring(0, 200)}`);
+                }
             }
 
             // Normalize entire response to PascalCase keys

@@ -844,6 +844,12 @@
         "icon": "$(symbol-struct)"
       },
       {
+        "command": "tiaConnect.openWatchTable",
+        "title": "%command.openWatchTable%",
+        "category": "T-IA Connect",
+        "icon": "$(eye)"
+      },
+      {
         "command": "tiaConnect.importSourceFile",
         "title": "%command.importSourceFile%",
         "category": "T-IA Connect",

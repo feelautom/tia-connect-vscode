@@ -164,6 +164,11 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
             case 'watchTable':
                 item.iconPath = new vscode.ThemeIcon('eye');
                 item.contextValue = 'watchTable';
+                item.command = {
+                    command: 'tiaConnect.openWatchTable',
+                    title: 'Open Watch Table',
+                    arguments: [element],
+                };
                 break;
         }
 

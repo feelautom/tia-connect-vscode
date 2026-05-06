@@ -2,7 +2,7 @@
   "name": "tia-connect-vscode",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.4.22",
+  "version": "0.4.23",
   "publisher": "FEELAUTOM",
   "license": "MIT",
   "icon": "resources/icons/icon.png",
@@ -101,19 +101,28 @@
         "name": "tia_get_project_overview",
         "displayName": "Get Project Overview",
         "modelDescription": "Get the current TIA Portal project overview including name, path, and list of devices",
-        "inputSchema": { "type": "object", "properties": {} }
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
       },
       {
         "name": "tia_list_devices",
         "displayName": "List Devices",
         "modelDescription": "List all devices (PLCs, HMIs) in the current TIA Portal project",
-        "inputSchema": { "type": "object", "properties": {} }
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
       },
       {
         "name": "tia_save_project",
         "displayName": "Save Project",
         "modelDescription": "Save the current TIA Portal project",
-        "inputSchema": { "type": "object", "properties": {} }
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
       },
       {
         "name": "tia_list_blocks",
@@ -121,8 +130,15 @@
         "modelDescription": "List all program blocks (OB, FB, FC, DB) for a TIA Portal PLC device. Returns block tree with names, types, numbers and programming languages.",
         "inputSchema": {
           "type": "object",
-          "properties": { "device": { "type": "string", "description": "Device name (e.g. PLC_1)" } },
-          "required": ["device"]
+          "properties": {
+            "device": {
+              "type": "string",
+              "description": "Device name (e.g. PLC_1)"
+            }
+          },
+          "required": [
+            "device"
+          ]
         }
       },
       {
@@ -132,10 +148,19 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "device": { "type": "string", "description": "Device name" },
-            "block": { "type": "string", "description": "Block name (e.g. Main, FB_Motor)" }
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            },
+            "block": {
+              "type": "string",
+              "description": "Block name (e.g. Main, FB_Motor)"
+            }
           },
-          "required": ["device", "block"]
+          "required": [
+            "device",
+            "block"
+          ]
         }
       },
       {
@@ -145,10 +170,19 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "device": { "type": "string", "description": "Device name" },
-            "block": { "type": "string", "description": "Block name" }
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            },
+            "block": {
+              "type": "string",
+              "description": "Block name"
+            }
           },
-          "required": ["device", "block"]
+          "required": [
+            "device",
+            "block"
+          ]
         }
       },
       {
@@ -158,12 +192,42 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "device": { "type": "string", "description": "Device name" },
-            "blockType": { "type": "string", "enum": ["FB", "FC", "OB", "DB"], "description": "Block type" },
-            "name": { "type": "string", "description": "Block name (e.g. FB_Motor)" },
-            "language": { "type": "string", "enum": ["SCL", "LAD", "FBD", "STL", "GRAPH"], "description": "Programming language" }
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            },
+            "blockType": {
+              "type": "string",
+              "enum": [
+                "FB",
+                "FC",
+                "OB",
+                "DB"
+              ],
+              "description": "Block type"
+            },
+            "name": {
+              "type": "string",
+              "description": "Block name (e.g. FB_Motor)"
+            },
+            "language": {
+              "type": "string",
+              "enum": [
+                "SCL",
+                "LAD",
+                "FBD",
+                "STL",
+                "GRAPH"
+              ],
+              "description": "Programming language"
+            }
           },
-          "required": ["device", "blockType", "name", "language"]
+          "required": [
+            "device",
+            "blockType",
+            "name",
+            "language"
+          ]
         }
       },
       {
@@ -173,11 +237,23 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "device": { "type": "string", "description": "Device name" },
-            "sclContent": { "type": "string", "description": "Full SCL source code including headers" },
-            "sourceName": { "type": "string", "description": "Optional source file name" }
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            },
+            "sclContent": {
+              "type": "string",
+              "description": "Full SCL source code including headers"
+            },
+            "sourceName": {
+              "type": "string",
+              "description": "Optional source file name"
+            }
           },
-          "required": ["device", "sclContent"]
+          "required": [
+            "device",
+            "sclContent"
+          ]
         }
       },
       {
@@ -187,11 +263,23 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "device": { "type": "string", "description": "Device name" },
-            "block": { "type": "string", "description": "Block name" },
-            "format": { "type": "string", "description": "Export format (xml, scl)" }
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            },
+            "block": {
+              "type": "string",
+              "description": "Block name"
+            },
+            "format": {
+              "type": "string",
+              "description": "Export format (xml, scl)"
+            }
           },
-          "required": ["device", "block"]
+          "required": [
+            "device",
+            "block"
+          ]
         }
       },
       {
@@ -201,10 +289,19 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "device": { "type": "string", "description": "Device name" },
-            "block": { "type": "string", "description": "Block name to delete" }
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            },
+            "block": {
+              "type": "string",
+              "description": "Block name to delete"
+            }
           },
-          "required": ["device", "block"]
+          "required": [
+            "device",
+            "block"
+          ]
         }
       },
       {
@@ -213,8 +310,15 @@
         "modelDescription": "Compile all software on a PLC device. Returns error/warning count and messages.",
         "inputSchema": {
           "type": "object",
-          "properties": { "device": { "type": "string", "description": "Device name" } },
-          "required": ["device"]
+          "properties": {
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            }
+          },
+          "required": [
+            "device"
+          ]
         }
       },
       {
@@ -224,10 +328,19 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "device": { "type": "string", "description": "Device name" },
-            "block": { "type": "string", "description": "Block name" }
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            },
+            "block": {
+              "type": "string",
+              "description": "Block name"
+            }
           },
-          "required": ["device", "block"]
+          "required": [
+            "device",
+            "block"
+          ]
         }
       },
       {
@@ -236,8 +349,15 @@
         "modelDescription": "List all PLC tag tables for a device",
         "inputSchema": {
           "type": "object",
-          "properties": { "device": { "type": "string", "description": "Device name" } },
-          "required": ["device"]
+          "properties": {
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            }
+          },
+          "required": [
+            "device"
+          ]
         }
       },
       {
@@ -247,10 +367,19 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "device": { "type": "string", "description": "Device name" },
-            "tagTable": { "type": "string", "description": "Tag table name" }
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            },
+            "tagTable": {
+              "type": "string",
+              "description": "Tag table name"
+            }
           },
-          "required": ["device", "tagTable"]
+          "required": [
+            "device",
+            "tagTable"
+          ]
         }
       },
       {
@@ -260,14 +389,38 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "device": { "type": "string", "description": "Device name" },
-            "tagTable": { "type": "string", "description": "Tag table name" },
-            "name": { "type": "string", "description": "Tag name" },
-            "dataType": { "type": "string", "description": "Data type (Bool, Int, Real, etc.)" },
-            "address": { "type": "string", "description": "Logical address (e.g. %I0.0, %Q0.0, %MW10)" },
-            "comment": { "type": "string", "description": "Optional comment" }
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            },
+            "tagTable": {
+              "type": "string",
+              "description": "Tag table name"
+            },
+            "name": {
+              "type": "string",
+              "description": "Tag name"
+            },
+            "dataType": {
+              "type": "string",
+              "description": "Data type (Bool, Int, Real, etc.)"
+            },
+            "address": {
+              "type": "string",
+              "description": "Logical address (e.g. %I0.0, %Q0.0, %MW10)"
+            },
+            "comment": {
+              "type": "string",
+              "description": "Optional comment"
+            }
           },
-          "required": ["device", "tagTable", "name", "dataType", "address"]
+          "required": [
+            "device",
+            "tagTable",
+            "name",
+            "dataType",
+            "address"
+          ]
         }
       },
       {
@@ -276,8 +429,15 @@
         "modelDescription": "List all User Defined Types (UDTs) for a device",
         "inputSchema": {
           "type": "object",
-          "properties": { "device": { "type": "string", "description": "Device name" } },
-          "required": ["device"]
+          "properties": {
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            }
+          },
+          "required": [
+            "device"
+          ]
         }
       },
       {
@@ -287,10 +447,19 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "device": { "type": "string", "description": "Device name" },
-            "block": { "type": "string", "description": "Block name" }
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            },
+            "block": {
+              "type": "string",
+              "description": "Block name"
+            }
           },
-          "required": ["device", "block"]
+          "required": [
+            "device",
+            "block"
+          ]
         }
       },
       {
@@ -300,10 +469,22 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "device": { "type": "string", "description": "Device name" },
-            "scope": { "type": "string", "enum": ["Software", "HardwareAndSoftware"], "description": "Download scope (default: Software)" }
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            },
+            "scope": {
+              "type": "string",
+              "enum": [
+                "Software",
+                "HardwareAndSoftware"
+              ],
+              "description": "Download scope (default: Software)"
+            }
           },
-          "required": ["device"]
+          "required": [
+            "device"
+          ]
         }
       },
       {
@@ -312,8 +493,15 @@
         "modelDescription": "Establish online connection to a PLC",
         "inputSchema": {
           "type": "object",
-          "properties": { "device": { "type": "string", "description": "Device name" } },
-          "required": ["device"]
+          "properties": {
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            }
+          },
+          "required": [
+            "device"
+          ]
         }
       },
       {
@@ -322,15 +510,25 @@
         "modelDescription": "Disconnect online connection from a PLC",
         "inputSchema": {
           "type": "object",
-          "properties": { "device": { "type": "string", "description": "Device name" } },
-          "required": ["device"]
+          "properties": {
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            }
+          },
+          "required": [
+            "device"
+          ]
         }
       },
       {
         "name": "tia_plcsim_status",
         "displayName": "PLCSim Status",
         "modelDescription": "Get PLCSim Advanced simulation status — check if simulator is running and instances available",
-        "inputSchema": { "type": "object", "properties": {} }
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
       },
       {
         "name": "tia_plcsim_read_tag",
@@ -338,8 +536,15 @@
         "modelDescription": "Read a tag value from PLCSim simulation",
         "inputSchema": {
           "type": "object",
-          "properties": { "tagName": { "type": "string", "description": "Tag name to read (e.g. bStart, DB1.value)" } },
-          "required": ["tagName"]
+          "properties": {
+            "tagName": {
+              "type": "string",
+              "description": "Tag name to read (e.g. bStart, DB1.value)"
+            }
+          },
+          "required": [
+            "tagName"
+          ]
         }
       },
       {
@@ -349,10 +554,19 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "tagName": { "type": "string", "description": "Tag name to write" },
-            "value": { "type": "string", "description": "Value to write" }
+            "tagName": {
+              "type": "string",
+              "description": "Tag name to write"
+            },
+            "value": {
+              "type": "string",
+              "description": "Value to write"
+            }
           },
-          "required": ["tagName", "value"]
+          "required": [
+            "tagName",
+            "value"
+          ]
         }
       },
       {
@@ -361,15 +575,25 @@
         "modelDescription": "Run PLC unit tests via PLCSim. Returns test results with pass/fail status for each test case.",
         "inputSchema": {
           "type": "object",
-          "properties": { "device": { "type": "string", "description": "Device name" } },
-          "required": ["device"]
+          "properties": {
+            "device": {
+              "type": "string",
+              "description": "Device name"
+            }
+          },
+          "required": [
+            "device"
+          ]
         }
       },
       {
         "name": "tia_vcs_status",
         "displayName": "VCS Status",
         "modelDescription": "Get version control status — pending changes, last commit info",
-        "inputSchema": { "type": "object", "properties": {} }
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
       },
       {
         "name": "tia_vcs_commit",
@@ -377,21 +601,34 @@
         "modelDescription": "Commit pending changes to version control",
         "inputSchema": {
           "type": "object",
-          "properties": { "message": { "type": "string", "description": "Commit message" } },
-          "required": ["message"]
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "Commit message"
+            }
+          },
+          "required": [
+            "message"
+          ]
         }
       },
       {
         "name": "tia_vcs_diff",
         "displayName": "VCS Diff",
         "modelDescription": "Get diff of pending changes in version control",
-        "inputSchema": { "type": "object", "properties": {} }
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
       },
       {
         "name": "tia_pipeline_list",
         "displayName": "List Pipelines",
         "modelDescription": "List available CI/CD pipelines",
-        "inputSchema": { "type": "object", "properties": {} }
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
       },
       {
         "name": "tia_pipeline_run",
@@ -399,8 +636,15 @@
         "modelDescription": "Execute a CI/CD pipeline by name",
         "inputSchema": {
           "type": "object",
-          "properties": { "pipeline": { "type": "string", "description": "Pipeline name" } },
-          "required": ["pipeline"]
+          "properties": {
+            "pipeline": {
+              "type": "string",
+              "description": "Pipeline name"
+            }
+          },
+          "required": [
+            "pipeline"
+          ]
         }
       },
       {
@@ -409,8 +653,15 @@
         "modelDescription": "Search the TIA Portal hardware catalog for modules, CPUs, I/O cards by keyword or order number",
         "inputSchema": {
           "type": "object",
-          "properties": { "query": { "type": "string", "description": "Search query (e.g. '1511', 'DI 32', '6ES7')" } },
-          "required": ["query"]
+          "properties": {
+            "query": {
+              "type": "string",
+              "description": "Search query (e.g. '1511', 'DI 32', '6ES7')"
+            }
+          },
+          "required": [
+            "query"
+          ]
         }
       },
       {
@@ -420,10 +671,18 @@
         "inputSchema": {
           "type": "object",
           "properties": {
-            "orderNumber": { "type": "string", "description": "Siemens order number (e.g. 6ES7 511-1AK02-0AB0)" },
-            "name": { "type": "string", "description": "Optional device name" }
+            "orderNumber": {
+              "type": "string",
+              "description": "Siemens order number (e.g. 6ES7 511-1AK02-0AB0)"
+            },
+            "name": {
+              "type": "string",
+              "description": "Optional device name"
+            }
           },
-          "required": ["orderNumber"]
+          "required": [
+            "orderNumber"
+          ]
         }
       }
     ],

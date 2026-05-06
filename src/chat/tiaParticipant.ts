@@ -71,15 +71,10 @@ export function registerChatParticipant(
                 // No tool calls — model is done
                 if (toolCalls.length === 0) { break; }
 
-                // Add assistant message with tool calls
-                const assistantMsg = vscode.LanguageModelChatMessage.Assistant('');
-                assistantMsg.content2 = toolCalls;
-                messages.push(assistantMsg);
-
                 // Execute each tool and collect results
-                const toolResultParts: vscode.LanguageModelToolResultPart[] = [];
+                const toolResultParts: (vscode.LanguageModelTextPart | vscode.LanguageModelToolResultPart)[] = [];
                 for (const call of toolCalls) {
-                    log(`[Chat] Tool call: ${call.name}`);
+                    log(`[Chat] Tool call: ${call.name}(${JSON.stringify(call.input)})`);
                     try {
                         const result = await vscode.lm.invokeTool(call.name, {
                             input: call.input,
@@ -95,10 +90,9 @@ export function registerChatParticipant(
                     }
                 }
 
-                // Add user message with tool results
-                const resultMsg = vscode.LanguageModelChatMessage.User('');
-                resultMsg.content2 = toolResultParts;
-                messages.push(resultMsg);
+                // Add assistant message with tool calls + user message with results
+                messages.push(vscode.LanguageModelChatMessage.Assistant(toolCalls));
+                messages.push(vscode.LanguageModelChatMessage.User(toolResultParts));
             }
         } catch (err: unknown) {
             if (err instanceof vscode.CancellationError) { return; }

@@ -146,7 +146,7 @@ async function connect(
         }
 
         // Refresh all providers
-        treeProvider.refresh();
+        treeProvider.setConnected(true);
         scmProvider.refresh();
         scmProvider.startAutoRefresh();
         testProvider.discoverTests();
@@ -313,7 +313,7 @@ async function disconnect(treeProvider: ProjectTreeProvider, scmProvider: TiaSou
     vscode.commands.executeCommand('setContext', CONTEXT_KEYS.connected, false);
     setDisconnected();
     scmProvider.stopAutoRefresh();
-    treeProvider.refresh();
+    treeProvider.setConnected(false);
 
     if (pick.action === 'stop') {
         try {

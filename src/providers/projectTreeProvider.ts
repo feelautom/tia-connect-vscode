@@ -55,6 +55,18 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
         this._onDidChangeTreeData.fire(undefined);
     }
 
+    private _connected = false;
+
+    /** Update connected state — tree returns empty when disconnected */
+    setConnected(value: boolean): void {
+        this._connected = value;
+        if (!value) {
+            this.projectData = null;
+            this.blockTreeCache.clear();
+        }
+        this._onDidChangeTreeData.fire(undefined);
+    }
+
     refresh(): void {
         this.projectData = null;
         this.blockTreeCache.clear();
@@ -171,8 +183,8 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
             }];
         }
 
-        // Don't try to load if not authenticated — let welcome view show
-        if (!this._authenticated) {
+        // Don't try to load if not authenticated or disconnected — let welcome view show
+        if (!this._authenticated || !this._connected) {
             return [];
         }
 

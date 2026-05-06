@@ -165,19 +165,21 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
             getProjectHistory().catch(() => []),
         ]);
 
-        if (files.length === 0 && history.length === 0) {
-            vscode.window.showInformationMessage(l10n.t('No projects found on the server.'));
-            return;
-        }
-
-        // Build QuickPick items: history first, then all files
-        const historyPaths = new Set(history.map(h => h.Path));
-
+        // Build QuickPick items: browse option + history + files
         interface ProjectQuickPickItem extends vscode.QuickPickItem {
             projectPath: string;
         }
 
         const items: ProjectQuickPickItem[] = [];
+
+        // Always show browse option first
+        items.push({
+            label: `$(folder-opened) ${l10n.t('Browse...')}`,
+            description: l10n.t('Select a TIA Portal project file'),
+            projectPath: '__browse__',
+        });
+
+        const historyPaths = new Set(history.map(h => h.Path));
 
         if (history.length > 0) {
             items.push({ label: l10n.t('Recent Projects'), kind: vscode.QuickPickItemKind.Separator, projectPath: '' } as ProjectQuickPickItem);
@@ -212,6 +214,20 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
         });
 
         if (!selected || !selected.projectPath) { return; }
+
+        // Handle browse option
+        if (selected.projectPath === '__browse__') {
+            const fileUri = await vscode.window.showOpenDialog({
+                canSelectFiles: true,
+                canSelectFolders: false,
+                canSelectMany: false,
+                filters: { 'TIA Portal Projects': ['ap17', 'ap18', 'ap19', 'ap20'] },
+                title: l10n.t('Select a TIA Portal project'),
+            });
+            if (!fileUri || fileUri.length === 0) { return; }
+            selected.projectPath = fileUri[0].fsPath;
+            selected.detail = selected.projectPath;
+        }
 
         showOutput();
         log(`Switching to project: ${selected.projectPath}`);

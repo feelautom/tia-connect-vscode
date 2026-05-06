@@ -43,23 +43,62 @@ export function registerChatParticipant(
                 ? `Current TIA Portal project: "${overview.Name}"\nDevices: ${overview.Devices?.map(d => `${d.Name} (${d.TypeIdentifier || 'PLC'})`).join(', ') || 'none'}`
                 : 'No project is currently open. Use tia_get_project_overview to check.';
 
-            const messages = [
+            const messages: vscode.LanguageModelChatMessage[] = [
                 vscode.LanguageModelChatMessage.User(SYSTEM_PROMPT),
                 vscode.LanguageModelChatMessage.User(projectContext),
                 vscode.LanguageModelChatMessage.User(request.prompt),
             ];
 
-            const chatResponse = await request.model.sendRequest(
-                messages,
-                { tools, toolMode: vscode.LanguageModelChatToolMode.Auto },
-                token,
-            );
+            const options: vscode.LanguageModelChatRequestOptions = {
+                tools,
+                toolMode: vscode.LanguageModelChatToolMode.Auto,
+            };
 
-            for await (const part of chatResponse.stream) {
-                if (part instanceof vscode.LanguageModelTextPart) {
-                    response.markdown(part.value);
+            // Agentic loop: send request, handle tool calls, repeat until text-only response
+            const MAX_TURNS = 10;
+            for (let turn = 0; turn < MAX_TURNS; turn++) {
+                const chatResponse = await request.model.sendRequest(messages, options, token);
+
+                const toolCalls: vscode.LanguageModelToolCallPart[] = [];
+                for await (const part of chatResponse.stream) {
+                    if (part instanceof vscode.LanguageModelTextPart) {
+                        response.markdown(part.value);
+                    } else if (part instanceof vscode.LanguageModelToolCallPart) {
+                        toolCalls.push(part);
+                    }
                 }
-                // Tool call parts are handled by VS Code automatically
+
+                // No tool calls — model is done
+                if (toolCalls.length === 0) { break; }
+
+                // Add assistant message with tool calls
+                const assistantMsg = vscode.LanguageModelChatMessage.Assistant('');
+                assistantMsg.content2 = toolCalls;
+                messages.push(assistantMsg);
+
+                // Execute each tool and collect results
+                const toolResultParts: vscode.LanguageModelToolResultPart[] = [];
+                for (const call of toolCalls) {
+                    log(`[Chat] Tool call: ${call.name}`);
+                    try {
+                        const result = await vscode.lm.invokeTool(call.name, {
+                            input: call.input,
+                            toolInvocationToken: request.toolInvocationToken,
+                        }, token);
+                        toolResultParts.push(new vscode.LanguageModelToolResultPart(call.callId, result.content));
+                    } catch (toolErr: unknown) {
+                        const errMsg = toolErr instanceof Error ? toolErr.message : String(toolErr);
+                        log(`[Chat] Tool error (${call.name}): ${errMsg}`);
+                        toolResultParts.push(new vscode.LanguageModelToolResultPart(call.callId, [
+                            new vscode.LanguageModelTextPart(`Error: ${errMsg}`),
+                        ]));
+                    }
+                }
+
+                // Add user message with tool results
+                const resultMsg = vscode.LanguageModelChatMessage.User('');
+                resultMsg.content2 = toolResultParts;
+                messages.push(resultMsg);
             }
         } catch (err: unknown) {
             if (err instanceof vscode.CancellationError) { return; }

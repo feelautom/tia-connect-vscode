@@ -6,6 +6,14 @@ set -e
 
 cd "$(dirname "$0")"
 
+# Check for uncommitted changes — refuse to deploy dirty tree
+if [ -n "$(git status --porcelain)" ]; then
+    echo "ERROR: Uncommitted changes detected. Commit before deploying."
+    echo ""
+    git status --short
+    exit 1
+fi
+
 # Bump version if provided
 if [ -n "$1" ]; then
     echo "=== Bumping version to $1 ==="

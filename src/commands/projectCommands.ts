@@ -341,6 +341,9 @@ async function launchAndConnect(
     treeProvider.clearBusy();
 
     if (started) {
+        // Auto-fetch API key before connecting
+        const { fetchLocalApiKey } = require('../install/serverDetector');
+        await fetchLocalApiKey();
         await connect(treeProvider, scmProvider, testProvider);
     } else {
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, true);

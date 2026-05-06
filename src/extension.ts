@@ -16,7 +16,7 @@ import { registerLanguageProviders } from './language';
 import { getSignalRClient, disposeSignalR } from './api/signalr';
 import { AuthService } from './auth/authService';
 import { TiaUriHandler } from './auth/uriHandler';
-import { detectServer } from './install/serverDetector';
+import { detectServer, fetchLocalApiKey } from './install/serverDetector';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -70,6 +70,7 @@ export function activate(context: vscode.ExtensionContext): void {
             const server = await detectServer();
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotInstalled, !server.installed);
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, !server.running);
+            if (server.running) { fetchLocalApiKey(); }
         }
     });
 
@@ -182,5 +183,7 @@ async function initAuthAndServer(_context: vscode.ExtensionContext): Promise<voi
     } else {
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotInstalled, false);
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, false);
+        // Auto-fetch API key from local server
+        fetchLocalApiKey();
     }
 }

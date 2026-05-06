@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { getServerUrl } from '../utils/config';
+import { getServerUrl, getApiKey, setApiKey } from '../utils/config';
 import { log } from '../views/outputChannel';
 
 const DEFAULT_INSTALL_PATHS = [
@@ -79,4 +79,41 @@ export function isServerInstalled(): { installed: boolean; exePath?: string } {
     }
 
     return { installed: false };
+}
+
+/** Fetch the API key from the local server (localhost-only endpoint, no auth required).
+ *  Stores it in settings if the current key is empty or different. */
+export async function fetchLocalApiKey(): Promise<boolean> {
+    const url = getServerUrl().replace(/\/+$/, '');
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+
+        const resp = await fetch(`${url}/api/auth/local-key`, {
+            signal: controller.signal,
+        });
+        clearTimeout(timeout);
+
+        if (!resp.ok) {
+            log(`Failed to fetch local API key: HTTP ${resp.status}`);
+            return false;
+        }
+
+        const data = await resp.json() as { apiKey?: string; ApiKey?: string };
+        const key = data.apiKey || data.ApiKey;
+        if (!key) {
+            log('Local API key endpoint returned empty key.');
+            return false;
+        }
+
+        const currentKey = getApiKey();
+        if (currentKey !== key) {
+            await setApiKey(key);
+            log('API key auto-configured from local server.');
+        }
+        return true;
+    } catch {
+        // Endpoint not available (older server version)
+        return false;
+    }
 }

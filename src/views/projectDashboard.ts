@@ -73,6 +73,7 @@ function buildHtml(overview: ProjectOverview): string {
 
     const totalBlocks = devices.reduce((s, d) => s + (d.Blocks?.length || 0), 0);
     const totalTags = devices.reduce((s, d) => s + (d.TagTables?.reduce((st, t) => st + (t.TagCount || 0), 0) || 0), 0);
+    const totalUdts = devices.reduce((s, d) => s + (d.Udts?.length || 0), 0);
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -104,22 +105,28 @@ function buildHtml(overview: ProjectOverview): string {
         margin-bottom: 24px;
     }
     .stat-card {
-        background: var(--vscode-editor-inactiveSelectionBackground, rgba(255,255,255,0.05));
-        border: 1px solid var(--vscode-widget-border, rgba(255,255,255,0.1));
         border-radius: 6px;
         padding: 12px 20px;
         min-width: 100px;
         text-align: center;
+        border: 1px solid rgba(255,255,255,0.08);
     }
     .stat-card .value {
         font-size: 2em;
         font-weight: bold;
-        color: var(--vscode-textLink-foreground);
     }
     .stat-card .label {
         font-size: 0.85em;
-        color: var(--vscode-descriptionForeground);
+        opacity: 0.85;
     }
+    .stat-devices  { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3); }
+    .stat-devices .value  { color: #60a5fa; }
+    .stat-blocks   { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.3); }
+    .stat-blocks .value   { color: #34d399; }
+    .stat-tags     { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); }
+    .stat-tags .value     { color: #fbbf24; }
+    .stat-udts     { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.3); }
+    .stat-udts .value     { color: #c084fc; }
     h2 {
         font-size: 1.2em;
         margin-top: 24px;
@@ -135,8 +142,8 @@ function buildHtml(overview: ProjectOverview): string {
     th {
         text-align: left;
         padding: 8px 12px;
-        background: var(--vscode-editor-inactiveSelectionBackground, rgba(255,255,255,0.05));
-        border-bottom: 2px solid var(--vscode-widget-border, rgba(255,255,255,0.15));
+        background: rgba(59, 130, 246, 0.12);
+        border-bottom: 2px solid rgba(59, 130, 246, 0.25);
         color: var(--vscode-foreground);
     }
     td {
@@ -160,17 +167,21 @@ function buildHtml(overview: ProjectOverview): string {
     <div class="path">${esc(projectPath)}</div>
 
     <div class="stats">
-        <div class="stat-card">
+        <div class="stat-card stat-devices">
             <div class="value">${devices.length}</div>
             <div class="label">Devices</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-blocks">
             <div class="value">${totalBlocks}</div>
             <div class="label">Blocks</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card stat-tags">
             <div class="value">${totalTags}</div>
             <div class="label">Tags</div>
+        </div>
+        <div class="stat-card stat-udts">
+            <div class="value">${totalUdts}</div>
+            <div class="label">UDTs</div>
         </div>
     </div>
 

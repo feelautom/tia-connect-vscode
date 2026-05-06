@@ -20,6 +20,8 @@ import { detectServer, fetchLocalApiKey } from './install/serverDetector';
 import { showProjectDashboard } from './views/projectDashboard';
 import { CopilotViewProvider } from './providers/copilotViewProvider';
 import { ensureMcpConfig } from './utils/mcpConfig';
+import { registerLanguageModelTools } from './chat/languageModelTools';
+import { registerChatParticipant } from './chat/tiaParticipant';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -195,6 +197,10 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // Language features (SCL/STL: completion, symbols, go-to-def, hover)
     registerLanguageProviders(context);
+
+    // Language Model Tools + @tia chat participant (VS Code 1.96+)
+    registerLanguageModelTools(context);
+    registerChatParticipant(context, treeProvider);
 
     // Output channel
     context.subscriptions.push(getOutputChannel());

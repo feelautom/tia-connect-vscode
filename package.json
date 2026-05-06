@@ -87,6 +87,346 @@
         }
       }
     },
+    "chatParticipants": [
+      {
+        "id": "tia.connect",
+        "name": "tia",
+        "fullName": "T-IA Connect",
+        "description": "TIA Portal automation assistant — create, edit, compile, test and deploy PLC programs",
+        "isSticky": true
+      }
+    ],
+    "languageModelTools": [
+      {
+        "name": "tia_get_project_overview",
+        "displayName": "Get Project Overview",
+        "modelDescription": "Get the current TIA Portal project overview including name, path, and list of devices",
+        "inputSchema": { "type": "object", "properties": {} }
+      },
+      {
+        "name": "tia_list_devices",
+        "displayName": "List Devices",
+        "modelDescription": "List all devices (PLCs, HMIs) in the current TIA Portal project",
+        "inputSchema": { "type": "object", "properties": {} }
+      },
+      {
+        "name": "tia_save_project",
+        "displayName": "Save Project",
+        "modelDescription": "Save the current TIA Portal project",
+        "inputSchema": { "type": "object", "properties": {} }
+      },
+      {
+        "name": "tia_list_blocks",
+        "displayName": "List Blocks",
+        "modelDescription": "List all program blocks (OB, FB, FC, DB) for a TIA Portal PLC device. Returns block tree with names, types, numbers and programming languages.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "device": { "type": "string", "description": "Device name (e.g. PLC_1)" } },
+          "required": ["device"]
+        }
+      },
+      {
+        "name": "tia_get_block_content",
+        "displayName": "Get Block Content",
+        "modelDescription": "Get full block content including interface, networks, raw XML and source text for a specific block",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "description": "Device name" },
+            "block": { "type": "string", "description": "Block name (e.g. Main, FB_Motor)" }
+          },
+          "required": ["device", "block"]
+        }
+      },
+      {
+        "name": "tia_get_block_source",
+        "displayName": "Get Block Source",
+        "modelDescription": "Get the SCL or STL source code text of a block via GenerateSource. Use this to read editable code.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "description": "Device name" },
+            "block": { "type": "string", "description": "Block name" }
+          },
+          "required": ["device", "block"]
+        }
+      },
+      {
+        "name": "tia_create_block",
+        "displayName": "Create Block",
+        "modelDescription": "Create a new program block (FB, FC, OB, DB) in TIA Portal. Specify blockType, name and language.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "description": "Device name" },
+            "blockType": { "type": "string", "enum": ["FB", "FC", "OB", "DB"], "description": "Block type" },
+            "name": { "type": "string", "description": "Block name (e.g. FB_Motor)" },
+            "language": { "type": "string", "enum": ["SCL", "LAD", "FBD", "STL", "GRAPH"], "description": "Programming language" }
+          },
+          "required": ["device", "blockType", "name", "language"]
+        }
+      },
+      {
+        "name": "tia_import_scl",
+        "displayName": "Import SCL Source",
+        "modelDescription": "Import SCL source code into TIA Portal. The source is compiled as an external source. Include full SCL with FUNCTION/FUNCTION_BLOCK/DATA_BLOCK headers.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "description": "Device name" },
+            "sclContent": { "type": "string", "description": "Full SCL source code including headers" },
+            "sourceName": { "type": "string", "description": "Optional source file name" }
+          },
+          "required": ["device", "sclContent"]
+        }
+      },
+      {
+        "name": "tia_export_block",
+        "displayName": "Export Block",
+        "modelDescription": "Export a block from TIA Portal as XML or other format",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "description": "Device name" },
+            "block": { "type": "string", "description": "Block name" },
+            "format": { "type": "string", "description": "Export format (xml, scl)" }
+          },
+          "required": ["device", "block"]
+        }
+      },
+      {
+        "name": "tia_delete_block",
+        "displayName": "Delete Block",
+        "modelDescription": "Delete a program block from TIA Portal",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "description": "Device name" },
+            "block": { "type": "string", "description": "Block name to delete" }
+          },
+          "required": ["device", "block"]
+        }
+      },
+      {
+        "name": "tia_compile_device",
+        "displayName": "Compile Device",
+        "modelDescription": "Compile all software on a PLC device. Returns error/warning count and messages.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "device": { "type": "string", "description": "Device name" } },
+          "required": ["device"]
+        }
+      },
+      {
+        "name": "tia_compile_block",
+        "displayName": "Compile Block",
+        "modelDescription": "Compile a single block (faster than full device compilation)",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "description": "Device name" },
+            "block": { "type": "string", "description": "Block name" }
+          },
+          "required": ["device", "block"]
+        }
+      },
+      {
+        "name": "tia_list_tag_tables",
+        "displayName": "List Tag Tables",
+        "modelDescription": "List all PLC tag tables for a device",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "device": { "type": "string", "description": "Device name" } },
+          "required": ["device"]
+        }
+      },
+      {
+        "name": "tia_list_tags",
+        "displayName": "List Tags",
+        "modelDescription": "List all tags in a specific tag table with names, data types, addresses and comments",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "description": "Device name" },
+            "tagTable": { "type": "string", "description": "Tag table name" }
+          },
+          "required": ["device", "tagTable"]
+        }
+      },
+      {
+        "name": "tia_create_tag",
+        "displayName": "Create Tag",
+        "modelDescription": "Create a new PLC tag in a tag table",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "description": "Device name" },
+            "tagTable": { "type": "string", "description": "Tag table name" },
+            "name": { "type": "string", "description": "Tag name" },
+            "dataType": { "type": "string", "description": "Data type (Bool, Int, Real, etc.)" },
+            "address": { "type": "string", "description": "Logical address (e.g. %I0.0, %Q0.0, %MW10)" },
+            "comment": { "type": "string", "description": "Optional comment" }
+          },
+          "required": ["device", "tagTable", "name", "dataType", "address"]
+        }
+      },
+      {
+        "name": "tia_list_udts",
+        "displayName": "List UDTs",
+        "modelDescription": "List all User Defined Types (UDTs) for a device",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "device": { "type": "string", "description": "Device name" } },
+          "required": ["device"]
+        }
+      },
+      {
+        "name": "tia_get_cross_references",
+        "displayName": "Get Cross References",
+        "modelDescription": "Get cross-references for a block — shows where it is used and what it references",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "description": "Device name" },
+            "block": { "type": "string", "description": "Block name" }
+          },
+          "required": ["device", "block"]
+        }
+      },
+      {
+        "name": "tia_download_to_plc",
+        "displayName": "Download to PLC",
+        "modelDescription": "Download the program to a PLC or PLCSim instance",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "device": { "type": "string", "description": "Device name" },
+            "scope": { "type": "string", "enum": ["Software", "HardwareAndSoftware"], "description": "Download scope (default: Software)" }
+          },
+          "required": ["device"]
+        }
+      },
+      {
+        "name": "tia_go_online",
+        "displayName": "Go Online",
+        "modelDescription": "Establish online connection to a PLC",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "device": { "type": "string", "description": "Device name" } },
+          "required": ["device"]
+        }
+      },
+      {
+        "name": "tia_go_offline",
+        "displayName": "Go Offline",
+        "modelDescription": "Disconnect online connection from a PLC",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "device": { "type": "string", "description": "Device name" } },
+          "required": ["device"]
+        }
+      },
+      {
+        "name": "tia_plcsim_status",
+        "displayName": "PLCSim Status",
+        "modelDescription": "Get PLCSim Advanced simulation status — check if simulator is running and instances available",
+        "inputSchema": { "type": "object", "properties": {} }
+      },
+      {
+        "name": "tia_plcsim_read_tag",
+        "displayName": "PLCSim Read Tag",
+        "modelDescription": "Read a tag value from PLCSim simulation",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "tagName": { "type": "string", "description": "Tag name to read (e.g. bStart, DB1.value)" } },
+          "required": ["tagName"]
+        }
+      },
+      {
+        "name": "tia_plcsim_write_tag",
+        "displayName": "PLCSim Write Tag",
+        "modelDescription": "Write a value to a tag in PLCSim simulation",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "tagName": { "type": "string", "description": "Tag name to write" },
+            "value": { "type": "string", "description": "Value to write" }
+          },
+          "required": ["tagName", "value"]
+        }
+      },
+      {
+        "name": "tia_run_tests",
+        "displayName": "Run PLC Tests",
+        "modelDescription": "Run PLC unit tests via PLCSim. Returns test results with pass/fail status for each test case.",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "device": { "type": "string", "description": "Device name" } },
+          "required": ["device"]
+        }
+      },
+      {
+        "name": "tia_vcs_status",
+        "displayName": "VCS Status",
+        "modelDescription": "Get version control status — pending changes, last commit info",
+        "inputSchema": { "type": "object", "properties": {} }
+      },
+      {
+        "name": "tia_vcs_commit",
+        "displayName": "VCS Commit",
+        "modelDescription": "Commit pending changes to version control",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "message": { "type": "string", "description": "Commit message" } },
+          "required": ["message"]
+        }
+      },
+      {
+        "name": "tia_vcs_diff",
+        "displayName": "VCS Diff",
+        "modelDescription": "Get diff of pending changes in version control",
+        "inputSchema": { "type": "object", "properties": {} }
+      },
+      {
+        "name": "tia_pipeline_list",
+        "displayName": "List Pipelines",
+        "modelDescription": "List available CI/CD pipelines",
+        "inputSchema": { "type": "object", "properties": {} }
+      },
+      {
+        "name": "tia_pipeline_run",
+        "displayName": "Run Pipeline",
+        "modelDescription": "Execute a CI/CD pipeline by name",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "pipeline": { "type": "string", "description": "Pipeline name" } },
+          "required": ["pipeline"]
+        }
+      },
+      {
+        "name": "tia_search_catalog",
+        "displayName": "Search Hardware Catalog",
+        "modelDescription": "Search the TIA Portal hardware catalog for modules, CPUs, I/O cards by keyword or order number",
+        "inputSchema": {
+          "type": "object",
+          "properties": { "query": { "type": "string", "description": "Search query (e.g. '1511', 'DI 32', '6ES7')" } },
+          "required": ["query"]
+        }
+      },
+      {
+        "name": "tia_add_device",
+        "displayName": "Add Device",
+        "modelDescription": "Add a new device (PLC, HMI) to the project by order number",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "orderNumber": { "type": "string", "description": "Siemens order number (e.g. 6ES7 511-1AK02-0AB0)" },
+            "name": { "type": "string", "description": "Optional device name" }
+          },
+          "required": ["orderNumber"]
+        }
+      }
+    ],
     "commands": [
       {
         "command": "tiaConnect.connect",

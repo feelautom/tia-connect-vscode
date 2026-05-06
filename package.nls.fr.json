@@ -41,6 +41,7 @@
   "command.openTagTable": "Ouvrir la table de variables",
   "command.openUdt": "Ouvrir le type UDT",
   "command.openWatchTable": "Ouvrir la table de surveillance",
+  "command.detectOrphans": "Détecter les éléments orphelins",
   "command.createBlock": "Créer un bloc",
   "command.importSourceFile": "Importer un fichier SCL/STL",
   "command.exportAll": "Exporter tout (Tags, UDTs, Watch Tables)",

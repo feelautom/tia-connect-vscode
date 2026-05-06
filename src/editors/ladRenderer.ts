@@ -296,17 +296,32 @@ function renderNetwork(net: LadNetwork): string {
         svg += vLine(rightRailX, rTop, rBot, C_WIRE, RAIL_WIDTH);
     }
 
+    // Find OR/AND merge columns: implicit gates define where branches converge
+    const mergeGates = parts.filter(p => IMPLICIT_GATES.has(p.Type || ''));
+    // Branch rows = rows that are NOT row 0 (row 0 is the main trunk)
+    const branchRows = [...new Set(visible.map(p => p.Row))].filter(r => r > 0).sort((a, b) => a - b);
+    // Merge column = column of the first implicit gate (where branches rejoin)
+    const mergeCol = mergeGates.length > 0 ? mergeGates[0].Col : -1;
+
     // Horizontal wires per row
     const rowGroups = groupBy(visible, p => p.Row);
     for (const [row, rowParts] of rowGroups) {
         const minC = Math.min(...rowParts.map(p => p.Col));
         const hasOutput = rowParts.some(p => OUTPUT_TYPES.has(p.Type));
-        const wireEnd = hasOutput ? rightRailX : (Math.max(...rowParts.map(p => p.Col)) + 1) * CELL_W;
+        let wireEnd: number;
+        if (hasOutput) {
+            wireEnd = rightRailX;
+        } else if (row > 0 && mergeCol > 0) {
+            // Branch rows extend to the merge column
+            wireEnd = mergeCol * CELL_W;
+        } else {
+            wireEnd = (Math.max(...rowParts.map(p => p.Col)) + 1) * CELL_W;
+        }
         const y = row * ROW_H + WIRE_Y;
         svg += hLine(minC * CELL_W, wireEnd, y, C_WIRE, WIRE_THICKNESS);
     }
 
-    // Vertical connectors at branch points
+    // Vertical connectors at branch points (visible parts)
     const colGroups = groupBy(visible, p => p.Col);
     for (const [col, colParts] of colGroups) {
         const rows = [...new Set(colParts.map(p => p.Row))].sort((a, b) => a - b);
@@ -317,6 +332,18 @@ function renderNetwork(net: LadNetwork): string {
         svg += vLine(x, y1, y2, C_WIRE, WIRE_THICKNESS);
         for (const r of rows) {
             svg += junctionDot(x, r * ROW_H + WIRE_Y);
+        }
+    }
+
+    // Merge vertical connector where branches rejoin (at OR/AND gate column)
+    if (mergeCol > 0 && branchRows.length > 0) {
+        const mergeX = mergeCol * CELL_W;
+        const y1 = 0 * ROW_H + WIRE_Y;
+        const y2 = branchRows[branchRows.length - 1] * ROW_H + WIRE_Y;
+        svg += vLine(mergeX, y1, y2, C_WIRE, WIRE_THICKNESS);
+        svg += junctionDot(mergeX, y1);
+        for (const r of branchRows) {
+            svg += junctionDot(mergeX, r * ROW_H + WIRE_Y);
         }
     }
 

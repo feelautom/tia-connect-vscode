@@ -902,6 +902,12 @@
         "icon": "$(cloud-download)"
       },
       {
+        "command": "tiaConnect.detectOrphans",
+        "title": "%command.detectOrphans%",
+        "category": "T-IA Connect",
+        "icon": "$(search-remove)"
+      },
+      {
         "command": "tiaConnect.createBlock",
         "title": "%command.createBlock%",
         "category": "T-IA Connect",
@@ -1161,6 +1167,11 @@
         },
         {
           "command": "tiaConnect.exportAll",
+          "when": "view == tiaProjectExplorer && viewItem == device",
+          "group": "2_export"
+        },
+        {
+          "command": "tiaConnect.detectOrphans",
           "when": "view == tiaProjectExplorer && viewItem == device",
           "group": "2_export"
         },

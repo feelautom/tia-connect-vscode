@@ -253,7 +253,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
             this.busyTimeout = setTimeout(() => {
                 log('[Copilot] Timeout (5 min) — stopping busy state');
                 this.isBusy = false;
-                this.postMessage({ type: 'error', message: 'Response timeout (5 min). Check T-IA Connect app.' });
+                this.postMessage({ type: 'error', message: vscode.l10n.t('Response timeout (5 min). Check T-IA Connect app.') });
                 this.postMessage({ type: 'updateStatus', status: 'idle' });
             }, 5 * 60 * 1000);
         }
@@ -268,7 +268,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
         this.busyTimeout = setTimeout(() => {
             log('[Copilot] Timeout (5 min) — stopping busy state');
             this.isBusy = false;
-            this.postMessage({ type: 'error', message: 'Response timeout (5 min). Check T-IA Connect app.' });
+            this.postMessage({ type: 'error', message: vscode.l10n.t('Response timeout (5 min). Check T-IA Connect app.') });
             this.postMessage({ type: 'updateStatus', status: 'idle' });
         }, 5 * 60 * 1000);
     }
@@ -494,26 +494,26 @@ body {
 <body>
 <div id="license-overlay">
     <div class="icon">&#128274;</div>
-    <p><strong>AI Assistant not available</strong></p>
-    <p>This feature requires an AI-enabled license.</p>
+    <p><strong>${vscode.l10n.t('AI Assistant not available')}</strong></p>
+    <p>${vscode.l10n.t('This feature requires an AI-enabled license.')}</p>
 </div>
 <div id="welcome">
     <div class="welcome-icon"><svg width="64" height="64" viewBox="0 0 507.2 507.2" xmlns="http://www.w3.org/2000/svg"><path style="fill:#0B7F9E" d="M413.6,172.8c0,140.8-76,290.4-160,290.4s-160-148.8-160-290.4S170.4,0,253.6,0S413.6,32,413.6,172.8z"/><path style="fill:#0B6382" d="M253.6,0c83.2,0,160,32,160,172.8s-76,290.4-160,290.4s-160-148.8-160-290.4"/><path style="fill:#00233F" d="M253.6,0c83.2,0,160,32,160,172.8s-76,290.4-160,290.4"/><path style="fill:#022728" d="M216,80c0,13.6-11.2,35.2-25.6,35.2c-13.6,0-25.6-20.8-25.6-35.2c0-13.6,11.2-25.6,25.6-25.6C204,54.4,216,65.6,216,80z"/><circle style="fill:#00FFF2" cx="190.4" cy="80" r="25.6"/><circle style="fill:#00FFF2" cx="190.4" cy="80" r="14.4"/><g><circle style="fill:#EBFFFD" cx="179.2" cy="68.8" r="8.8"/><circle style="fill:#EBFFFD" cx="204.8" cy="92.8" r="4"/></g><path style="fill:#0B6382" d="M342.4,80c0,13.6-11.2,35.2-25.6,35.2c-13.6,0-25.6-20.8-25.6-35.2c0-13.6,11.2-25.6,25.6-25.6C331.2,54.4,342.4,65.6,342.4,80z"/><circle style="fill:#00FFF2" cx="316.8" cy="80" r="25.6"/><circle style="fill:#00FFF2" cx="316.8" cy="80" r="14.4"/><g><circle style="fill:#EBFFFD" cx="305.6" cy="68.8" r="8.8"/><circle style="fill:#EBFFFD" cx="331.2" cy="92.8" r="4"/></g><path style="fill:#00FFF2" d="M191.2,141.6l-33.6-40H96c-0.8,8-1.6,16-1.6,16h56.8l38.4,40h56v-16H191.2z"/><path style="fill:#00FFF2" d="M316,141.6l33.6-40h61.6c0.8,8,1.6,16,1.6,16H356l-38.4,40h-56v-16H316z"/><circle style="fill:#00FFF2" cx="253.6" cy="147.2" r="16"/><path style="fill:#0B7F9E" d="M94.4,173.6l-0.8-1.6c0,0.8-0.8,0.8-0.8,1.6c0,93.6,32,188.8,80,243.2v-216l-29.6-27.2H94.4z"/><path style="fill:#0B7F9E" d="M412,173.6l0.8-1.6c0,0.8,0.8,0.8,0.8,1.6c0,93.6-32,184.8-80,240V200.8l29.6-27.2H412z"/><circle style="fill:#0B6382" cx="50.4" cy="304.8" r="40.8"/><g><path style="fill:#00233F" d="M50.4,264.8c22.4,0,40.8,18.4,40.8,40.8s-18.4,40.8-40.8,40.8"/><circle style="fill:#00233F" cx="50.4" cy="247.2" r="9.6"/></g><path style="fill:#00FFF2" d="M69.6,313.6c0,2.4-1.6,4-4,4h-32c-2.4,0-4-1.6-4-4c0-2.4,1.6-4,4-4h32C68,309.6,69.6,311.2,69.6,313.6z"/><circle style="fill:#0B6382" cx="456.8" cy="304.8" r="40.8"/><g><path style="fill:#00233F" d="M456.8,264.8c-22.4,0-40.8,18.4-40.8,40.8s18.4,40.8,40.8,40.8"/><circle style="fill:#00233F" cx="456.8" cy="247.2" r="9.6"/></g><path style="fill:#00FFF2" d="M477.6,313.6c0-2.4-1.6-4-4-4h-32c-2.4,0-4,1.6-4,4c0,2.4,1.6,4,4,4h32C476,317.6,477.6,316,477.6,313.6z"/></svg></div>
-    <h3>T-IA Copilot</h3>
-    <p>Ask questions about your TIA Portal project, generate blocks, or get help with PLC programming.</p>
+    <h3>T-IA Connect Copilot</h3>
+    <p>${vscode.l10n.t('Ask questions about your TIA Portal project, generate blocks, or get help with PLC programming.')}</p>
     <div class="suggestions">
-        <div class="suggestion" data-text="Summarize my project">&#128196; Summarize my project</div>
-        <div class="suggestion" data-text="List all blocks and their status">&#128270; List all blocks and their status</div>
-        <div class="suggestion" data-text="Create a motor start/stop FB in SCL">&#9881; Create a motor start/stop FB</div>
+        <div class="suggestion" data-text="${vscode.l10n.t('Summarize my project')}">&#128196; ${vscode.l10n.t('Summarize my project')}</div>
+        <div class="suggestion" data-text="${vscode.l10n.t('List all blocks and their status')}">&#128270; ${vscode.l10n.t('List all blocks and their status')}</div>
+        <div class="suggestion" data-text="${vscode.l10n.t('Create a motor start/stop FB in SCL')}">&#9881; ${vscode.l10n.t('Create a motor start/stop FB')}</div>
     </div>
 </div>
 <div id="messages" class="hidden"></div>
 <div id="input-wrapper">
-    <div id="input-status"><span class="spinner"></span><span>Thinking...</span></div>
+    <div id="input-status"><span class="spinner"></span><span>${vscode.l10n.t('Thinking...')}</span></div>
     <div id="input-area">
-        <textarea id="input" rows="1" placeholder="Ask anything about your TIA project..."></textarea>
-        <button id="btn-send" title="Send">&#9654;</button>
-        <button id="btn-stop" title="Stop">&#9632;</button>
+        <textarea id="input" rows="1" placeholder="${vscode.l10n.t('Ask anything about your TIA project...')}"></textarea>
+        <button id="btn-send" title="${vscode.l10n.t('Send')}">&#9654;</button>
+        <button id="btn-stop" title="${vscode.l10n.t('Stop')}">&#9632;</button>
     </div>
 </div>
 <script>

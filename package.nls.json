@@ -41,6 +41,7 @@
   "command.openTagTable": "Open Tag Table",
   "command.openUdt": "Open UDT",
   "command.openWatchTable": "Open Watch Table",
+  "command.detectOrphans": "Detect Orphaned Elements",
   "command.createBlock": "Create Block",
   "command.importSourceFile": "Import SCL/STL File",
   "command.exportAll": "Export All (Tags, UDTs, Watch Tables)",

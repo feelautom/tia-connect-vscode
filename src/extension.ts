@@ -23,6 +23,7 @@ import { CopilotViewProvider } from './providers/copilotViewProvider';
 import { ensureMcpConfig } from './utils/mcpConfig';
 import { registerLanguageModelTools } from './chat/languageModelTools';
 import { registerChatParticipant } from './chat/tiaParticipant';
+import { registerOrphanCleanupCommands } from './commands/orphanCleanup';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -188,6 +189,7 @@ export function activate(context: vscode.ExtensionContext): void {
     registerBlockCommands(context, blockEditor);
     registerPipelineCommands(context);
     registerExportImportCommands(context);
+    registerOrphanCleanupCommands(context);
 
     // Dashboard command (click on project name in tree)
     context.subscriptions.push(

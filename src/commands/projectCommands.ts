@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { l10n } from 'vscode';
 import { client } from '../api/client';
-import { getProjectOverview, listProjectFiles, getProjectHistory, openProject, closeProject } from '../api/project';
+import { getProjectOverview, listProjectFiles, getProjectHistory, openProject, closeProject, retrieveProject } from '../api/project';
 import { pollJob } from '../api/jobs';
 import { ProjectTreeProvider } from '../providers/projectTreeProvider';
 import { TiaSourceControl } from '../providers/scmProvider';
@@ -225,7 +225,10 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
                 canSelectFolders: false,
                 canSelectMany: false,
                 defaultUri: defaultPath,
-                filters: { 'TIA Portal Projects': ['ap17', 'ap18', 'ap19', 'ap20'] },
+                filters: {
+                    'TIA Portal Projects': ['ap17', 'ap18', 'ap19', 'ap20', 'ap21'],
+                    'TIA Portal Archives': ['zap17', 'zap18', 'zap19', 'zap20', 'zap21'],
+                },
                 title: l10n.t('Select a TIA Portal project'),
             });
             if (!fileUri || fileUri.length === 0) { return; }
@@ -250,9 +253,31 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
                 log('No project to close (or close failed — continuing).');
             }
 
-            // Open new project
-            treeProvider.setBusy(l10n.t('Connecting to TIA Portal...'));
-            const openJobId = await openProject(selected.projectPath);
+            // Open or retrieve project
+            const isArchive = /\.zap\d+$/i.test(selected.projectPath);
+            treeProvider.setBusy(l10n.t(isArchive ? 'Extracting project...' : 'Connecting to TIA Portal...'));
+
+            let openJobId: string;
+            if (isArchive) {
+                // Ask for target directory to extract the archive
+                const targetUri = await vscode.window.showOpenDialog({
+                    canSelectFiles: false,
+                    canSelectFolders: true,
+                    canSelectMany: false,
+                    title: l10n.t('Select folder to extract the project into'),
+                    defaultUri: process.env.USERPROFILE
+                        ? vscode.Uri.file(require('path').join(process.env.USERPROFILE, 'Documents', 'Automation'))
+                        : undefined,
+                });
+                if (!targetUri || targetUri.length === 0) {
+                    treeProvider.clearBusy();
+                    return;
+                }
+                openJobId = await retrieveProject(selected.projectPath, targetUri[0].fsPath);
+            } else {
+                openJobId = await openProject(selected.projectPath);
+            }
+
             await pollJob(openJobId, (s) => {
                 log(`Open: ${s.Status}${s.Message ? ' - ' + s.Message : ''}`);
                 if (s.Message) { treeProvider.setBusy(s.Message); }

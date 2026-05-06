@@ -61,3 +61,11 @@ export async function closeProject(): Promise<string> {
     const res = await client.post<{ JobId: string }>('/api/projects/actions/close');
     return res.Data.JobId;
 }
+
+export async function retrieveProject(archivePath: string, targetDirectory: string): Promise<string> {
+    const res = await client.post<{ JobId: string }>('/api/projects/actions/retrieve', {
+        ArchivePath: archivePath,
+        TargetDirectory: targetDirectory,
+    });
+    return res.Data.JobId;
+}

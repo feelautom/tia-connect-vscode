@@ -137,6 +137,22 @@ export function activate(context: vscode.ExtensionContext): void {
         vscode.commands.registerCommand('tiaConnect.refreshOpenBlocks', () => blockEditor.refreshOpenBlocks()),
     );
 
+    // Auto-move Copilot to secondary sidebar (one-time)
+    if (!context.globalState.get('copilotMovedToAuxBar3')) {
+        context.globalState.update('copilotMovedToAuxBar3', true);
+        setTimeout(async () => {
+            try {
+                await vscode.commands.executeCommand('vscode.moveViews', {
+                    viewIds: ['tiaCopilotChat'],
+                    destinationId: 'workbench.view.extension.auxiliarybar',
+                });
+                log('[Copilot] Auto-moved to secondary sidebar');
+            } catch (err) {
+                log(`[Copilot] Auto-move failed: ${err}`);
+            }
+        }, 3000);
+    }
+
     // Refresh tree after successful reimport
     blockEditor.onBlockReimported(() => {
         treeProvider.refresh();

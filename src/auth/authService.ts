@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { log, logError } from '../views/outputChannel';
 import { CONTEXT_KEYS } from '../utils/constants';
-import { setApiKey } from '../utils/config';
 
 const TOKEN_KEY = 'tiaConnect.authToken';
 const AUTH_BASE_URL = 'https://t-ia-connect.com';
@@ -49,7 +48,6 @@ export class AuthService implements vscode.Disposable {
         const profile = await this.fetchProfile(token);
         if (profile) {
             this.profile = profile;
-            await setApiKey(profile.apiKey);
             log(`Authenticated as ${profile.email} (${profile.licenseType})`);
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, true);
             this._onDidChangeAuth.fire(true);
@@ -151,11 +149,10 @@ export class AuthService implements vscode.Disposable {
                 return;
             }
 
-            // Fetch profile and set API key
+            // Fetch profile
             const profile = await this.fetchProfile(token);
             if (profile) {
                 this.profile = profile;
-                await setApiKey(profile.apiKey);
                 log(`Profile loaded: ${profile.email} (${profile.licenseType})`);
             }
         } catch {

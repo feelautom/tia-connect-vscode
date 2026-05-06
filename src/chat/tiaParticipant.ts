@@ -37,11 +37,16 @@ export function registerChatParticipant(
                 return;
             }
 
-            // Build context from current project
+            // Check if project is connected
             const overview = treeProvider.getProjectOverview();
-            const projectContext = overview
-                ? `Current TIA Portal project: "${overview.Name}"\nDevices: ${overview.Devices?.map(d => `${d.Name} (${d.TypeIdentifier || 'PLC'})`).join(', ') || 'none'}`
-                : 'No project is currently open. Use tia_get_project_overview to check.';
+            if (!overview) {
+                response.markdown(
+                    '**No TIA Portal project connected.** Open the T-IA Connect panel in the sidebar to connect to a project first.'
+                );
+                return;
+            }
+
+            const projectContext = `Current TIA Portal project: "${overview.Name}"\nDevices: ${overview.Devices?.map(d => `${d.Name} (${d.TypeIdentifier || 'PLC'})`).join(', ') || 'none'}`;
 
             const messages: vscode.LanguageModelChatMessage[] = [
                 vscode.LanguageModelChatMessage.User(SYSTEM_PROMPT),

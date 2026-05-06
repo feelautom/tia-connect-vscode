@@ -17,6 +17,7 @@ import { getSignalRClient, disposeSignalR } from './api/signalr';
 import { AuthService } from './auth/authService';
 import { TiaUriHandler } from './auth/uriHandler';
 import { detectServer, fetchLocalApiKey } from './install/serverDetector';
+import { showProjectDashboard } from './views/projectDashboard';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -128,9 +129,9 @@ export function activate(context: vscode.ExtensionContext): void {
     });
 
     // When the tree loads a project, activate VCS + tests + status bar
-    treeProvider.onProjectLoaded((projectName) => {
+    treeProvider.onProjectLoaded((overview) => {
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.connected, true);
-        setConnected(projectName);
+        setConnected(overview.Name);
         scmProvider.refresh();
         scmProvider.startAutoRefresh();
         vcsTreeProvider.refresh();
@@ -139,12 +140,22 @@ export function activate(context: vscode.ExtensionContext): void {
         testProvider.discoverTests();
         // Connect SignalR for real-time job notifications
         getSignalRClient().connect();
+        // Show project dashboard
+        showProjectDashboard(overview);
     });
 
     // Register commands
     registerProjectCommands(context, treeProvider, scmProvider, testProvider);
     registerBlockCommands(context, blockEditor);
     registerPipelineCommands(context);
+
+    // Dashboard command (click on project name in tree)
+    context.subscriptions.push(
+        vscode.commands.registerCommand('tiaConnect.showDashboard', () => {
+            const overview = treeProvider.getProjectOverview();
+            if (overview) { showProjectDashboard(overview); }
+        }),
+    );
 
     // Language features (SCL/STL: completion, symbols, go-to-def, hover)
     registerLanguageProviders(context);

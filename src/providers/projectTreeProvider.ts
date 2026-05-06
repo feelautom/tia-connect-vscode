@@ -35,8 +35,8 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
     private _onDidChangeTreeData = new vscode.EventEmitter<TiaTreeItem | undefined>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-    private _onProjectLoaded = new vscode.EventEmitter<string>();
-    /** Fires when a project is successfully loaded (emits project name) */
+    private _onProjectLoaded = new vscode.EventEmitter<ProjectOverview>();
+    /** Fires when a project is successfully loaded (emits full overview) */
     readonly onProjectLoaded = this._onProjectLoaded.event;
 
     private projectData: ProjectOverview | null = null;
@@ -47,6 +47,11 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
 
     setExtensionPath(extensionPath: string): void {
         this.iconsDir = path.join(extensionPath, 'resources', 'icons');
+    }
+
+    /** Get the current project overview (for dashboard) */
+    getProjectOverview(): ProjectOverview | null {
+        return this.projectData;
     }
 
     /** Update authenticated state — tree won't load data until true */
@@ -103,6 +108,10 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
             case 'project':
                 item.iconPath = new vscode.ThemeIcon('project');
                 item.contextValue = 'project';
+                item.command = {
+                    command: 'tiaConnect.showDashboard',
+                    title: 'Show Project Dashboard',
+                };
                 break;
             case 'device':
                 item.iconPath = new vscode.ThemeIcon('server');
@@ -195,7 +204,7 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
                 return [];
             }
             log(`Project loaded: ${this.projectData.Name}`);
-            this._onProjectLoaded.fire(this.projectData.Name);
+            this._onProjectLoaded.fire(this.projectData);
             return [{
                 type: 'project',
                 label: this.projectData.Name,

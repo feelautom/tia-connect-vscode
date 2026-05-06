@@ -99,8 +99,11 @@ export async function fetchLocalApiKey(): Promise<boolean> {
             return false;
         }
 
-        const data = await resp.json() as { apiKey?: string; ApiKey?: string };
-        const key = data.apiKey || data.ApiKey;
+        const body = await resp.json() as Record<string, unknown>;
+        // Handle nested response format: { response: { data: { apiKey } } } or flat { apiKey }
+        const nested = (body.response as Record<string, unknown>)?.data as Record<string, string> | undefined;
+        const flat = body as Record<string, string>;
+        const key = nested?.apiKey || nested?.ApiKey || flat.apiKey || flat.ApiKey;
         if (!key) {
             log('Local API key endpoint returned empty key.');
             return false;

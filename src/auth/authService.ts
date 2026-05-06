@@ -86,7 +86,7 @@ export class AuthService implements vscode.Disposable {
         // Already polling → stop previous attempt and start fresh
         this.stopPolling();
 
-        console.log(`[T-IA Connect] openAuthPage(${mode}) called`);
+
         const state = generateState();
         const redirectUri = 'vscode://feelautom.tia-connect-vscode/auth-callback';
         const modeParam = mode === 'register' ? '&mode=register' : '';
@@ -175,7 +175,7 @@ export class AuthService implements vscode.Disposable {
         const shortState = state.substring(0, 8);
 
         log(`Polling for auth token (state=${shortState}...)...`);
-        console.log(`[T-IA Connect] Polling started for state=${shortState}...`);
+
 
         this.pollTimer = setInterval(async () => {
             if (Date.now() - startTime > POLL_TIMEOUT_MS) {
@@ -186,12 +186,12 @@ export class AuthService implements vscode.Disposable {
             }
 
             const pollUrl = `${AUTH_BASE_URL}/api/auth/vscode-poll?state=${encodeURIComponent(state)}`;
-            console.log(`[T-IA Connect] Polling ${pollUrl}`);
+
             try {
                 const resp = await fetch(pollUrl);
                 const text = await resp.text();
                 log(`Poll response (state=${shortState}): ${resp.status} ${text}`);
-                console.log(`[T-IA Connect] Poll ${resp.status}: ${text}`);
+
 
                 if (!resp.ok) return;
 
@@ -199,7 +199,7 @@ export class AuthService implements vscode.Disposable {
 
                 if (data.status === 'complete' && data.token) {
                     log('Auth token received via polling.');
-                    console.log('[T-IA Connect] Token received via polling!');
+
                     this.stopPolling();
 
                     const success = await this.handleToken(data.token);
@@ -212,7 +212,7 @@ export class AuthService implements vscode.Disposable {
                 }
             } catch (err) {
                 log(`Poll error (state=${shortState}): ${err}`);
-                console.error(`[T-IA Connect] Poll error:`, err);
+
             }
         }, POLL_INTERVAL_MS);
     }

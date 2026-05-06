@@ -908,6 +908,48 @@
         "icon": "$(search-remove)"
       },
       {
+        "command": "tiaConnect.exportHmiScreen",
+        "title": "%command.exportHmiScreen%",
+        "category": "T-IA Connect",
+        "icon": "$(export)"
+      },
+      {
+        "command": "tiaConnect.importHmiScreen",
+        "title": "%command.importHmiScreen%",
+        "category": "T-IA Connect",
+        "icon": "$(import)"
+      },
+      {
+        "command": "tiaConnect.exportHmiAll",
+        "title": "%command.exportHmiAll%",
+        "category": "T-IA Connect",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "tiaConnect.importHmiAll",
+        "title": "%command.importHmiAll%",
+        "category": "T-IA Connect",
+        "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "tiaConnect.exportHwConfig",
+        "title": "%command.exportHwConfig%",
+        "category": "T-IA Connect",
+        "icon": "$(server)"
+      },
+      {
+        "command": "tiaConnect.importHwConfig",
+        "title": "%command.importHwConfig%",
+        "category": "T-IA Connect",
+        "icon": "$(server-process)"
+      },
+      {
+        "command": "tiaConnect.initWorkspace",
+        "title": "%command.initWorkspace%",
+        "category": "T-IA Connect",
+        "icon": "$(folder-active)"
+      },
+      {
         "command": "tiaConnect.createBlock",
         "title": "%command.createBlock%",
         "category": "T-IA Connect",
@@ -1174,6 +1216,26 @@
           "command": "tiaConnect.detectOrphans",
           "when": "view == tiaProjectExplorer && viewItem == device",
           "group": "2_export"
+        },
+        {
+          "command": "tiaConnect.exportHmiAll",
+          "when": "view == tiaProjectExplorer && viewItem == device",
+          "group": "3_hmi"
+        },
+        {
+          "command": "tiaConnect.importHmiAll",
+          "when": "view == tiaProjectExplorer && viewItem == device",
+          "group": "3_hmi"
+        },
+        {
+          "command": "tiaConnect.exportHwConfig",
+          "when": "view == tiaProjectExplorer && viewItem == device",
+          "group": "4_hardware"
+        },
+        {
+          "command": "tiaConnect.importHwConfig",
+          "when": "view == tiaProjectExplorer && viewItem == device",
+          "group": "4_hardware"
         },
         {
           "command": "tiaConnect.exportTagsCsv",

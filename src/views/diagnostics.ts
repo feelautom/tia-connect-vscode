@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { CompilationMessage } from '../api/types';
+import { mapDiagnostics } from '../utils/diagnosticMapper';
 
 let diagnosticCollection: vscode.DiagnosticCollection;
 
@@ -10,26 +11,34 @@ export function createDiagnostics(): vscode.DiagnosticCollection {
 
 /**
  * Update diagnostics for a file based on compilation messages.
- * Maps compilation errors to the open editor if possible.
+ * Tries to map errors to precise line numbers when possible.
  */
-export function updateDiagnostics(fileUri: vscode.Uri, messages: CompilationMessage[]): void {
+export function updateDiagnostics(fileUri: vscode.Uri, messages: CompilationMessage[], sourceCode?: string): void {
     if (!diagnosticCollection) { return; }
 
-    const diagnostics: vscode.Diagnostic[] = messages.map(msg => {
-        const severity = msg.ErrorLevel === 'Error'
+    // If no source code provided, try to read from the open editor
+    if (!sourceCode) {
+        const doc = vscode.workspace.textDocuments.find(d => d.uri.toString() === fileUri.toString());
+        if (doc) {
+            sourceCode = doc.getText();
+        }
+    }
+
+    const mapped = mapDiagnostics(messages, sourceCode);
+
+    const diagnostics: vscode.Diagnostic[] = mapped.map(m => {
+        const severity = m.severity === 'Error'
             ? vscode.DiagnosticSeverity.Error
-            : msg.ErrorLevel === 'Warning'
+            : m.severity === 'Warning'
                 ? vscode.DiagnosticSeverity.Warning
                 : vscode.DiagnosticSeverity.Information;
 
-        // TIA Portal doesn't provide line numbers in compilation messages,
-        // so we place diagnostics at line 0
-        const range = new vscode.Range(0, 0, 0, 0);
+        const range = new vscode.Range(m.line, m.column, m.line, m.column);
 
-        const diag = new vscode.Diagnostic(range, msg.Description, severity);
+        const diag = new vscode.Diagnostic(range, m.message, severity);
         diag.source = 'T-IA Connect';
-        if (msg.Path) {
-            diag.code = msg.Path;
+        if (m.path) {
+            diag.code = m.path;
         }
         return diag;
     });

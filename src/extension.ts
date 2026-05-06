@@ -24,6 +24,9 @@ import { ensureMcpConfig } from './utils/mcpConfig';
 import { registerLanguageModelTools } from './chat/languageModelTools';
 import { registerChatParticipant } from './chat/tiaParticipant';
 import { registerOrphanCleanupCommands } from './commands/orphanCleanup';
+import { registerHmiCommands } from './commands/hmiCommands';
+import { registerHwConfigCommands } from './commands/hwConfigCommands';
+import { registerWorkspaceCommands } from './commands/workspaceCommands';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -190,6 +193,9 @@ export function activate(context: vscode.ExtensionContext): void {
     registerPipelineCommands(context);
     registerExportImportCommands(context);
     registerOrphanCleanupCommands(context);
+    registerHmiCommands(context);
+    registerHwConfigCommands(context);
+    registerWorkspaceCommands(context);
 
     // Dashboard command (click on project name in tree)
     context.subscriptions.push(

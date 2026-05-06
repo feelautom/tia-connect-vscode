@@ -83,11 +83,8 @@ export class AuthService implements vscode.Disposable {
 
     /** Open auth page in the external browser */
     private async openAuthPage(mode: 'login' | 'register'): Promise<string> {
-        // Already polling → don't open another browser tab
-        if (this.pollTimer) {
-            vscode.window.showInformationMessage('T-IA Connect: Authentication in progress — check your browser.');
-            return '';
-        }
+        // Already polling → stop previous attempt and start fresh
+        this.stopPolling();
 
         const state = generateState();
         const redirectUri = 'vscode://feelautom.tia-connect-vscode/auth-callback';

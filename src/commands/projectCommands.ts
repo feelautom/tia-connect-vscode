@@ -217,10 +217,14 @@ async function switchProject(treeProvider: ProjectTreeProvider): Promise<void> {
 
         // Handle browse option
         if (selected.projectPath === '__browse__') {
+            const defaultPath = process.env.USERPROFILE
+                ? vscode.Uri.file(require('path').join(process.env.USERPROFILE, 'Documents', 'Automation'))
+                : undefined;
             const fileUri = await vscode.window.showOpenDialog({
                 canSelectFiles: true,
                 canSelectFolders: false,
                 canSelectMany: false,
+                defaultUri: defaultPath,
                 filters: { 'TIA Portal Projects': ['ap17', 'ap18', 'ap19', 'ap20'] },
                 title: l10n.t('Select a TIA Portal project'),
             });

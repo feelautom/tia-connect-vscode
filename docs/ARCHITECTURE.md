@@ -56,6 +56,9 @@ tia-connect-vscode/
 │   │   ├── blockFileManager.ts     # Fichiers temporaires + metadata .tia-meta.json + cache
 │   │   ├── crossRefWebview.ts      # Webview cross-references (sources, objets, locations)
 │   │   └── testResultWebview.ts   # Webview resultats de tests (steps, assertions, pass/fail)
+│   ├── chat/
+│   │   ├── languageModelTools.ts   # 30 Language Model Tools (VS Code LM API)
+│   │   └── tiaParticipant.ts       # @tia chat participant (GitHub Copilot Chat)
 │   ├── commands/
 │   │   ├── projectCommands.ts      # connect, disconnect, refresh, switch, browse, launch server
 │   │   ├── blockCommands.ts        # openBlock, compileDevice, compileBlock, exportBlock, crossRefs
@@ -65,10 +68,11 @@ tia-connect-vscode/
 │   │   ├── outputChannel.ts        # Canal de logs "T-IA Connect"
 │   │   ├── diagnostics.ts          # DiagnosticCollection (erreurs compilation dans l'editeur)
 │   │   └── projectDashboard.ts     # Webview dashboard projet (stats, devices, tags)
-│   └── utils/
-│       ├── config.ts               # Lecture/ecriture settings VS Code
-│       ├── jobPoller.ts            # Polling async avec callback progression
-│       └── constants.ts            # IDs, noms, langages editables
+│   ├── utils/
+│   │   ├── config.ts               # Lecture/ecriture settings VS Code
+│   │   ├── jobPoller.ts            # Polling async avec callback progression
+│   │   ├── mcpConfig.ts            # Auto-config MCP pour GitHub Copilot Chat
+│   │   └── constants.ts            # IDs, noms, langages editables
 └── docs/
     ├── ARCHITECTURE.md             # Ce fichier
     └── ROADMAP.md                  # Roadmap par phases
@@ -199,6 +203,39 @@ Gestion CI/CD via QuickPick.
 ### 7. Diagnostics (`views/diagnostics.ts`)
 
 `DiagnosticCollection` pour afficher les erreurs/warnings de compilation TIA Portal directement dans l'editeur VS Code (soulignement rouge/jaune).
+
+### 8. GitHub Copilot Integration (`chat/`)
+
+Deux mecanismes independants pour l'IA dans VS Code :
+
+**a) Language Model Tools (`chat/languageModelTools.ts`)**
+
+30 outils enregistres via `vscode.lm.registerTool()` (VS Code 1.96+). Chaque outil est une classe implementant `vscode.LanguageModelTool<InputType>` qui appelle l'API REST T-IA Connect.
+
+- **Verification licence AI** : check cache (TTL 5 min) avant chaque appel d'outil. Si la licence AI n'est pas activee, retourne une erreur sans consommer de tokens.
+- **safeCall()** : wrapper qui catch les erreurs et retourne un `LanguageModelToolResult` JSON structure (`{ success, data }` ou `{ success: false, error }`).
+- Les outils sont declares dans `package.json` > `contributes.languageModelTools` avec `inputSchema` (JSON Schema) pour que le modele sache quels parametres fournir.
+
+**b) Chat Participant (`chat/tiaParticipant.ts`)**
+
+Participant `@tia` dans GitHub Copilot Chat via `vscode.chat.createChatParticipant('tia.connect', handler)`.
+
+- **Pre-checks** : verifie (1) projet connecte, (2) licence AI, (3) outils disponibles avant d'envoyer quoi que ce soit au modele.
+- **Contexte projet** : injecte automatiquement le nom du projet et la liste des devices dans le prompt systeme.
+- **Boucle agentique** : le handler gere les `LanguageModelToolCallPart` en boucle (max 10 tours) :
+  1. Envoie la requete au modele avec les outils
+  2. Streame le texte vers l'utilisateur
+  3. Si le modele demande un outil → execute via `vscode.lm.invokeTool()`
+  4. Renvoie les resultats au modele → retour a l'etape 1
+  5. Quand le modele ne demande plus d'outil → fin
+
+**c) MCP Auto-configuration (`utils/mcpConfig.ts`)**
+
+A la connexion d'un projet, l'extension genere automatiquement `.vscode/mcp.json` avec l'entree T-IA Connect (SSE endpoint + API key). Cela permet a GitHub Copilot Chat d'utiliser aussi les 100+ outils MCP du serveur.
+
+**d) Copilot Sidebar (`providers/copilotViewProvider.ts`)**
+
+Webview dans la sidebar secondaire connectee a l'API assistant du serveur (multi-provider : OpenAI, Anthropic, Google, Mistral, Ollama). Independant de GitHub Copilot — utilise le LLM configure cote serveur.
 
 ## Communication avec le serveur
 

@@ -2,6 +2,30 @@
 
 All notable changes to the T-IA Connect for VS Code extension will be documented in this file.
 
+## [0.4.27] - 2026-05-06
+
+### Added
+- **GitHub Copilot Chat `@tia` participant**: type `@tia` in GitHub Copilot Chat to interact with your TIA Portal project using natural language. The participant auto-injects project context and uses the registered tools to answer queries and perform actions.
+- **30 Language Model Tools**: registered via VS Code Language Model Tools API (`vscode.lm.registerTool`), usable by GitHub Copilot Chat and any VS Code chat participant. Tools cover:
+  - **Project** (3): `tia_get_project_overview`, `tia_list_devices`, `tia_save_project`
+  - **Blocks** (7): `tia_list_blocks`, `tia_get_block_content`, `tia_get_block_source`, `tia_create_block`, `tia_import_scl`, `tia_export_block`, `tia_delete_block`
+  - **Compilation** (2): `tia_compile_device`, `tia_compile_block`
+  - **Tags** (3): `tia_list_tag_tables`, `tia_list_tags`, `tia_create_tag`
+  - **UDTs** (1): `tia_list_udts`
+  - **Cross-references** (1): `tia_get_cross_references`
+  - **Online/Download** (3): `tia_download_to_plc`, `tia_go_online`, `tia_go_offline`
+  - **PLCSim** (3): `tia_plcsim_status`, `tia_plcsim_read_tag`, `tia_plcsim_write_tag`
+  - **Tests** (1): `tia_run_tests`
+  - **VCS** (3): `tia_vcs_status`, `tia_vcs_commit`, `tia_vcs_diff`
+  - **Pipelines** (2): `tia_pipeline_list`, `tia_pipeline_run`
+  - **Hardware** (2): `tia_search_catalog`, `tia_add_device`
+- **AI license check**: the `@tia` participant and all 30 LM Tools verify the AI license feature before execution. Prevents wasting GitHub Copilot tokens on calls that would be rejected by the server. Cache with 5-minute TTL.
+- **Agentic tool loop**: the `@tia` participant handles multi-turn tool calls — invokes tools, feeds results back to the model, up to 10 turns per interaction.
+
+### Fixed
+- `@tia` participant now properly executes tools (was only streaming text without handling `LanguageModelToolCallPart`)
+- Use `LanguageModelChatMessage.Assistant(toolCalls)` / `.User(toolResults)` constructors instead of deprecated `content2` property
+
 ## [0.4.0] - 2026-05-06
 
 ### Added

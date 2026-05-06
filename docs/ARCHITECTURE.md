@@ -31,7 +31,7 @@ tia-connect-vscode/
 │   ├── api/
 │   │   ├── client.ts               # Client HTTP (fetch, X-API-Key, PascalCase normalization)
 │   │   ├── types.ts                # Types TypeScript (miroir DTOs C#)
-│   │   ├── project.ts              # GET /api/projects/overview
+│   │   ├── project.ts              # GET /api/projects/overview, open, close, retrieve
 │   │   ├── blocks.ts               # Blocs: tree, content, compile, export, reimport
 │   │   ├── sourceControl.ts        # VCS: status, commit, diff, branches, push/pull
 │   │   ├── testHarness.ts          # Tests PLCSim: list, run, results
@@ -39,6 +39,11 @@ tia-connect-vscode/
 │   │   ├── tags.ts                 # Tag tables, tags, UDTs: list, details
 │   │   ├── jobs.ts                 # Job monitoring (SignalR push + HTTP polling fallback)
 │   │   └── signalr.ts             # Client SignalR legacy (ASP.NET SignalR, longPolling)
+│   ├── auth/
+│   │   ├── authService.ts          # OAuth : login/register, JWT SecretStorage, polling, session
+│   │   └── uriHandler.ts           # URI callback handler (vscode://...auth-callback)
+│   ├── install/
+│   │   └── serverDetector.ts       # Detection serveur (exe + running) + auto-fetch API key
 │   ├── providers/
 │   │   ├── projectTreeProvider.ts  # TreeDataProvider (explorateur projet TIA)
 │   │   ├── scmProvider.ts          # SourceControl provider (QuickDiff gutter)
@@ -47,18 +52,19 @@ tia-connect-vscode/
 │   │   ├── originalContentProvider.ts # QuickDiff pour blocs en cours d'edition
 │   │   └── testTreeProvider.ts     # TreeDataProvider (PLC Tests dans la sidebar)
 │   ├── editors/
-│   │   ├── blockEditor.ts          # Ouverture, sauvegarde, reimport blocs SCL/STL
-│   │   ├── blockFileManager.ts     # Fichiers temporaires + metadata .tia-meta.json
+│   │   ├── blockEditor.ts          # Ouverture, sauvegarde, reimport, prechargement blocs SCL/STL
+│   │   ├── blockFileManager.ts     # Fichiers temporaires + metadata .tia-meta.json + cache
 │   │   ├── crossRefWebview.ts      # Webview cross-references (sources, objets, locations)
 │   │   └── testResultWebview.ts   # Webview resultats de tests (steps, assertions, pass/fail)
 │   ├── commands/
-│   │   ├── projectCommands.ts      # connect, disconnect, refresh (+ API key prompt)
+│   │   ├── projectCommands.ts      # connect, disconnect, refresh, switch, browse, launch server
 │   │   ├── blockCommands.ts        # openBlock, compileDevice, compileBlock, exportBlock, crossRefs
 │   │   └── pipelineCommands.ts     # list, run, history, createFromTemplate
 │   ├── views/
 │   │   ├── statusBar.ts            # Barre de statut (Connected/Disconnected/Error)
 │   │   ├── outputChannel.ts        # Canal de logs "T-IA Connect"
-│   │   └── diagnostics.ts          # DiagnosticCollection (erreurs compilation dans l'editeur)
+│   │   ├── diagnostics.ts          # DiagnosticCollection (erreurs compilation dans l'editeur)
+│   │   └── projectDashboard.ts     # Webview dashboard projet (stats, devices, tags)
 │   └── utils/
 │       ├── config.ts               # Lecture/ecriture settings VS Code
 │       ├── jobPoller.ts            # Polling async avec callback progression
@@ -123,6 +129,8 @@ Gere le cycle de vie de l'edition des blocs SCL/STL.
 - **Auto-save de securite** : timer configurable (5/10/15 min) qui sauvegarde les fichiers modifies sur disque sans reimporter.
 - Verrou `reimportInProgress` pour eviter les reimports concurrents sur le meme fichier.
 - Blocs LAD/FBD/GRAPH : ouverts en lecture seule (export XML).
+- **Prechargement** : apres le chargement d'un projet, tous les blocs SCL/STL sont telecharges en arriere-plan. A l'ouverture, le bloc est servi depuis le cache si disponible (TTL 10 min).
+- **Cache** : `blockFileManager.hasCachedBlock()` verifie l'existence du fichier + age via metadata `exportedAt`.
 
 ### 4. Source Control (`providers/vcsTreeProvider.ts` + `vcsContentProvider.ts`)
 
@@ -221,9 +229,20 @@ interface ApiResponse<T> {
 
 ### Authentification
 
-- Header `X-API-Key` sur chaque requete
-- L'endpoint `/api/health` est accessible sans cle (ping)
-- A la connexion : prompt interactif si pas de cle, validation, re-prompt si invalide
+Deux niveaux d'authentification independants :
+
+1. **Token OAuth (cloud)** — `auth/authService.ts`
+   - Login via navigateur externe (`t-ia-connect.com/auth/vscode`)
+   - Token JWT stocke dans `vscode.SecretStorage` (keyring OS)
+   - Polling silencieux (`/api/auth/vscode-poll`) en fallback si URI callback bloque
+   - Validation en arriere-plan au demarrage (fast startup : confiance immediate, validation async)
+   - Gere les context keys `tiaConnect.authenticated` pour les welcome views
+
+2. **Cle API (serveur local)** — header `X-API-Key` sur chaque requete
+   - Auto-recuperee depuis `GET /api/auth/local-key` (cle DPAPI du serveur local)
+   - L'endpoint `/api/health` est accessible sans cle (ping)
+   - Fallback : prompt interactif si la cle n'est pas detectee automatiquement
+   - **Important** : le token OAuth cloud ne remplace jamais la cle API locale
 
 ### Jobs asynchrones
 

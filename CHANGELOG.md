@@ -2,6 +2,25 @@
 
 All notable changes to the T-IA Connect for VS Code extension will be documented in this file.
 
+## [0.4.0] - 2026-05-06
+
+### Added
+- **OAuth Authentication**: login/register via browser (t-ia-connect.com), JWT stored in OS keyring (SecretStorage). Silent background polling for token retrieval. Session validation on startup (fast: trust stored token, validate async).
+- **Welcome Views**: multi-state sidebar — not authenticated, server not installed, server not running, connected. Context keys drive conditional UI.
+- **Server Detection**: auto-detect T-IA Connect installation (exe path + running status) on startup and after auth.
+- **Auto API Key**: automatically fetches the local server API key via `GET /api/auth/local-key` (DPAPI-encrypted). No manual copy-paste needed.
+- **Project Dashboard**: webview panel showing project stats (devices, blocks, tags), device table with details. Opens automatically on project load, re-openable via tree click.
+- **Block Preloading**: SCL/STL blocks are preloaded in background after project load. Cache-first opening (10min TTL) — blocks open near-instantly.
+- **Browse Project Files**: file dialog with default folder (`Documents/Automation`), supports .ap17-21 and .zap17-21 (archives).
+- **Archive Support**: .zap files prompt for extraction folder, use `retrieveProject` API.
+- **Smart Logging**: "not connected" / "not available" messages logged as INFO instead of ERROR when no project is open.
+- **Tree State Management**: tree view properly clears on disconnect/stop server, re-populates on connect.
+
+### Changed
+- Disconnect menu now properly resets tree view state (`setConnected(false)`)
+- API client distinguishes expected "not ready" responses from real errors in logs
+- Phase 5 auth does NOT overwrite local API key with cloud profile token
+
 ## [0.3.0] - 2026-05-05
 
 ### Added

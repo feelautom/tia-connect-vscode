@@ -102,7 +102,12 @@ export class TiaSourceControl implements vscode.Disposable {
                 { command: 'tiaConnect.vcsPull', title: '$(cloud-download)', tooltip: 'Pull' },
             ];
         } catch (err) {
-            logError('VCS refresh failed', err);
+            const msg = err instanceof Error ? err.message : String(err);
+            if (/not connected|not available|aucun projet|no project/i.test(msg)) {
+                log('VCS refresh skipped — no project open.');
+            } else {
+                logError('VCS refresh failed', err);
+            }
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsInitialized, false);
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, false);
         }

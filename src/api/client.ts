@@ -132,7 +132,9 @@ export class TiaClient {
                     throw new Error(featureMsg);
                 }
                 const msg = json.Message || `HTTP ${resp.status}`;
-                log(`ERROR ${method} ${path}: ${msg}`);
+                // "Not connected" / "not available" are normal when no project is open — don't log as ERROR
+                const isNotReady = /not connected|not available|aucun projet|no project/i.test(msg);
+                log(`${isNotReady ? 'INFO' : 'ERROR'} ${method} ${path}: ${msg}`);
                 throw new Error(msg);
             }
 

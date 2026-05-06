@@ -74,6 +74,16 @@ export class BlockFileManager {
         return normFile.startsWith(normDir) && !normFile.endsWith(META_FILE_SUFFIX.toLowerCase());
     }
 
+    /** Check if a cached block file exists and is recent enough */
+    hasCachedBlock(deviceName: string, blockName: string, language: string, maxAgeMs = 10 * 60 * 1000): boolean {
+        const filePath = this.getBlockFilePath(deviceName, blockName, language);
+        if (!fs.existsSync(filePath)) { return false; }
+        const meta = this.readMetadata(filePath);
+        if (!meta) { return false; }
+        const age = Date.now() - new Date(meta.exportedAt).getTime();
+        return age < maxAgeMs;
+    }
+
     /** Clean up all temp files */
     cleanup(): void {
         if (fs.existsSync(this.tempDir)) {

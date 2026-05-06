@@ -6,208 +6,275 @@ This extension connects to a running [T-IA Connect](https://t-ia-connect.com) se
 
 ![SCL Editing](https://img.shields.io/badge/SCL-Syntax_Highlighting-blue)
 ![STL Editing](https://img.shields.io/badge/STL-Syntax_Highlighting-green)
+![TIA Portal](https://img.shields.io/badge/TIA_Portal-V17--V21-orange)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+
+---
+
+## Quick Start
+
+1. **Install the extension** from the VS Code Marketplace
+2. Click the **T-IA Connect** icon in the Activity Bar (left sidebar)
+3. **Sign in** with your T-IA Connect account (or create one for free)
+4. If T-IA Connect is not installed, follow the download link in the sidebar
+5. Click **Launch Headless** or **Launch with GUI** to start the server
+6. Open a TIA Portal project — you're ready to code!
+
+> The API key is configured automatically when the server runs on your machine. No manual setup needed.
+
+---
 
 ## Features
 
 ### Project Explorer
 
-Browse your TIA Portal project structure directly in VS Code: devices, program blocks, data blocks, UDTs — all in a familiar tree view.
+Browse your TIA Portal project structure directly in VS Code.
 
-- Lazy-loaded device and block tree
-- Block type icons (OB, FB, FC, DB)
-- Language and consistency indicators
-- Folder structure preserved
+- **Device tree**: PLCs, HMIs, and their contents — blocks, tag tables, UDTs
+- **Block folders**: hierarchical view matching your TIA Portal structure
+- **Block icons**: color-coded by type — OB (blue), FB (green), FC (orange), DB (purple)
+- **Status indicators**: block language and consistency state at a glance
+- **Project Dashboard**: overview panel with device stats, block counts, and tag summaries — opens automatically when a project loads
 
 ### SCL / STL Editing
 
-Double-click any SCL or STL block to open it in VS Code with full syntax highlighting. Edit the code, press **Ctrl+S**, and it's automatically reimported into TIA Portal.
+Double-click any SCL or STL block to open it with full language support. Edit, save (**Ctrl+S**), and it's reimported into TIA Portal automatically.
 
-- **SCL** syntax highlighting with TextMate grammar
-- **STL** syntax highlighting with TextMate grammar
-- **Autocompletion** for keywords, types, variables, and built-in functions
-- **Signature Help** — parameter hints for 30+ SCL functions (math, string, conversion)
-- **Hover documentation** — type info for variables, docs for keywords/functions
-- **Go-to-Definition** — Ctrl+click on variables (local) or block names (cross-file via API)
-- **Rename Symbol** (F2) — rename variables across the file
-- **SCL Diagnostics** — detects unclosed sections, missing END_ keywords, unmatched parentheses
+- **Syntax highlighting** — TextMate grammars for SCL and STL
+- **Autocompletion** — keywords, types, variables, and built-in functions
+- **Signature Help** — parameter hints for 30+ SCL functions
+- **Hover documentation** — type info, function docs, system block documentation (TON, CTU, R_TRIG...)
+- **Go-to-Definition** — Ctrl+click on local variables or block names (cross-file via API)
+- **Rename Symbol** (F2) — rename a variable across the entire file
+- **Diagnostics** — detects unclosed sections, missing `END_` keywords, unmatched parentheses
 - **Document Outline** — hierarchical view of blocks, sections, and variables
-- Reimport on **manual save only** (Ctrl+S) — VS Code auto-save is ignored
-- Safety auto-save timer (configurable: 5/10/15 minutes, saves to disk without reimporting)
-- Optional auto-compile after reimport
-- 15 SCL snippets (FB, FC, OB, DB, IF, FOR, CASE, TON, R_TRIG...)
-- Compilation diagnostics in the editor (errors and warnings from TIA Portal)
-- **LAD/FBD/GRAPH Webview** — graphical SVG rendering of LADDER networks (contacts, coils, boxes, wires, parallel branches) in a read-only webview panel
+- **15 SCL snippets** — FB, FC, OB, DB, IF, FOR, CASE, TON, R_TRIG...
+- **Compilation errors** displayed directly in the editor (red/yellow squiggles)
+- **Background preloading** — blocks are cached after project load for near-instant opening
+
+#### Save behavior
+
+- **Ctrl+S** (manual save) triggers reimport into TIA Portal + optional auto-compile
+- **VS Code auto-save** is ignored — no accidental reimports
+- **Safety timer** saves to disk every 5/10/15 minutes without reimporting (configurable)
+
+### LAD / FBD / GRAPH Viewer
+
+Non-editable blocks open in a graphical webview with SVG rendering.
+
+- Contact, coil, and box instructions rendered as network diagrams
+- Parallel branches and wire routing
+- Interface table with variable types
+- Read-only — no accidental modifications
 
 ### Create Blocks
 
-Create new blocks directly from VS Code — right-click any device in the Project Explorer and select **Create Block**.
+Right-click any device in the Project Explorer and select **Create Block**.
 
-- Choose block type: **FB**, **FC**, **OB**, or **DB**
-- Choose language: **SCL**, **STL**, **LAD**, **FBD**, or **GRAPH**
-- Enter a name — the block is automatically created in TIA Portal
-- SCL/STL blocks get a ready-to-use code template; LAD/FBD/GRAPH are created via XML generation
-- The project tree refreshes to show the new block immediately
+- Block types: **FB**, **FC**, **OB**, **DB**
+- Languages: **SCL**, **STL**, **LAD**, **FBD**, **GRAPH**
+- SCL/STL blocks include a ready-to-use code template
+- The project tree refreshes automatically
 
 ### Compile
 
-Compile a single block or an entire device directly from VS Code, with progress notifications and detailed error/warning output.
+Compile a single block or an entire device from the context menu or the Command Palette.
+
+- Progress notification with error/warning count
+- Detailed messages in the Output channel
+- Compilation errors appear as diagnostics in the editor
+- Keyboard shortcut: **Ctrl+Shift+B**
 
 ### Source Control (VCS)
 
-Version your TIA Portal project with a dedicated **Source Control** panel in the T-IA Connect sidebar. Track changes to blocks, tags, UDTs, and hardware configuration with Git-based versioning.
+Version your TIA Portal project with Git-based source control, directly in the sidebar.
 
-#### Workflow
+1. **Export Preview** (eye icon) — export the project and detect changes since the last commit
+2. **Review** — click any changed file to open a read-only side-by-side diff
+3. **Commit** (checkmark icon) — save the current state with a message
 
-1. **Export Preview** — Click the eye icon to export the current project state and detect changes since the last commit
-2. **Review changes** — Changed files appear in the panel with status icons (Added, Modified, Removed). Click any file to open a **read-only side-by-side diff** showing exactly what changed
-3. **Commit** — Click the checkmark icon and enter a commit message to save the current state
-
-#### Features
-
-- **Diff viewer**: side-by-side comparison of XML exports (blocks, tags, UDTs, hardware) — read-only, no accidental edits
-- **Export Preview**: exports the project without committing, so you can review before saving
+Additional features:
 - Push / Pull to remote repositories
 - Branch operations: create, switch, delete, merge
-- Commit log with unified diff viewer
-- Auto-export every minute + on connect (keeps the panel up to date automatically)
+- Commit log with diff viewer
+- Auto-export every minute (changes appear automatically)
 - Auto-refresh status every 30 seconds
-- License check: shows lock icon if VCS is not included in your license
+- License check (lock icon if VCS is not included in your edition)
 
 ### PLC Tests
 
-Run PLC tests against PLCSim Advanced directly from the T-IA Connect sidebar.
+Run PLC tests against PLCSim Advanced from the sidebar.
 
-- **License and PLCSim checks**: verifies the Test Harness feature is enabled and PLCSim Advanced is available before showing tests
-- Discover tests from the T-IA Connect test harness
+- Automatic license and PLCSim availability checks
 - Run individual tests or the entire suite
-- **Detailed results webview**: pass/fail badges, step cards with colored borders, assertions table (Tag, Expected, Actual, Message), duration and timestamps
-- Step-level breakdown in the test tree
-- Clear error messages when PLCSim instance is not available
-
-### Server Launch
-
-Launch the T-IA Connect server directly from VS Code when it's not running.
-
-- **Sidebar prompt**: when the server is unreachable, the sidebar offers "Launch Headless" or "Launch with GUI" buttons
-- **Headless mode**: runs silently in the background (no window), auto-shuts down after 5 minutes of inactivity
-- **GUI mode**: opens the full T-IA Connect desktop application
-- **Auto-connect**: waits for the server to start, then connects automatically
-- **Stop Server**: available from the Disconnect menu — shuts down the server remotely
-- Configurable executable path (`tiaConnect.executablePath`)
+- Detailed results: pass/fail badges, step cards, assertions table with expected vs actual values
+- Duration and timestamps
 
 ### Cross-References
 
-View cross-references for any block (SCL, STL, LAD, FBD, GRAPH) in a dedicated webview panel.
+View cross-references for any block type (SCL, STL, LAD, FBD, GRAPH).
 
 - Source and target references with type badges
 - Read/Write access indicators
-- Dark-theme styled panel alongside the editor
+- Dedicated webview panel alongside the editor
 
 ### Pipelines (CI/CD)
 
 Define and run CI/CD pipelines for your TIA Portal projects.
 
-- List, view, and run saved pipelines
-- Create pipelines from built-in templates
+- List, run, and monitor pipelines
+- Create from built-in templates
 - Execution history with step-level details
-- Async execution with progress tracking
 
-## Requirements
+---
 
-- **T-IA Connect** server running (v2.1.620+) — [t-ia-connect.com](https://t-ia-connect.com) (or let the extension launch it for you)
-- **TIA Portal** V17-V21 installed on the same machine as the server
-- Network access to the server (default: `http://localhost:9000`)
+## Authentication
 
-## Getting Started
+The extension uses two independent layers:
 
-1. Install the extension
-2. Click the **T-IA Connect** icon in the Activity Bar (left sidebar)
-3. If the server is not running, click **Launch Headless** or **Launch with GUI** in the sidebar
-4. Otherwise, click the **Connect** button in the panel toolbar
-5. Enter the **API Key** when prompted (configured in T-IA Connect server)
-6. The project tree loads automatically once connected
+| Layer | Purpose | How it works |
+|-------|---------|--------------|
+| **T-IA Connect Account** | Identifies you, checks your license | Sign in via browser — token stored securely in your OS keyring |
+| **Server API Key** | Authenticates REST calls to the local server | Auto-configured from the local server (no manual copy-paste) |
+
+On first launch:
+1. Click **Sign In** in the sidebar → your browser opens the login page
+2. After login, the extension picks up your session automatically
+3. The API key is retrieved from the local server in the background
+
+> Your credentials are stored in the OS credential manager (Windows Credential Manager / macOS Keychain / Linux Secret Service). They are never stored in plain text.
+
+---
+
+## Opening Projects
+
+Use **T-IA Connect: Switch Project** (`Ctrl+Shift+P`) to open a project.
+
+- **Recent projects** — your project history, sorted by last access
+- **Browse...** — file dialog to pick any `.ap17` to `.ap21` file
+- **Archives** — `.zap17` to `.zap21` files are supported (prompts for extraction folder)
+- Default browse location: `Documents/Automation`
+
+---
+
+## Server Management
+
+The extension can launch and stop the T-IA Connect server for you.
+
+| Action | Description |
+|--------|-------------|
+| **Launch Headless** | Runs silently in the background (no window) |
+| **Launch with GUI** | Opens the full desktop application |
+| **Stop Server** | Shuts down the server (from the Disconnect menu) |
+
+The server is automatically detected if installed in the default location. You can configure a custom path in settings.
+
+---
 
 ## Extension Settings
 
 | Setting | Default | Description |
 |---------|---------|-------------|
 | `tiaConnect.serverUrl` | `http://localhost:9000` | T-IA Connect server URL |
-| `tiaConnect.apiKey` | *(empty)* | API key for authentication |
-| `tiaConnect.autoReimportOnSave` | `true` | Reimport SCL/STL blocks on manual save (Ctrl+S) |
+| `tiaConnect.apiKey` | *(auto-configured)* | API key (auto-fetched from local server) |
+| `tiaConnect.autoReimportOnSave` | `true` | Reimport blocks on Ctrl+S |
 | `tiaConnect.autoCompileOnReimport` | `false` | Compile after reimport |
-| `tiaConnect.autoSaveInterval` | `5` | Safety auto-save interval in minutes (0 = disabled, 5/10/15) |
-| `tiaConnect.excludeFromReimport` | `[]` | Block names to exclude from auto-reimport (e.g. `["Main", "FB_Legacy"]`) |
-| `tiaConnect.executablePath` | `C:\Program Files\...` | Path to the T-IA Connect server executable |
+| `tiaConnect.autoSaveInterval` | `5` | Safety auto-save (minutes, 0 = disabled) |
+| `tiaConnect.excludeFromReimport` | `[]` | Block names to skip during auto-reimport |
+| `tiaConnect.executablePath` | *(auto-detected)* | Path to the T-IA Connect executable |
+
+---
 
 ## Commands
 
-All commands are available via the Command Palette (`Ctrl+Shift+P`):
+All commands are available via **Ctrl+Shift+P**:
 
+### Project
 | Command | Description |
 |---------|-------------|
-| T-IA Connect: Connect to Server | Connect and authenticate |
-| T-IA Connect: Disconnect from Server | Disconnect or stop the server |
-| T-IA Connect: Launch Server (Headless) | Start server in background |
-| T-IA Connect: Launch Server (GUI) | Start server with desktop UI |
-| T-IA Connect: Refresh Project Tree | Reload project structure |
-| T-IA Connect: Compile Device | Compile all software on a device |
-| T-IA Connect: Compile Block | Compile a single block |
-| T-IA Connect: Export Block to File | Export block as SimaticML XML |
-| T-IA Connect: Create Block | Create a new FB/FC/OB/DB in SCL or STL |
-| T-IA Connect: Switch Project | Open a different project (recent + available) |
-| T-IA Connect VCS: Initialize VCS | Initialize source control repository |
-| T-IA Connect VCS: Export Preview | Export project and show changed files (without committing) |
-| T-IA Connect VCS: Commit Changes | Export project and create a Git commit |
-| T-IA Connect VCS: Show Changes | Open a side-by-side diff for a changed file |
-| T-IA Connect VCS: Push | Push to remote repository |
-| T-IA Connect VCS: Pull | Pull from remote repository |
-| T-IA Connect VCS: Branch Operations | Create, switch, delete, or merge branches |
-| T-IA Connect VCS: Show Commit Log | View commit history with diffs |
-| T-IA Connect Pipelines: List Pipelines | View defined pipelines |
-| T-IA Connect Pipelines: Run Pipeline | Select and run a CI/CD pipeline |
-| T-IA Connect Pipelines: Pipeline History | View past pipeline executions |
-| T-IA Connect Pipelines: Create Pipeline from Template | Create pipeline from template |
-| T-IA Connect: Show Cross-References | Show cross-references for a block |
-| T-IA Connect: Import SCL/STL File | Import an external source file |
-| T-IA Connect Tests: Refresh PLC Tests | Refresh PLC test discovery |
-| T-IA Connect Tests: Run All PLC Tests | Run all discovered tests |
-| T-IA Connect Tests: Run Test | Run a single test |
+| Sign In | Sign in with your T-IA Connect account |
+| Create Account | Create a new account |
+| Sign Out | Sign out |
+| Connect to Server | Connect and authenticate |
+| Disconnect from Server | Disconnect or stop the server |
+| Launch Server (Headless) | Start server in background |
+| Launch Server (GUI) | Start server with desktop UI |
+| Switch Project | Open a different project |
+| Refresh Project Tree | Reload project structure |
+
+### Blocks
+| Command | Description |
+|---------|-------------|
+| Create Block | Create a new FB/FC/OB/DB |
+| Compile Device | Compile all software on a device |
+| Compile Block | Compile a single block |
+| Export Block to File | Export as SimaticML XML |
+| Import SCL/STL File | Import an external source file |
+| Show Cross-References | View block references |
+
+### Source Control
+| Command | Description |
+|---------|-------------|
+| Initialize VCS | Initialize source control repository |
+| Export Preview | Detect changes without committing |
+| Commit Changes | Export and commit |
+| Push / Pull | Sync with remote |
+| Branch Operations | Create, switch, delete, merge |
+| Show Commit Log | View history with diffs |
+
+### Pipelines & Tests
+| Command | Description |
+|---------|-------------|
+| List / Run / History | Manage CI/CD pipelines |
+| Create from Template | Create pipeline from template |
+| Run All PLC Tests | Run the full test suite |
+| Run Test | Run a single test |
+
+---
+
+## Requirements
+
+- **T-IA Connect server** v2.1.620+ — [t-ia-connect.com](https://t-ia-connect.com)
+- **TIA Portal** V17-V21 installed on the same machine as the server
+- Network access to the server (default: `http://localhost:9000`)
 
 ## How It Works
 
 ```
-VS Code Extension (this)          T-IA Connect Server          TIA Portal
-   TypeScript/REST  ──HTTP──>   C# / .NET Framework 4.8  ──Openness──>  V17-V21
-              <──SignalR──  (push notifications for job status)
+VS Code Extension           T-IA Connect Server          TIA Portal
+  TypeScript/REST  ──HTTP──>  C# / .NET 4.8  ──Openness──>  V17-V21
+             <──SignalR──  (real-time push notifications)
 ```
 
-The extension is a **lightweight REST + SignalR client**. All the heavy lifting (Openness API calls, block compilation, PLCSim simulation) happens in the T-IA Connect server. This means:
+The extension is a **lightweight REST + SignalR client**. All TIA Portal operations (Openness API calls, compilation, simulation) happen server-side. This means:
 
-- **No TIA Portal dependency** in VS Code itself
-- **Multi-project**: switch between projects without leaving VS Code
-- **Multi-client**: VS Code + Cursor + scripts can connect simultaneously
+- **No TIA Portal dependency** in VS Code
+- **Multi-project**: switch between projects without restarting
+- **Multi-client**: VS Code, Cursor, and scripts can connect simultaneously
 - **Remote-capable**: the server can run on a different machine or VM
-
-## Localisation
-
-The extension is fully translated in **French**. It automatically displays in French when VS Code is configured with `"locale": "fr"`. English is the default language.
 
 ## Compatibility
 
 | Editor | Supported |
 |--------|-----------|
-| VS Code | Yes |
+| VS Code 1.85+ | Yes |
 | Cursor | Yes |
 | Windsurf | Yes |
 
+## Localisation
+
+The extension is fully translated in **French**. It displays in French when VS Code is configured with `"locale": "fr"`. English is the default.
+
+---
+
 ## Documentation
 
-- [Architecture](docs/ARCHITECTURE.md) — Structure du code, composants, flux de donnees
-- [Roadmap](docs/ROADMAP.md) — Etat d'avancement par phase, fonctionnalites a venir
+- [Architecture](docs/ARCHITECTURE.md) — Code structure, components, data flow
+- [Roadmap](docs/ROADMAP.md) — Development status by phase
+- [Changelog](changelog.md) — Version history
 
 ## License
 
-MIT -- [FEELAUTOM](https://feelautom.com)
+MIT — [FEELAUTOM](https://feelautom.com)
 
-The extension is free and open-source. The T-IA Connect server requires a commercial license.
+The extension is free and open-source. The T-IA Connect server requires a license — free trial available at [t-ia-connect.com](https://t-ia-connect.com).

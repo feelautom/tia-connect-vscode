@@ -378,8 +378,7 @@
         {
           "id": "tiaCopilotChat",
           "name": "%view.copilotChat%",
-          "type": "webview",
-          "when": "tiaConnect.connected"
+          "type": "webview"
         }
       ]
     },

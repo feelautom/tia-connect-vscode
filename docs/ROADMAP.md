@@ -78,11 +78,6 @@
 
 **Statut global Phase 2 : TERMINEE ET TESTEE**
 
-Teste en conditions reelles le 2026-05-04 avec :
-- VCS : commit, diff, branches, checkout inline
-- Tests PLCSim : Motor_Start_Stop (PASSED), Speed_Check (PASSED)
-- Cross-references : fonctionne sur tous types de blocs
-
 ---
 
 ## Phase 3 — Pipelines + Polish
@@ -122,56 +117,65 @@ Teste en conditions reelles le 2026-05-04 avec :
 
 ---
 
-## Phase 4 — V2 (Futur)
+## Phase 4 — V2 (Language Server, Webview LAD, Multi-projet)
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
 | Language Server SCL (autocompletion, go-to-definition) | DONE | Signature help, cross-file go-to-def, diagnostics, rename |
-| Webview LAD (visualisation graphique lecture seule) | DONE | Rendering SVG des reseaux LADDER (contacts, coils, boxes, wires, branches) |
-| Multi-projet (switch entre projets) | DONE | QuickPick avec historique + projets disponibles, close/open via jobs |
+| Webview LAD (visualisation graphique lecture seule) | DONE | Rendering SVG des reseaux LADDER |
+| Multi-projet (switch entre projets) | DONE | QuickPick avec historique + projets disponibles |
 | QuickDiff pour VCS (diff inline dans editeur) | DONE | VcsContentProvider + VcsTreeProvider |
 | Webview pour resultats de test detailles | DONE | Steps, assertions, pass/fail badges, duree, timestamps |
-| Notifications push (SignalR) | DONE | Client SignalR legacy (longPolling), fallback HTTP polling auto |
-| Server launch depuis VS Code | DONE | Sidebar buttons Headless/GUI, auto-connect, Stop Server, loading spinner |
+| Notifications push (SignalR) | DONE | Client SignalR legacy (longPolling), fallback HTTP polling |
+| Server launch depuis VS Code | DONE | Sidebar buttons Headless/GUI, auto-connect, Stop Server |
 | Hover documentation avec fallback API | DONE | System blocks (TON, CTU...) + server docs fallback |
-| Creation de blocs (FB, FC, OB, DB) | DONE | Clic droit device, choix type + langage (SCL/STL/LAD/FBD/GRAPH) + nom |
-| Loading spinner sidebar | DONE | Toutes les operations longues (compile, export, import, xref, open block) |
-| Publication Marketplace | TODO | Quand la v1 sera stable |
+| Creation de blocs (FB, FC, OB, DB) | DONE | Clic droit device, choix type + langage + nom |
+| Loading spinner sidebar | DONE | Toutes les operations longues |
 | Localisation (i18n) | DONE | package.nls.json (EN/FR) + vscode.l10n (runtime FR) |
 
-**Statut global Phase 4 : TERMINEE** (sauf Publication Marketplace)
+**Statut global Phase 4 : TERMINEE**
 
 ---
 
-## Phase 5 — Authentification et onboarding integre
+## Phase 5 — Authentification, onboarding et UX avancee
 
 **Objectif :** Un utilisateur installe l'extension depuis le Marketplace et peut se connecter, telecharger, installer T-IA Connect et commencer a travailler sans quitter VS Code.
 
-**Spec complete :** [docs/research/feature-auth-onboarding.md](research/feature-auth-onboarding.md)
-
-### Phase 5a — Welcome view + detection serveur (sans endpoint web)
+### Phase 5a — Welcome view + detection serveur
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
-| Welcome view multi-etats (non auth, auth, serveur absent, serveur arrete) | TODO | Context keys conditionnels |
-| Bouton "Se connecter" → ouvre navigateur t-ia-connect.com | TODO | `vscode.env.openExternal` |
-| Bouton "Creer un compte" → ouvre navigateur | TODO | Lien direct vers page inscription |
-| Detection serveur T-IA Connect (ping + fichier + registre) | TODO | `serverDetector.ts` |
-| Message guide si serveur absent + lien telechargement | TODO | Welcome view conditionnel |
-| Brider l'extension si pas connecte (context keys) | TODO | Toutes les vues cachees sauf welcome |
+| Welcome view multi-etats (non auth, auth, serveur absent, serveur arrete) | DONE | Context keys conditionnels dans package.json |
+| Bouton "Se connecter" → ouvre navigateur t-ia-connect.com | DONE | `vscode.env.openExternal` |
+| Bouton "Creer un compte" → ouvre navigateur | DONE | Lien direct vers page inscription |
+| Detection serveur T-IA Connect (ping + fichier + registre) | DONE | `serverDetector.ts` — detection exe + running |
+| Message guide si serveur absent + lien telechargement | DONE | Welcome view conditionnel |
+| Brider l'extension si pas connecte (context keys) | DONE | Toutes les vues cachees sauf welcome |
 
-### Phase 5b — OAuth callback (necessite endpoint cote site web)
+### Phase 5b — OAuth + gestion de session
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
-| URI handler `vscode://feelautom.tia-connect-vscode/auth-callback` | TODO | `vscode.window.registerUriHandler` |
-| Stockage token JWT dans SecretStorage | TODO | Keyring OS (Windows Credential Manager) |
-| Auto-remplissage API key depuis le token | TODO | Plus besoin de copier-coller |
-| Verification session au demarrage | TODO | Token expire → re-login |
-| Bouton "Se deconnecter" | TODO | Supprime token + reset context keys |
-| Affichage compte dans status bar | TODO | Nom + type licence |
+| URI handler `vscode://feelautom.tia-connect-vscode/auth-callback` | DONE | `vscode.window.registerUriHandler` |
+| Polling token (fallback si URI callback bloque) | DONE | Poll `/api/auth/vscode-poll` toutes les 3s, silencieux |
+| Stockage token JWT dans SecretStorage | DONE | Keyring OS (Windows Credential Manager) |
+| Verification session au demarrage | DONE | Fast startup : trust stored token, validate in background |
+| Bouton "Se deconnecter" | DONE | Supprime token + reset context keys |
+| Auto-fetch API key depuis serveur local | DONE | `GET /api/auth/local-key` (DPAPI), pas d'ecrasement par token cloud |
+| Separation cle API locale / token cloud | DONE | Le token OAuth ne remplace pas la cle API du serveur local |
 
-### Phase 5c — Auto-installation T-IA Connect
+### Phase 5c — UX avancee
+
+| Fonctionnalite | Statut | Notes |
+|----------------|--------|-------|
+| Dashboard projet (webview) | DONE | Stats (devices, blocs, tags), table devices, s'ouvre au chargement projet |
+| Prechargement blocs SCL/STL en arriere-plan | DONE | Cache 10 min, ouverture quasi-instantanee |
+| Browse fichiers projet (dialog natif) | DONE | Dossier par defaut `Documents/Automation`, filtres .ap17-21/.zap17-21 |
+| Ouverture archives .zap (retrieve + extract) | DONE | Demande dossier cible, appel `retrieveProject` |
+| Logs intelligents (INFO vs ERROR) | DONE | "Not connected" n'est plus affiche comme erreur |
+| Tree view : etat connected/disconnected | DONE | `setConnected(false)` vide le cache et la vue |
+
+### Phase 5d — Auto-installation T-IA Connect
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
@@ -186,10 +190,29 @@ Teste en conditions reelles le 2026-05-04 avec :
 
 | Endpoint | Methode | Statut | Description |
 |----------|---------|--------|-------------|
-| `/auth/vscode` | GET | TODO | Page login avec redirect vers callback URI |
-| `/api/auth/validate-token` | GET | TODO | Verification JWT |
-| `/api/account/profile` | GET | TODO | Infos compte (nom, email, licence) |
+| `/auth/vscode` | GET | DONE | Page login avec redirect vers callback URI |
+| `/api/auth/vscode-poll` | GET | DONE | Polling token pendant le flow OAuth |
+| `/api/auth/validate-token` | GET | DONE | Verification JWT |
+| `/api/account/profile` | GET | DONE | Infos compte (nom, email, licence) |
 | `/api/downloads/latest` | GET | TODO | URL + version + taille derniere release |
+
+### Pre-requis cote serveur local (T-IA Connect)
+
+| Endpoint | Methode | Statut | Description |
+|----------|---------|--------|-------------|
+| `/api/auth/local-key` | GET | DONE | Recuperation de la cle API locale (DPAPI) |
+
+**Statut global Phase 5 : EN COURS** (5a, 5b, 5c terminees — 5d en attente de l'endpoint download)
+
+---
+
+## Phase 6 — Publication et futures ameliorations
+
+| Fonctionnalite | Statut | Notes |
+|----------------|--------|-------|
+| Publication Marketplace | TODO | Quand la v1 sera stable |
+| Copilot sidebar (chat IA integre) | TODO | Feature future — assistant IA dans le panel lateral |
+| Validation licence/compte (matching local vs cloud) | TODO | Nice to have — verifier coherence entre les comptes |
 
 ---
 
@@ -248,7 +271,10 @@ Teste en conditions reelles le 2026-05-04 avec :
 | Server shutdown | `POST /api/health/shutdown` | 4 |
 | Docs search | `GET /api/docs/search` | 4 |
 | Block source gen | `GET /api/devices/{d}/blocks/{b}/source` | 4 |
+| Retrieve (archive) | `POST /api/projects/actions/retrieve` | 5 |
 | Auth page (site web) | `GET /auth/vscode` | 5 |
+| Auth poll (site web) | `GET /api/auth/vscode-poll` | 5 |
 | Validate token (site web) | `GET /api/auth/validate-token` | 5 |
 | Account profile (site web) | `GET /api/account/profile` | 5 |
+| Local API key (serveur) | `GET /api/auth/local-key` | 5 |
 | Download latest (site web) | `GET /api/downloads/latest` | 5 |

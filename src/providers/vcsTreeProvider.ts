@@ -143,7 +143,12 @@ export class VcsTreeProvider implements vscode.TreeDataProvider<VcsTreeItem>, vs
             this.lastCommitSha = status.LastCommitSha || '';
             this.lastCommitMessage = status.LastCommitMessage || '';
         } catch (err) {
-            logError('VCS tree refresh failed', err);
+            const msg = err instanceof Error ? err.message : String(err);
+            if (/not connected|not available|aucun projet|no project/i.test(msg)) {
+                log('VCS tree refresh skipped — no project open.');
+            } else {
+                logError('VCS tree refresh failed', err);
+            }
             this.isInitialized = false;
             this.changes = [];
         }

@@ -178,60 +178,40 @@ export class AuthService implements vscode.Disposable {
 
         log(`Polling for auth token (state=${shortState}...)...`);
 
-        // Show a progress notification so the user knows polling is active
-        vscode.window.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                title: 'T-IA Connect: Waiting for authentication...',
-                cancellable: true,
-            },
-            (_progress, cancellationToken) => {
-                return new Promise<void>((resolve) => {
-                    cancellationToken.onCancellationRequested(() => {
-                        log('Auth polling cancelled by user.');
-                        this.stopPolling();
-                        resolve();
-                    });
+        this.pollTimer = setInterval(async () => {
+            if (Date.now() - startTime > POLL_TIMEOUT_MS) {
+                log('Auth polling timed out after 5 minutes.');
+                this.stopPolling();
+                vscode.window.showWarningMessage('T-IA Connect: Authentication timed out. Please try again.');
+                return;
+            }
 
-                    this.pollTimer = setInterval(async () => {
-                        if (Date.now() - startTime > POLL_TIMEOUT_MS) {
-                            log('Auth polling timed out after 5 minutes.');
-                            this.stopPolling();
-                            vscode.window.showWarningMessage('T-IA Connect: Authentication timed out. Please try again.');
-                            resolve();
-                            return;
-                        }
+            const pollUrl = `${AUTH_BASE_URL}/api/auth/vscode-poll?state=${encodeURIComponent(state)}`;
+            try {
+                const resp = await fetch(pollUrl);
+                const text = await resp.text();
+                log(`Poll response (state=${shortState}): ${resp.status} ${text}`);
 
-                        const pollUrl = `${AUTH_BASE_URL}/api/auth/vscode-poll?state=${encodeURIComponent(state)}`;
-                        try {
-                            const resp = await fetch(pollUrl);
-                            const text = await resp.text();
-                            log(`Poll response (state=${shortState}): ${resp.status} ${text}`);
+                if (!resp.ok) return;
 
-                            if (!resp.ok) return;
+                const data = JSON.parse(text) as { status: string; token?: string };
 
-                            const data = JSON.parse(text) as { status: string; token?: string };
+                if (data.status === 'complete' && data.token) {
+                    log('Auth token received via polling.');
+                    this.stopPolling();
 
-                            if (data.status === 'complete' && data.token) {
-                                log('Auth token received via polling.');
-                                this.stopPolling();
-
-                                const success = await this.handleToken(data.token);
-                                if (success) {
-                                    const name = this.profile?.name || this.profile?.email || '';
-                                    vscode.window.showInformationMessage(`T-IA Connect: Connected as ${name}`);
-                                } else {
-                                    vscode.window.showErrorMessage('Authentication failed. Please try again.');
-                                }
-                                resolve();
-                            }
-                        } catch (err) {
-                            log(`Poll error (state=${shortState}): ${err}`);
-                        }
-                    }, POLL_INTERVAL_MS);
-                });
-            },
-        );
+                    const success = await this.handleToken(data.token);
+                    if (success) {
+                        const name = this.profile?.name || this.profile?.email || '';
+                        vscode.window.showInformationMessage(`T-IA Connect: Connected as ${name}`);
+                    } else {
+                        vscode.window.showErrorMessage('Authentication failed. Please try again.');
+                    }
+                }
+            } catch (err) {
+                log(`Poll error (state=${shortState}): ${err}`);
+            }
+        }, POLL_INTERVAL_MS);
     }
 
     private stopPolling(): void {

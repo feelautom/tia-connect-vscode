@@ -6,6 +6,7 @@ import { BlockEditor } from './editors/blockEditor';
 import { registerProjectCommands } from './commands/projectCommands';
 import { registerBlockCommands } from './commands/blockCommands';
 import { registerPipelineCommands } from './commands/pipelineCommands';
+import { registerExportImportCommands } from './commands/exportImportCommands';
 import { createStatusBar, setConnected, disposeStatusBar } from './views/statusBar';
 import { createDiagnostics, disposeDiagnostics } from './views/diagnostics';
 import { getOutputChannel, log } from './views/outputChannel';
@@ -186,6 +187,7 @@ export function activate(context: vscode.ExtensionContext): void {
     registerProjectCommands(context, treeProvider, scmProvider, testProvider);
     registerBlockCommands(context, blockEditor);
     registerPipelineCommands(context);
+    registerExportImportCommands(context);
 
     // Dashboard command (click on project name in tree)
     context.subscriptions.push(

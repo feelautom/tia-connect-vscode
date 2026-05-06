@@ -350,6 +350,13 @@ export interface CrossReferenceLocation {
     Access: string;
 }
 
+// ─── Watch Table types ────────────────────────────────────────────
+
+export interface WatchTableInfo {
+    Name: string;
+    EntryCount: number;
+}
+
 // ─── Tag & UDT types ──────────────────────────────────────────────
 
 export interface TagTableInfo {

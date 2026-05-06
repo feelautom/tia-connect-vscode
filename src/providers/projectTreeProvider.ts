@@ -2,16 +2,17 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { getProjectOverview } from '../api/project';
 import { getBlockTree } from '../api/blocks';
-import { getTagTables, getUdts } from '../api/tags';
+import { getTagTables, getUdts, getWatchTables } from '../api/tags';
 import { BlockTreeNode, ProjectOverview } from '../api/types';
 import { log, logError } from '../views/outputChannel';
 
 export type TreeNodeType =
     | 'project' | 'device'
-    | 'section'                          // "Program Blocks", "Tag Tables", "UDTs"
+    | 'section'                          // "Program Blocks", "Tag Tables", "UDTs", "Watch Tables"
     | 'folder' | 'block'
     | 'tagTable'
     | 'udt'
+    | 'watchTable'
     | 'loading';
 
 export interface TiaTreeItem {
@@ -24,11 +25,13 @@ export interface TiaTreeItem {
     children?: TiaTreeItem[];
     isConsistent?: boolean;
     /** Section kind for 'section' nodes */
-    sectionKind?: 'blocks' | 'tagTables' | 'udts';
+    sectionKind?: 'blocks' | 'tagTables' | 'udts' | 'watchTables';
     /** Tag table name (for tag nodes) */
     tagTableName?: string;
     /** UDT number */
     udtNumber?: number;
+    /** Watch table name */
+    watchTableName?: string;
 }
 
 export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem> {
@@ -158,6 +161,10 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
                     arguments: [element],
                 };
                 break;
+            case 'watchTable':
+                item.iconPath = new vscode.ThemeIcon('eye');
+                item.contextValue = 'watchTable';
+                break;
         }
 
         return item;
@@ -251,6 +258,12 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
                 deviceName,
                 sectionKind: 'udts',
             },
+            {
+                type: 'section',
+                label: 'Watch Tables',
+                deviceName,
+                sectionKind: 'watchTables',
+            },
         ];
     }
 
@@ -263,6 +276,8 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
                 return this.getTagTableNodes(deviceName);
             case 'udts':
                 return this.getUdtNodes(deviceName);
+            case 'watchTables':
+                return this.getWatchTableNodes(deviceName);
             default:
                 return [];
         }
@@ -395,6 +410,23 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
         }
     }
 
+    // ─── Watch Tables ─────────────────────────────────────────────────
+
+    private async getWatchTableNodes(deviceName: string): Promise<TiaTreeItem[]> {
+        try {
+            const tables = await getWatchTables(deviceName);
+            return tables.map(t => ({
+                type: 'watchTable' as const,
+                label: t.Name,
+                deviceName,
+                watchTableName: t.Name,
+            }));
+        } catch (err) {
+            logError(`Failed to load watch tables for ${deviceName}`, err);
+            return [];
+        }
+    }
+
     // ─── Icons & descriptions ───────────────────────────────────────
 
     private getSectionIcon(kind?: string): vscode.ThemeIcon {
@@ -402,6 +434,7 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
             case 'blocks': return new vscode.ThemeIcon('symbol-method');
             case 'tagTables': return new vscode.ThemeIcon('tag');
             case 'udts': return new vscode.ThemeIcon('symbol-struct');
+            case 'watchTables': return new vscode.ThemeIcon('eye');
             default: return new vscode.ThemeIcon('folder');
         }
     }

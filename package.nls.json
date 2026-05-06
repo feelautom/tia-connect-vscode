@@ -42,6 +42,7 @@
   "command.openUdt": "Open UDT",
   "command.createBlock": "Create Block",
   "command.importSourceFile": "Import SCL/STL File",
+  "command.exportAll": "Export All (Tags, UDTs, Watch Tables)",
   "command.switchProject": "Switch Project",
   "command.openSettings": "Settings",
   "command.vcsTreeRefresh": "Refresh",

@@ -2,7 +2,7 @@
   "name": "tia-connect-vscode",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.4.27",
+  "version": "0.5.0",
   "publisher": "FEELAUTOM",
   "license": "MIT",
   "icon": "resources/icons/icon.png",
@@ -850,6 +850,52 @@
         "icon": "$(cloud-upload)"
       },
       {
+        "command": "tiaConnect.exportTagsCsv",
+        "title": "Export Tag Table (CSV)",
+        "category": "T-IA Connect"
+      },
+      {
+        "command": "tiaConnect.exportTagsXlsx",
+        "title": "Export Tag Table (XLSX)",
+        "category": "T-IA Connect"
+      },
+      {
+        "command": "tiaConnect.exportTagsXml",
+        "title": "Export Tag Table (XML)",
+        "category": "T-IA Connect"
+      },
+      {
+        "command": "tiaConnect.importTagsCsv",
+        "title": "Import Tags (CSV)",
+        "category": "T-IA Connect"
+      },
+      {
+        "command": "tiaConnect.importTagsXlsx",
+        "title": "Import Tags (XLSX)",
+        "category": "T-IA Connect"
+      },
+      {
+        "command": "tiaConnect.exportUdt",
+        "title": "Export UDT (XML)",
+        "category": "T-IA Connect"
+      },
+      {
+        "command": "tiaConnect.importUdt",
+        "title": "Import UDT (XML)",
+        "category": "T-IA Connect"
+      },
+      {
+        "command": "tiaConnect.exportWatchTable",
+        "title": "Export Watch Table (XML)",
+        "category": "T-IA Connect"
+      },
+      {
+        "command": "tiaConnect.exportAll",
+        "title": "%command.exportAll%",
+        "category": "T-IA Connect",
+        "icon": "$(cloud-download)"
+      },
+      {
         "command": "tiaConnect.createBlock",
         "title": "%command.createBlock%",
         "category": "T-IA Connect",
@@ -1106,6 +1152,51 @@
           "command": "tiaConnect.showCrossReferences",
           "when": "view == tiaProjectExplorer && viewItem =~ /^block-/",
           "group": "2_export"
+        },
+        {
+          "command": "tiaConnect.exportAll",
+          "when": "view == tiaProjectExplorer && viewItem == device",
+          "group": "2_export"
+        },
+        {
+          "command": "tiaConnect.exportTagsCsv",
+          "when": "view == tiaProjectExplorer && viewItem == tagTable",
+          "group": "1_export"
+        },
+        {
+          "command": "tiaConnect.exportTagsXlsx",
+          "when": "view == tiaProjectExplorer && viewItem == tagTable",
+          "group": "1_export"
+        },
+        {
+          "command": "tiaConnect.exportTagsXml",
+          "when": "view == tiaProjectExplorer && viewItem == tagTable",
+          "group": "1_export"
+        },
+        {
+          "command": "tiaConnect.importTagsCsv",
+          "when": "view == tiaProjectExplorer && viewItem == tagTable",
+          "group": "2_import"
+        },
+        {
+          "command": "tiaConnect.importTagsXlsx",
+          "when": "view == tiaProjectExplorer && viewItem == tagTable",
+          "group": "2_import"
+        },
+        {
+          "command": "tiaConnect.exportUdt",
+          "when": "view == tiaProjectExplorer && viewItem == udt",
+          "group": "1_export"
+        },
+        {
+          "command": "tiaConnect.importUdt",
+          "when": "view == tiaProjectExplorer && viewItem =~ /^section-udts$/",
+          "group": "2_import"
+        },
+        {
+          "command": "tiaConnect.exportWatchTable",
+          "when": "view == tiaProjectExplorer && viewItem == watchTable",
+          "group": "1_export"
         },
         {
           "command": "tiaConnect.vcsInit",

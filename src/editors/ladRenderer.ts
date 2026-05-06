@@ -37,6 +37,7 @@ const IMPLICIT_GATES = new Set(['O', 'A']);
 const BOX_TYPES = new Set([
     'Move', 'Add', 'Sub', 'Mul', 'Div',
     'CmpEq', 'CmpNe', 'CmpGt', 'CmpGe', 'CmpLt', 'CmpLe',
+    'Eq', 'Ne', 'Gt', 'Ge', 'Lt', 'Le',
     'TON', 'TOF', 'TP', 'CTU', 'CTD', 'CTUD',
     'Call',
 ]);
@@ -439,12 +440,12 @@ function renderPart(part: LadPart, x: number, y: number): string {
         case 'Move': case 'Add': case 'Sub': case 'Mul': case 'Div':
             svg += drawBox(cx, symY, type.toUpperCase(), C_BOX_BLUE, part.Parameters);
             break;
-        case 'CmpEq': svg += drawBox(cx, symY, '==', C_BOX_PURPLE, part.Parameters); break;
-        case 'CmpNe': svg += drawBox(cx, symY, '<>', C_BOX_PURPLE, part.Parameters); break;
-        case 'CmpGt': svg += drawBox(cx, symY, '>', C_BOX_PURPLE, part.Parameters); break;
-        case 'CmpGe': svg += drawBox(cx, symY, '>=', C_BOX_PURPLE, part.Parameters); break;
-        case 'CmpLt': svg += drawBox(cx, symY, '<', C_BOX_PURPLE, part.Parameters); break;
-        case 'CmpLe': svg += drawBox(cx, symY, '<=', C_BOX_PURPLE, part.Parameters); break;
+        case 'CmpEq': case 'Eq': svg += drawBox(cx, symY, '==', C_BOX_PURPLE, part.Parameters); break;
+        case 'CmpNe': case 'Ne': svg += drawBox(cx, symY, '<>', C_BOX_PURPLE, part.Parameters); break;
+        case 'CmpGt': case 'Gt': svg += drawBox(cx, symY, '>', C_BOX_PURPLE, part.Parameters); break;
+        case 'CmpGe': case 'Ge': svg += drawBox(cx, symY, '>=', C_BOX_PURPLE, part.Parameters); break;
+        case 'CmpLt': case 'Lt': svg += drawBox(cx, symY, '<', C_BOX_PURPLE, part.Parameters); break;
+        case 'CmpLe': case 'Le': svg += drawBox(cx, symY, '<=', C_BOX_PURPLE, part.Parameters); break;
         case 'TON': case 'TOF': case 'TP':
         case 'CTU': case 'CTD': case 'CTUD':
             svg += drawBox(cx, symY, type, C_BOX_GREEN, part.Parameters);

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { getBlockContent, importAndGenerate, compileBlock, exportBlockSource } from '../api/blocks';
 import { openLadWebview } from './ladWebview';
 import { BlockFileManager } from './blockFileManager';
-import { BlockMetadata } from '../api/types';
+import { BlockMetadata, ProjectOverview } from '../api/types';
 import { OriginalContentProvider } from '../providers/originalContentProvider';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
 import { getAutoReimport, getAutoCompile, getAutoSaveInterval, getExcludeFromReimport } from '../utils/config';
@@ -80,6 +80,31 @@ export class BlockEditor {
         }
     }
 
+    /** Re-fetch content for all open block editors from the server */
+    async refreshOpenBlocks(): Promise<void> {
+        for (const doc of vscode.workspace.textDocuments) {
+            if (!this.fileManager.isManagedFile(doc.uri.fsPath)) { continue; }
+            if (this.reimportInProgress.has(doc.uri.fsPath)) { continue; }
+
+            const meta = this.fileManager.readMetadata(doc.uri.fsPath);
+            if (!meta) { continue; }
+
+            try {
+                const { content } = await this.fetchBlockContent(meta.deviceName, meta.blockName, meta.language);
+                const currentContent = doc.getText();
+                if (content !== currentContent && !doc.isDirty) {
+                    // File not dirty — overwrite silently
+                    this.fileManager.writeBlock(meta.deviceName, meta.blockName, meta.language, content);
+                    log(`[Copilot] Refreshed open block ${meta.blockName}`);
+                } else if (content !== currentContent && doc.isDirty) {
+                    log(`[Copilot] Block ${meta.blockName} changed on server but editor has unsaved changes — skipped`);
+                }
+            } catch {
+                // Block may have been deleted or renamed — ignore
+            }
+        }
+    }
+
     /** Open a block for editing in VS Code */
     async openBlock(item: TiaTreeItem): Promise<void> {
         if (!item.deviceName || !item.blockName || !item.language) {
@@ -108,34 +133,18 @@ export class BlockEditor {
 
     /** Open SCL/STL block for editing */
     private async openEditableBlock(item: TiaTreeItem): Promise<void> {
+        // Check cache first — if block was preloaded, open instantly
+        if (this.fileManager.hasCachedBlock(item.deviceName!, item.blockName!, item.language!)) {
+            const filePath = this.fileManager.getBlockFilePath(item.deviceName!, item.blockName!, item.language!);
+            const doc = await vscode.workspace.openTextDocument(filePath);
+            await vscode.window.showTextDocument(doc);
+            log(`Opened block ${item.blockName} from cache`);
+            return;
+        }
+
         const { content, modifiedDate } = await vscode.window.withProgress(
             { location: vscode.ProgressLocation.Notification, title: l10n.t('Loading {0}...', item.blockName!) },
-            async () => {
-                const dto = await getBlockContent(item.deviceName!, item.blockName!);
-
-                if (dto.SourceText) {
-                    return { content: dto.SourceText, modifiedDate: dto.ModifiedDate };
-                }
-
-                // Fallback: try export-source endpoint (works for STL and some SCL blocks)
-                try {
-                    const source = await exportBlockSource(item.deviceName!, item.blockName!);
-                    if (source) {
-                        log(`Got source via export-source for ${item.blockName}`);
-                        return { content: source, modifiedDate: dto.ModifiedDate };
-                    }
-                } catch {
-                    log(`export-source not available for ${item.blockName}, trying RawXml fallback.`);
-                }
-
-                // Last resort: show RawXml (but not for STL — XML is not useful as STL source)
-                if (dto.RawXml && item.language!.toUpperCase() !== 'STL') {
-                    log(`No SourceText for ${item.blockName}, showing RawXml as fallback.`);
-                    return { content: dto.RawXml, modifiedDate: dto.ModifiedDate };
-                }
-
-                throw new Error(`No source code available for ${item.blockName}. The block may need compilation first.`);
-            }
+            () => this.fetchBlockContent(item.deviceName!, item.blockName!, item.language!),
         );
 
         const filePath = this.fileManager.writeBlock(
@@ -152,6 +161,61 @@ export class BlockEditor {
         const doc = await vscode.workspace.openTextDocument(filePath);
         await vscode.window.showTextDocument(doc);
         log(`Opened block ${item.blockName} from ${item.deviceName}`);
+    }
+
+    /** Fetch block source content from server */
+    private async fetchBlockContent(deviceName: string, blockName: string, language: string): Promise<{ content: string; modifiedDate?: string }> {
+        const dto = await getBlockContent(deviceName, blockName);
+
+        if (dto.SourceText) {
+            return { content: dto.SourceText, modifiedDate: dto.ModifiedDate };
+        }
+
+        try {
+            const source = await exportBlockSource(deviceName, blockName);
+            if (source) {
+                log(`Got source via export-source for ${blockName}`);
+                return { content: source, modifiedDate: dto.ModifiedDate };
+            }
+        } catch {
+            log(`export-source not available for ${blockName}, trying RawXml fallback.`);
+        }
+
+        if (dto.RawXml && language.toUpperCase() !== 'STL') {
+            log(`No SourceText for ${blockName}, showing RawXml as fallback.`);
+            return { content: dto.RawXml, modifiedDate: dto.ModifiedDate };
+        }
+
+        throw new Error(`No source code available for ${blockName}. The block may need compilation first.`);
+    }
+
+    /** Preload all SCL/STL blocks in background after project load */
+    async preloadBlocks(overview: ProjectOverview): Promise<void> {
+        const devices = overview.Devices || [];
+        let count = 0;
+
+        for (const dev of devices) {
+            const blocks = dev.Blocks || [];
+            for (const block of blocks) {
+                if (!block.Language) { continue; }
+                const lang = block.Language.toUpperCase();
+                if (!EDITABLE_LANGUAGES.includes(lang as any)) { continue; }
+                if (this.fileManager.hasCachedBlock(dev.Name, block.Name, block.Language)) { continue; }
+
+                try {
+                    const { content, modifiedDate } = await this.fetchBlockContent(dev.Name, block.Name, block.Language);
+                    this.fileManager.writeBlock(dev.Name, block.Name, block.Language, content, modifiedDate);
+                    count++;
+                    log(`Preloaded ${block.Name} (${count})`);
+                } catch {
+                    // Skip blocks that fail to preload
+                }
+            }
+        }
+
+        if (count > 0) {
+            log(`Preloaded ${count} block(s) in background.`);
+        }
     }
 
     /** Open LAD/FBD/GRAPH block as Webview with SVG rendering */

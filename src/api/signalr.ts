@@ -182,7 +182,7 @@ let instance: SignalRClient | null = null;
 
 export function getSignalRClient(): SignalRClient {
     if (!instance) {
-        instance = new SignalRClient(['jobhub']);
+        instance = new SignalRClient(['jobhub', 'assistanthub']);
     }
     return instance;
 }

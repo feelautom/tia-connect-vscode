@@ -2,7 +2,7 @@
   "name": "tia-connect-vscode",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.4.0",
+  "version": "0.4.19",
   "publisher": "FEELAUTOM",
   "license": "MIT",
   "icon": "resources/icons/icon.png",
@@ -347,7 +347,9 @@
           "id": "tiaConnect",
           "title": "T-IA Connect",
           "icon": "resources/icons/tia-portal.svg"
-        },
+        }
+      ],
+      "secondarySideBar": [
         {
           "id": "tiaCopilot",
           "title": "T-IA Copilot",

@@ -76,6 +76,8 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                         this.postMessage({ type: 'error', message: error });
                     }
                     this.setBusy(false);
+                    // Refresh project tree — copilot may have changed project state
+                    this.refreshProject();
                     break;
                 }
                 case 'ontokenusage': {
@@ -227,6 +229,16 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
         } catch (err) {
             log(`[Copilot] Failed to open block ${blockName}: ${err}`);
         }
+    }
+
+    /** Refresh project tree and open editors after copilot actions */
+    private refreshProject(): void {
+        // Small delay to let server-side changes settle
+        setTimeout(() => {
+            log('[Copilot] Auto-refreshing project after assistant response');
+            vscode.commands.executeCommand('tiaConnect.refreshProject');
+            vscode.commands.executeCommand('tiaConnect.refreshOpenBlocks');
+        }, 1500);
     }
 
     private setBusy(busy: boolean): void {

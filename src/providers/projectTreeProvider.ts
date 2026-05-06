@@ -211,9 +211,10 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
             }];
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
-            logError('Failed to load project', err);
-            if (msg.toLowerCase().includes('no project') || msg.toLowerCase().includes('aucun projet')) {
-                log('No project is currently open in TIA Portal.');
+            if (/not connected|not available|aucun projet|no project/i.test(msg)) {
+                log('No project open in TIA Portal.');
+            } else {
+                logError('Failed to load project', err);
             }
             return [];
         }
@@ -309,6 +310,54 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
             language,
             isConsistent,
         };
+    }
+
+    /** Find a block by name across all devices (searches cache first, then fetches) */
+    async findBlockByName(blockName: string): Promise<TiaTreeItem | undefined> {
+        // Search in cache first
+        for (const [deviceName, tree] of this.blockTreeCache.entries()) {
+            const found = this.searchBlockTree(tree, deviceName, blockName);
+            if (found) { return found; }
+        }
+
+        // Ensure we have project data (may not be loaded yet)
+        if (!this.projectData) {
+            try {
+                this.projectData = await getProjectOverview();
+            } catch {
+                return undefined;
+            }
+        }
+
+        // Fetch block tree for devices not yet cached
+        if (this.projectData?.Devices) {
+            for (const dev of this.projectData.Devices) {
+                if (!this.blockTreeCache.has(dev.Name)) {
+                    try {
+                        const tree = await getBlockTree(dev.Name);
+                        this.blockTreeCache.set(dev.Name, tree);
+                        const found = this.searchBlockTree(tree, dev.Name, blockName);
+                        if (found) { return found; }
+                    } catch { /* skip device */ }
+                }
+            }
+        }
+        return undefined;
+    }
+
+    private searchBlockTree(nodes: BlockTreeNode[], deviceName: string, blockName: string): TiaTreeItem | undefined {
+        for (const node of nodes) {
+            const isFolder = node.IsFolder || node.NodeType === 'Folder' || node.NodeType === 'UserFolder' || node.Type === 'Folder';
+            if (!isFolder && node.Name === blockName) {
+                log(`[findBlock] FOUND "${blockName}" in device "${deviceName}"`);
+                return this.convertBlockNode(node, deviceName);
+            }
+            if (node.Children) {
+                const found = this.searchBlockTree(node.Children, deviceName, blockName);
+                if (found) { return found; }
+            }
+        }
+        return undefined;
     }
 
     // ─── Tag Tables ─────────────────────────────────────────────────

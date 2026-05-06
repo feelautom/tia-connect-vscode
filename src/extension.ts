@@ -127,38 +127,15 @@ export function activate(context: vscode.ExtensionContext): void {
 
     // Copilot Chat (sidebar webview)
     const copilotProvider = new CopilotViewProvider(context.extensionUri);
+    copilotProvider.setTreeProvider(treeProvider);
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(CopilotViewProvider.viewType, copilotProvider, {
             webviewOptions: { retainContextWhenHidden: true },
         }),
         vscode.commands.registerCommand(COMMANDS.copilotClear, () => copilotProvider.clearHistory()),
         vscode.commands.registerCommand(COMMANDS.copilotStop, () => copilotProvider.stop()),
+        vscode.commands.registerCommand('tiaConnect.refreshOpenBlocks', () => blockEditor.refreshOpenBlocks()),
     );
-
-    // Move Copilot Chat to secondary sidebar (right) on first install
-    if (!context.globalState.get('copilotMovedToSecondary3')) {
-        setTimeout(async () => {
-            try {
-                // Focus the copilot view
-                await vscode.commands.executeCommand('tiaCopilotChat.focus');
-                await new Promise(r => setTimeout(r, 300));
-                // Open the auxiliary bar so it exists as a target
-                await vscode.commands.executeCommand('workbench.action.toggleAuxiliaryBar');
-                await new Promise(r => setTimeout(r, 300));
-                // Re-focus our view
-                await vscode.commands.executeCommand('tiaCopilotChat.focus');
-                await new Promise(r => setTimeout(r, 300));
-                // Move the focused view using the layout move command
-                await vscode.commands.executeCommand('workbench.action.moveView', {
-                    to: 'auxiliaryBar',
-                });
-                context.globalState.update('copilotMovedToSecondary3', true);
-                log('[Copilot move] Moved to secondary sidebar.');
-            } catch (err) {
-                log(`[Copilot move] Failed: ${err}. Right-click the T-IA Copilot icon > Move to Secondary Side Bar.`);
-            }
-        }, 3000);
-    }
 
     // Refresh tree after successful reimport
     blockEditor.onBlockReimported(() => {

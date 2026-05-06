@@ -397,6 +397,15 @@ export interface CopilotMessage {
     Timestamp?: string;
 }
 
+export interface CopilotLastResponse {
+    Status: 'busy' | 'done' | 'idle';
+    RunningFor?: number;
+    Response?: string;
+    ToolLog?: string[];
+    IntermediateMessages?: string[];
+    LatestIntermediateMessage?: string;
+}
+
 // ─── Common types ──────────────────────────────────────────────────
 
 /** Block metadata stored alongside temp files */

@@ -27,6 +27,12 @@ export class TiaUriHandler implements vscode.UriHandler {
             return;
         }
 
+        // If polling already authenticated us, ignore the URI callback silently
+        if (await this.authService.isAuthenticated()) {
+            log('URI callback ignored — already authenticated via polling.');
+            return;
+        }
+
         const params = new URLSearchParams(uri.query);
         const token = params.get('token');
         const state = params.get('state');

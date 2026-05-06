@@ -12,6 +12,8 @@ export const COMMANDS = {
     compileDevice: 'tiaConnect.compileDevice',
     compileBlock: 'tiaConnect.compileBlock',
     exportBlock: 'tiaConnect.exportBlock',
+    copilotClear: 'tiaConnect.copilotClear',
+    copilotStop: 'tiaConnect.copilotStop',
 } as const;
 
 export const CONTEXT_KEYS = {
@@ -21,6 +23,7 @@ export const CONTEXT_KEYS = {
     serverNotInstalled: 'tiaConnect.serverNotInstalled',
     vcsInitialized: 'tiaConnect.vcsInitialized',
     vcsHasRemote: 'tiaConnect.vcsHasRemote',
+    hasAi: 'tiaConnect.hasAi',
 } as const;
 
 export const EDITABLE_LANGUAGES = ['SCL', 'STL'] as const;

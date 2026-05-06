@@ -29,3 +29,8 @@ export function getAutoSaveInterval(): number {
 export function getExcludeFromReimport(): string[] {
     return vscode.workspace.getConfiguration('tiaConnect').get<string[]>('excludeFromReimport', []);
 }
+
+/** Whether to auto-configure MCP in .vscode/mcp.json for GitHub Copilot */
+export function getAutoConfigureMcp(): boolean {
+    return vscode.workspace.getConfiguration('tiaConnect').get<boolean>('autoConfigureMcp', true);
+}

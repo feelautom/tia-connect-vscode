@@ -9,7 +9,7 @@ import { registerPipelineCommands } from './commands/pipelineCommands';
 import { createStatusBar, setConnected, disposeStatusBar } from './views/statusBar';
 import { createDiagnostics, disposeDiagnostics } from './views/diagnostics';
 import { getOutputChannel, log } from './views/outputChannel';
-import { CONTEXT_KEYS, ORIGINAL_SCHEME } from './utils/constants';
+import { COMMANDS, CONTEXT_KEYS, ORIGINAL_SCHEME } from './utils/constants';
 import { VcsContentProvider, VCS_SCHEME } from './providers/vcsContentProvider';
 import { VcsTreeProvider } from './providers/vcsTreeProvider';
 import { registerLanguageProviders } from './language';
@@ -18,6 +18,8 @@ import { AuthService } from './auth/authService';
 import { TiaUriHandler } from './auth/uriHandler';
 import { detectServer, fetchLocalApiKey } from './install/serverDetector';
 import { showProjectDashboard } from './views/projectDashboard';
+import { CopilotViewProvider } from './providers/copilotViewProvider';
+import { ensureMcpConfig } from './utils/mcpConfig';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -123,6 +125,41 @@ export function activate(context: vscode.ExtensionContext): void {
     testProvider.activate(context);
     context.subscriptions.push(testProvider);
 
+    // Copilot Chat (sidebar webview)
+    const copilotProvider = new CopilotViewProvider(context.extensionUri);
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(CopilotViewProvider.viewType, copilotProvider, {
+            webviewOptions: { retainContextWhenHidden: true },
+        }),
+        vscode.commands.registerCommand(COMMANDS.copilotClear, () => copilotProvider.clearHistory()),
+        vscode.commands.registerCommand(COMMANDS.copilotStop, () => copilotProvider.stop()),
+    );
+
+    // Move Copilot Chat to secondary sidebar (right) on first install
+    if (!context.globalState.get('copilotMovedToSecondary3')) {
+        setTimeout(async () => {
+            try {
+                // Focus the copilot view
+                await vscode.commands.executeCommand('tiaCopilotChat.focus');
+                await new Promise(r => setTimeout(r, 300));
+                // Open the auxiliary bar so it exists as a target
+                await vscode.commands.executeCommand('workbench.action.toggleAuxiliaryBar');
+                await new Promise(r => setTimeout(r, 300));
+                // Re-focus our view
+                await vscode.commands.executeCommand('tiaCopilotChat.focus');
+                await new Promise(r => setTimeout(r, 300));
+                // Move the focused view using the layout move command
+                await vscode.commands.executeCommand('workbench.action.moveView', {
+                    to: 'auxiliaryBar',
+                });
+                context.globalState.update('copilotMovedToSecondary3', true);
+                log('[Copilot move] Moved to secondary sidebar.');
+            } catch (err) {
+                log(`[Copilot move] Failed: ${err}. Right-click the T-IA Copilot icon > Move to Secondary Side Bar.`);
+            }
+        }, 3000);
+    }
+
     // Refresh tree after successful reimport
     blockEditor.onBlockReimported(() => {
         treeProvider.refresh();
@@ -140,8 +177,14 @@ export function activate(context: vscode.ExtensionContext): void {
         testProvider.discoverTests();
         // Connect SignalR for real-time job notifications
         getSignalRClient().connect();
+        // Set project path for copilot history filtering
+        copilotProvider.setProjectPath(overview.Path);
         // Show project dashboard
         showProjectDashboard(overview);
+        // Auto-configure MCP for GitHub Copilot Chat
+        ensureMcpConfig();
+        // Preload SCL/STL blocks in background (non-blocking)
+        blockEditor.preloadBlocks(overview);
     });
 
     // Register commands
@@ -195,6 +238,11 @@ async function initAuthAndServer(_context: vscode.ExtensionContext): Promise<voi
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotInstalled, false);
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, false);
         // Auto-fetch API key from local server
-        fetchLocalApiKey();
+        await fetchLocalApiKey();
+        // Auto-connect if server is running and user is authenticated
+        if (isAuthenticated) {
+            log('Server running + authenticated — auto-connecting...');
+            vscode.commands.executeCommand('tiaConnect.connect');
+        }
     }
 }

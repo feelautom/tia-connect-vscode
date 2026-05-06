@@ -389,6 +389,14 @@ export interface UdtMember {
     Comment?: string;
 }
 
+// ─── Copilot / AI Assistant types ───────────────────────────────────
+
+export interface CopilotMessage {
+    Role: 'user' | 'assistant';
+    Content: string;
+    Timestamp?: string;
+}
+
 // ─── Common types ──────────────────────────────────────────────────
 
 /** Block metadata stored alongside temp files */

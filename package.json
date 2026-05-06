@@ -79,6 +79,11 @@
           "type": "string",
           "default": "C:\\Program Files\\FeelAutomCorp\\TiaConnect\\TiaPortalApi.App.exe",
           "description": "%config.executablePath.description%"
+        },
+        "tiaConnect.autoConfigureMcp": {
+          "type": "boolean",
+          "default": true,
+          "description": "%config.autoConfigureMcp.description%"
         }
       }
     },
@@ -322,6 +327,18 @@
         "title": "%command.logout%",
         "category": "T-IA Connect",
         "icon": "$(sign-out)"
+      },
+      {
+        "command": "tiaConnect.copilotClear",
+        "title": "%command.copilotClear%",
+        "category": "T-IA Connect",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "tiaConnect.copilotStop",
+        "title": "%command.copilotStop%",
+        "category": "T-IA Connect",
+        "icon": "$(debug-stop)"
       }
     ],
     "viewsContainers": {
@@ -330,6 +347,11 @@
           "id": "tiaConnect",
           "title": "T-IA Connect",
           "icon": "resources/icons/tia-portal.svg"
+        },
+        {
+          "id": "tiaCopilot",
+          "title": "T-IA Copilot",
+          "icon": "resources/icons/copilot-chat.svg"
         }
       ]
     },
@@ -347,6 +369,14 @@
         {
           "id": "tiaTestExplorer",
           "name": "%view.testExplorer%",
+          "when": "tiaConnect.connected"
+        }
+      ],
+      "tiaCopilot": [
+        {
+          "id": "tiaCopilotChat",
+          "name": "%view.copilotChat%",
+          "type": "webview",
           "when": "tiaConnect.connected"
         }
       ]
@@ -403,6 +433,11 @@
         {
           "command": "tiaConnect.testRefresh",
           "when": "view == tiaTestExplorer",
+          "group": "navigation"
+        },
+        {
+          "command": "tiaConnect.copilotClear",
+          "when": "view == tiaCopilotChat",
           "group": "navigation"
         },
         {

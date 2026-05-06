@@ -27,27 +27,29 @@ export async function getTagsInTable(deviceName: string, tableName: string): Pro
 
 /** Export a tag table to CSV */
 export async function exportTagTableCsv(deviceName: string, tableName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/export/csv`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/export-csv-sync`, { FilePath: filePath });
 }
 
 /** Export a tag table to XLSX */
 export async function exportTagTableXlsx(deviceName: string, tableName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/export/xlsx`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/export-excel-sync`, { FilePath: filePath });
 }
 
-/** Export a tag table to XML */
+/** Export a tag table to XML — uses GET endpoint */
 export async function exportTagTableXml(deviceName: string, tableName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/export/xml`, { FilePath: filePath });
+    const res = await client.get<string>(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/export-xml`);
+    const fs = await import('fs');
+    fs.writeFileSync(filePath, typeof res.Data === 'string' ? res.Data : JSON.stringify(res.Data, null, 2), 'utf-8');
 }
 
 /** Import tags from a CSV file */
 export async function importTagsCsv(deviceName: string, tableName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/import/csv`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/import-csv-sync`, { FilePath: filePath });
 }
 
 /** Import tags from an XLSX file */
 export async function importTagsXlsx(deviceName: string, tableName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/import/xlsx`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/tag-tables/${enc(tableName)}/actions/import-xlsx-sync`, { FilePath: filePath });
 }
 
 // ─── UDTs ────────────────────────────────────────────────────────
@@ -73,12 +75,12 @@ export async function getUdtDetails(deviceName: string, udtName: string): Promis
 
 /** Export a UDT to XML */
 export async function exportUdtXml(deviceName: string, udtName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/udts/${enc(udtName)}/export`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/udts/${enc(udtName)}/actions/export`, { FilePath: filePath });
 }
 
 /** Import a UDT from XML */
 export async function importUdtXml(deviceName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/udts/import`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/udts/actions/import`, { FilePath: filePath });
 }
 
 // ─── Watch Tables ────────────────────────────────────────────────
@@ -96,7 +98,7 @@ export async function getWatchTables(deviceName: string): Promise<WatchTableInfo
 
 /** Export a watch table to XML */
 export async function exportWatchTableXml(deviceName: string, tableName: string, filePath: string): Promise<void> {
-    await client.post(`/api/devices/${enc(deviceName)}/watch-tables/${enc(tableName)}/export`, { FilePath: filePath });
+    await client.post(`/api/devices/${enc(deviceName)}/watch-tables/${enc(tableName)}/actions/export`, { FilePath: filePath });
 }
 
 function enc(s: string): string {

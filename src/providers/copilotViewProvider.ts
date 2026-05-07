@@ -39,6 +39,12 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
         this.postMessage({ type: connected ? 'online' : 'offline' });
     }
 
+    /** Called when server is connected but no project is open */
+    setNoProject(): void {
+        this.isConnected = false;
+        this.postMessage({ type: 'noProject' });
+    }
+
     constructor(private readonly extensionUri: vscode.Uri) {
         this.signalRDispose = getSignalRClient().onMessage((_hub, method, args) => {
             const m = method.toLowerCase();
@@ -511,16 +517,16 @@ body {
 #btn-stop { background: var(--vscode-statusBarItem-errorBackground, #c72e2e); display: none; }
 #btn-stop.visible { display: flex; }
 #btn-send.hidden { display: none; }
-#license-overlay, #offline-overlay, #auth-overlay {
+#license-overlay, #offline-overlay, #auth-overlay, #noproject-overlay {
     position: fixed; inset: 0;
     background: var(--vscode-sideBar-background, var(--vscode-editor-background));
     display: none; flex-direction: column; align-items: center; justify-content: center;
     text-align: center; padding: 24px; gap: 12px; z-index: 100;
 }
-#license-overlay.visible, #offline-overlay.visible, #auth-overlay.visible { display: flex; }
+#license-overlay.visible, #offline-overlay.visible, #auth-overlay.visible, #noproject-overlay.visible { display: flex; }
 #license-overlay .icon { font-size: 32px; opacity: 0.5; }
-#offline-overlay .icon, #auth-overlay .icon { opacity: 0.5; }
-#license-overlay p, #offline-overlay p, #auth-overlay p { color: var(--vscode-descriptionForeground); }
+#offline-overlay .icon, #auth-overlay .icon, #noproject-overlay .icon { opacity: 0.5; }
+#license-overlay p, #offline-overlay p, #auth-overlay p, #noproject-overlay p { color: var(--vscode-descriptionForeground); }
 #offline-overlay a {
     color: var(--vscode-textLink-foreground);
     text-decoration: none;
@@ -539,6 +545,11 @@ body {
     <div class="icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.2 6.2A8 8 0 1 0 16.2 17.8" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><text x="12.5" y="14" font-family="Arial,sans-serif" font-weight="bold" font-size="7" fill="currentColor" text-anchor="middle">T-IA</text></svg></div>
     <p><strong>${vscode.l10n.t('Sign in required')}</strong></p>
     <p>${vscode.l10n.t('Sign in to your T-IA Connect account to use the AI assistant.')}</p>
+</div>
+<div id="noproject-overlay">
+    <div class="icon"><svg width="48" height="48" viewBox="0 0 507.2 507.2" xmlns="http://www.w3.org/2000/svg"><path style="fill:#0B7F9E" d="M413.6,172.8c0,140.8-76,290.4-160,290.4s-160-148.8-160-290.4S170.4,0,253.6,0S413.6,32,413.6,172.8z"/><path style="fill:#0B6382" d="M253.6,0c83.2,0,160,32,160,172.8s-76,290.4-160,290.4s-160-148.8-160-290.4"/><path style="fill:#00233F" d="M253.6,0c83.2,0,160,32,160,172.8s-76,290.4-160,290.4"/><circle style="fill:#00FFF2" cx="190.4" cy="80" r="25.6"/><circle style="fill:#00FFF2" cx="190.4" cy="80" r="14.4"/><circle style="fill:#EBFFFD" cx="179.2" cy="68.8" r="8.8"/><circle style="fill:#00FFF2" cx="316.8" cy="80" r="25.6"/><circle style="fill:#00FFF2" cx="316.8" cy="80" r="14.4"/><circle style="fill:#EBFFFD" cx="305.6" cy="68.8" r="8.8"/><circle style="fill:#00FFF2" cx="253.6" cy="147.2" r="16"/><circle style="fill:#0B6382" cx="50.4" cy="304.8" r="40.8"/><circle style="fill:#0B6382" cx="456.8" cy="304.8" r="40.8"/></svg></div>
+    <p><strong>${vscode.l10n.t('No project open')}</strong></p>
+    <p>${vscode.l10n.t('Open a TIA Portal project to use the AI assistant.')}</p>
 </div>
 <div id="offline-overlay">
     <div class="icon"><svg width="48" height="48" viewBox="0 0 507.2 507.2" xmlns="http://www.w3.org/2000/svg"><path style="fill:#0B7F9E" d="M413.6,172.8c0,140.8-76,290.4-160,290.4s-160-148.8-160-290.4S170.4,0,253.6,0S413.6,32,413.6,172.8z"/><path style="fill:#0B6382" d="M253.6,0c83.2,0,160,32,160,172.8s-76,290.4-160,290.4s-160-148.8-160-290.4"/><path style="fill:#00233F" d="M253.6,0c83.2,0,160,32,160,172.8s-76,290.4-160,290.4"/><circle style="fill:#00FFF2" cx="190.4" cy="80" r="25.6"/><circle style="fill:#00FFF2" cx="190.4" cy="80" r="14.4"/><circle style="fill:#EBFFFD" cx="179.2" cy="68.8" r="8.8"/><circle style="fill:#00FFF2" cx="316.8" cy="80" r="25.6"/><circle style="fill:#00FFF2" cx="316.8" cy="80" r="14.4"/><circle style="fill:#EBFFFD" cx="305.6" cy="68.8" r="8.8"/><circle style="fill:#00FFF2" cx="253.6" cy="147.2" r="16"/><circle style="fill:#0B6382" cx="50.4" cy="304.8" r="40.8"/><circle style="fill:#0B6382" cx="456.8" cy="304.8" r="40.8"/></svg></div>
@@ -575,6 +586,7 @@ const inputStatus = document.getElementById('input-status');
 const licenseOverlay = document.getElementById('license-overlay');
 const offlineOverlay = document.getElementById('offline-overlay');
 const authOverlay = document.getElementById('auth-overlay');
+const noProjectOverlay = document.getElementById('noproject-overlay');
 const inputWrapper = document.getElementById('input-wrapper');
 let busy = false;
 
@@ -823,18 +835,28 @@ window.addEventListener('message', (e) => {
         case 'notAuthenticated':
             authOverlay.className = 'visible';
             offlineOverlay.className = '';
+            noProjectOverlay.className = '';
             inputWrapper.style.display = 'none';
             welcomeEl.className = 'hidden';
             break;
         case 'offline':
             authOverlay.className = '';
             offlineOverlay.className = 'visible';
+            noProjectOverlay.className = '';
+            inputWrapper.style.display = 'none';
+            welcomeEl.className = 'hidden';
+            break;
+        case 'noProject':
+            authOverlay.className = '';
+            offlineOverlay.className = '';
+            noProjectOverlay.className = 'visible';
             inputWrapper.style.display = 'none';
             welcomeEl.className = 'hidden';
             break;
         case 'online':
             authOverlay.className = '';
             offlineOverlay.className = '';
+            noProjectOverlay.className = '';
             inputWrapper.style.display = '';
             break;
     }

@@ -145,9 +145,11 @@ async function connect(
             const overview = await getProjectOverview();
             setConnected(overview.Name);
             log(`Connected. Project: ${overview.Name}`);
+            copilotProviderRef?.setConnected(true);
         } catch {
             setConnected();
             log('Connected (no project open).');
+            copilotProviderRef?.setNoProject();
         }
 
         // Refresh all providers

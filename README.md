@@ -4,10 +4,14 @@ Explore, edit, and compile Siemens TIA Portal projects directly from VS Code, Cu
 
 This extension connects to a running [T-IA Connect](https://t-ia-connect.com) server and provides a full development workflow for PLC programming — without leaving your editor.
 
-![SCL Editing](https://img.shields.io/badge/SCL-Syntax_Highlighting-blue)
-![STL Editing](https://img.shields.io/badge/STL-Syntax_Highlighting-green)
-![TIA Portal](https://img.shields.io/badge/TIA_Portal-V17--V21-orange)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+[![Version](https://img.shields.io/github/v/tag/feelautom/tia-connect-vscode?label=version&sort=semver)](https://github.com/feelautom/tia-connect-vscode/releases)
+[![VS Code](https://img.shields.io/badge/VS_Code-1.85+-007ACC?logo=visual-studio-code&logoColor=white)](https://code.visualstudio.com/)
+[![License: Elastic-2.0](https://img.shields.io/badge/license-Elastic--2.0-blue)](https://github.com/feelautom/tia-connect-vscode/blob/main/LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows-0078D6?logo=windows&logoColor=white)](https://github.com/feelautom/tia-connect-vscode)
+[![TIA Portal](https://img.shields.io/badge/TIA_Portal-V17--V21-orange)](https://www.siemens.com/tia-portal)
+[![Tests](https://img.shields.io/badge/tests-185_passing-brightgreen)](https://github.com/feelautom/tia-connect-vscode)
+[![i18n](https://img.shields.io/badge/i18n-EN_%7C_FR-lightgrey)](https://github.com/feelautom/tia-connect-vscode)
+[![Author](https://img.shields.io/badge/author-FEELAUTOM-00B4D8)](https://feelautom.com)
 
 ---
 
@@ -30,11 +34,11 @@ This extension connects to a running [T-IA Connect](https://t-ia-connect.com) se
 
 Browse your TIA Portal project structure directly in VS Code.
 
-- **Device tree**: PLCs, HMIs, and their contents — blocks, tag tables, UDTs
+- **Device tree**: PLCs, HMIs, and their contents — blocks, tag tables, UDTs, watch tables
 - **Block folders**: hierarchical view matching your TIA Portal structure
 - **Block icons**: color-coded by type — OB (blue), FB (green), FC (orange), DB (purple)
 - **Status indicators**: block language and consistency state at a glance
-- **Project Dashboard**: overview panel with device stats, block counts, and tag summaries — opens automatically when a project loads
+- **Project Dashboard**: overview panel with device stats, block counts, tag summaries, and UDT counts
 
 ### SCL / STL Editing
 
@@ -46,10 +50,10 @@ Double-click any SCL or STL block to open it with full language support. Edit, s
 - **Hover documentation** — type info, function docs, system block documentation (TON, CTU, R_TRIG...)
 - **Go-to-Definition** — Ctrl+click on local variables or block names (cross-file via API)
 - **Rename Symbol** (F2) — rename a variable across the entire file
-- **Diagnostics** — detects unclosed sections, missing `END_` keywords, unmatched parentheses
+- **Diagnostics** — compilation errors mapped to precise source lines (regex + symbol search)
 - **Document Outline** — hierarchical view of blocks, sections, and variables
 - **15 SCL snippets** — FB, FC, OB, DB, IF, FOR, CASE, TON, R_TRIG...
-- **Compilation errors** displayed directly in the editor (red/yellow squiggles)
+- **Compilation errors** displayed directly in the editor (red/yellow squiggles at the correct line)
 - **Background preloading** — blocks are cached after project load for near-instant opening
 
 #### Save behavior
@@ -63,7 +67,7 @@ Double-click any SCL or STL block to open it with full language support. Edit, s
 Non-editable blocks open in a graphical webview with SVG rendering.
 
 - Contact, coil, and box instructions rendered as network diagrams
-- Parallel branches and wire routing
+- Parallel branches with vertical merge connectors and wire routing
 - Interface table with variable types
 - Read-only — no accidental modifications
 
@@ -82,8 +86,32 @@ Compile a single block or an entire device from the context menu or the Command 
 
 - Progress notification with error/warning count
 - Detailed messages in the Output channel
-- Compilation errors appear as diagnostics in the editor
+- Compilation errors appear as diagnostics at the correct line in the editor
 - Keyboard shortcut: **Ctrl+Shift+B**
+
+### Export / Import
+
+Full bidirectional export and import for all project data.
+
+#### Tags
+- Export tag tables as **CSV**, **XLSX**, or **XML**
+- Import from **CSV** or **XLSX**
+
+#### UDTs (User-Defined Types)
+- Export/import as **XML**
+
+#### Watch Tables
+- Export/import watch and force tables
+
+#### HMI
+- Export/import individual **HMI screens**
+- Bulk export: **screens + tags + connections** in one command
+
+#### Hardware Configuration
+- Export/import hardware config (**AML** format)
+
+#### Export All
+- One-click export of **tags + UDTs + watch tables** for a device
 
 ### Source Control (VCS)
 
@@ -99,7 +127,37 @@ Additional features:
 - Commit log with diff viewer
 - Auto-export every minute (changes appear automatically)
 - Auto-refresh status every 30 seconds
+- **Smart Comparison** — normalized XML diff (strips IDs, timestamps, whitespace) to detect real changes
+- **Dependency Sort** — topological ordering (Kahn's algorithm) for correct import order
+- **Orphan Cleanup** — detect blocks deleted in TIA Portal but still in source control
 - License check (lock icon if VCS is not included in your edition)
+
+### AI Integration
+
+Three complementary AI features for PLC development:
+
+#### @tia Chat Participant (GitHub Copilot Chat)
+
+Type `@tia` in GitHub Copilot Chat to interact with your TIA Portal project using natural language.
+
+- **30 Language Model Tools** — project overview, block management, compilation, tags, UDTs, cross-references, PLCSim, VCS, pipelines, hardware
+- **Agentic loop** — the AI can chain multiple tool calls (up to 10 rounds) to complete complex tasks
+- **License check** — verifies AI license before consuming tokens
+
+#### T-IA Connect Copilot (Sidebar)
+
+Dedicated AI assistant in the secondary sidebar, independent of GitHub Copilot.
+
+- Connected to the T-IA Connect server's multi-provider LLM (OpenAI, Anthropic, Google, Mistral, Ollama)
+- Chat history, clickable block links, auto-refresh after AI actions
+- Connection-aware: shows sign-in or offline state when not connected
+- Localized in French
+
+#### MCP Server (100+ Tools)
+
+The T-IA Connect server exposes a **Model Context Protocol** server with 100+ tools. The extension auto-generates `.vscode/mcp.json` so GitHub Copilot Chat can use all MCP tools automatically.
+
+Compatible with: **Claude Desktop**, **Claude Code**, **Cursor**, **Windsurf**, and any MCP client.
 
 ### PLC Tests
 
@@ -125,6 +183,14 @@ Define and run CI/CD pipelines for your TIA Portal projects.
 - List, run, and monitor pipelines
 - Create from built-in templates
 - Execution history with step-level details
+
+### Workspace Scaffolding
+
+Initialize a TIA-ready workspace with one command:
+
+- `.gitignore` with TIA Portal patterns (*.ap*, *.zap*, .tia-temp/)
+- `.github/copilot-instructions.md` for GitHub Copilot context
+- `CLAUDE.md` for Claude Code context
 
 ---
 
@@ -182,6 +248,7 @@ The server is automatically detected if installed in the default location. You c
 | `tiaConnect.autoSaveInterval` | `5` | Safety auto-save (minutes, 0 = disabled) |
 | `tiaConnect.excludeFromReimport` | `[]` | Block names to skip during auto-reimport |
 | `tiaConnect.executablePath` | *(auto-detected)* | Path to the T-IA Connect executable |
+| `tiaConnect.autoConfigureMcp` | `true` | Auto-generate MCP config for GitHub Copilot |
 
 ---
 
@@ -201,6 +268,7 @@ All commands are available via **Ctrl+Shift+P**:
 | Launch Server (GUI) | Start server with desktop UI |
 | Switch Project | Open a different project |
 | Refresh Project Tree | Reload project structure |
+| Open Settings | Open extension settings |
 
 ### Blocks
 | Command | Description |
@@ -212,6 +280,17 @@ All commands are available via **Ctrl+Shift+P**:
 | Import SCL/STL File | Import an external source file |
 | Show Cross-References | View block references |
 
+### Export / Import
+| Command | Description |
+|---------|-------------|
+| Export All | Export tags + UDTs + watch tables for a device |
+| Export HMI Screen | Export a single HMI screen |
+| Export All HMI | Export screens, tags, and connections |
+| Import HMI Files | Import HMI screens/tags/connections |
+| Export Hardware Config | Export hardware configuration (AML) |
+| Import Hardware Config | Import hardware configuration |
+| Initialize Workspace | Generate .gitignore, copilot-instructions, CLAUDE.md |
+
 ### Source Control
 | Command | Description |
 |---------|-------------|
@@ -221,6 +300,7 @@ All commands are available via **Ctrl+Shift+P**:
 | Push / Pull | Sync with remote |
 | Branch Operations | Create, switch, delete, merge |
 | Show Commit Log | View history with diffs |
+| Detect Orphans | Find blocks deleted from TIA but still in VCS |
 
 ### Pipelines & Tests
 | Command | Description |
@@ -275,6 +355,8 @@ The extension is fully translated in **French**. It displays in French when VS C
 
 ## License
 
-MIT — [FEELAUTOM](https://feelautom.com)
+[Elastic License 2.0](LICENSE) — [FEELAUTOM](https://feelautom.com)
 
-The extension is free and open-source. The T-IA Connect server requires a license — free trial available at [t-ia-connect.com](https://t-ia-connect.com).
+This software is source-available. You may use, copy, distribute, and modify it, subject to the limitations in the license. You may **not** provide it as a hosted/managed service, and you may **not** circumvent the license key functionality.
+
+The T-IA Connect server requires a separate license — free trial available at [t-ia-connect.com](https://t-ia-connect.com).

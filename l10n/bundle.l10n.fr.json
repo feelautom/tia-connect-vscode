@@ -149,5 +149,7 @@
   "Sign in required": "Connexion requise",
   "Sign in to your T-IA Connect account to use the AI assistant.": "Connectez-vous à votre compte T-IA Connect pour utiliser l'assistant IA.",
   "Not connected": "Non connecté",
-  "Connect to the T-IA Connect server to use the AI assistant.": "Connectez-vous au serveur T-IA Connect pour utiliser l'assistant IA."
+  "Connect to the T-IA Connect server to use the AI assistant.": "Connectez-vous au serveur T-IA Connect pour utiliser l'assistant IA.",
+  "No project open": "Aucun projet ouvert",
+  "Open a TIA Portal project to use the AI assistant.": "Ouvrez un projet TIA Portal pour utiliser l'assistant IA."
 }

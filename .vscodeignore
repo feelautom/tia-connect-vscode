@@ -8,3 +8,6 @@ tsconfig.json
 **/*.map
 *.vsix
 .tia-temp/**
+docs/screenshots/**
+docs/screenshots.html
+image-tia-connect-vscode/**

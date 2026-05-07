@@ -47,6 +47,54 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
     private iconsDir: string | undefined;
     private busyMessage: string | null = null;
     private _authenticated = false;
+    private treeView?: vscode.TreeView<TiaTreeItem>;
+
+    /** Store the TreeView reference for reveal operations */
+    setTreeView(view: vscode.TreeView<TiaTreeItem>): void {
+        this.treeView = view;
+    }
+
+    /** Reveal an item in the tree (expand parents and select it) */
+    async revealItem(item: TiaTreeItem): Promise<void> {
+        if (this.treeView) {
+            try { await this.treeView.reveal(item, { select: true, expand: true }); } catch { /* ignore */ }
+        }
+    }
+
+    /** Required for treeView.reveal() to work with nested items */
+    getParent(element: TiaTreeItem): TiaTreeItem | undefined {
+        if (!this.projectData?.Devices) { return undefined; }
+
+        // Top-level items (project, devices) have no parent in this context
+        if (element.type === 'project' || element.type === 'device') { return undefined; }
+
+        // Section nodes: parent is device
+        if (element.type === 'section' && element.deviceName) {
+            return { type: 'device', label: element.deviceName, deviceName: element.deviceName };
+        }
+
+        // Blocks, UDTs, tag tables, watch tables: parent is their section
+        if (element.deviceName) {
+            const sectionMap: Record<string, { label: string; kind: string }> = {
+                block: { label: 'Program Blocks', kind: 'blocks' },
+                folder: { label: 'Program Blocks', kind: 'blocks' },
+                tagTable: { label: 'Tag Tables', kind: 'tagTables' },
+                udt: { label: 'UDTs', kind: 'udts' },
+                watchTable: { label: 'Watch Tables', kind: 'watchTables' },
+            };
+            const sec = sectionMap[element.type];
+            if (sec) {
+                return {
+                    type: 'section',
+                    label: sec.label,
+                    deviceName: element.deviceName,
+                    sectionKind: sec.kind as any,
+                };
+            }
+        }
+
+        return undefined;
+    }
 
     setExtensionPath(extensionPath: string): void {
         this.iconsDir = path.join(extensionPath, 'resources', 'icons');

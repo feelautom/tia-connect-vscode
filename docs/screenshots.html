@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T-IA Connect for VS Code - Screenshots</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #1e1e1e; color: #d4d4d4;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+  }
+  header {
+    padding: 2rem 1rem 1rem; text-align: center;
+  }
+  header h1 { color: #4fc3f7; font-size: 1.8rem; margin-bottom: 0.3rem; }
+  header p { color: #888; font-size: 0.95rem; }
+
+  /* Carousel */
+  .carousel {
+    position: relative; width: 90vw; max-width: 1200px;
+    margin: 1.5rem auto; overflow: hidden; border-radius: 8px;
+    background: #111; box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  .carousel-inner {
+    display: flex; transition: transform 0.4s ease;
+  }
+  .carousel-slide {
+    min-width: 100%; display: flex; flex-direction: column; align-items: center;
+    padding: 1rem;
+  }
+  .carousel-slide img {
+    max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 4px;
+    cursor: zoom-in;
+  }
+  .carousel-slide .caption {
+    margin-top: 0.8rem; font-size: 1rem; color: #ccc; text-align: center;
+  }
+  .carousel-slide .caption small { color: #666; }
+
+  /* Navigation arrows */
+  .carousel-btn {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(0,0,0,0.6); color: #fff; border: none;
+    font-size: 2rem; padding: 0.5rem 1rem; cursor: pointer;
+    border-radius: 4px; z-index: 10; transition: background 0.2s;
+  }
+  .carousel-btn:hover { background: rgba(79,195,247,0.4); }
+  .carousel-btn.prev { left: 10px; }
+  .carousel-btn.next { right: 10px; }
+
+  /* Counter */
+  .counter {
+    text-align: center; padding: 0.5rem; color: #888; font-size: 0.9rem;
+  }
+
+  /* Thumbnails */
+  .thumbnails {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+    max-width: 1200px; padding: 1rem;
+  }
+  .thumbnails img {
+    width: 100px; height: 60px; object-fit: cover; border-radius: 4px;
+    cursor: pointer; opacity: 0.5; transition: opacity 0.2s, outline 0.2s;
+    border: 2px solid transparent;
+  }
+  .thumbnails img:hover { opacity: 0.8; }
+  .thumbnails img.active { opacity: 1; border-color: #4fc3f7; }
+
+  /* Lightbox */
+  .lightbox {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95); z-index: 100; justify-content: center; align-items: center;
+    cursor: zoom-out;
+  }
+  .lightbox.open { display: flex; }
+  .lightbox img { max-width: 95vw; max-height: 95vh; object-fit: contain; }
+
+  /* Keyboard hint */
+  .hint { color: #555; font-size: 0.8rem; padding: 1rem; text-align: center; }
+
+  footer { padding: 2rem 1rem; color: #555; font-size: 0.85rem; text-align: center; }
+  footer a { color: #4fc3f7; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>T-IA Connect for VS Code</h1>
+  <p>Screenshot Gallery</p>
+</header>
+
+<div class="carousel" id="carousel">
+  <button class="carousel-btn prev" onclick="navigate(-1)">&lsaquo;</button>
+  <button class="carousel-btn next" onclick="navigate(1)">&rsaquo;</button>
+  <div class="carousel-inner" id="carouselInner"></div>
+</div>
+<div class="counter" id="counter"></div>
+
+<div class="thumbnails" id="thumbnails"></div>
+
+<div class="hint">Arrow keys to navigate &middot; Click image to zoom &middot; Escape to close</div>
+
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<footer>
+  <a href="https://github.com/feelautom/tia-connect-vscode">GitHub</a> &middot;
+  <a href="https://t-ia-connect.com">T-IA Connect</a> &middot;
+  FEELAUTOM
+</footer>
+
+<script>
+const slides = [
+  { src: 'screenshots/01-marketplace.png', caption: 'VS Code Marketplace', desc: 'Extension installed from VSIX' },
+  { src: 'screenshots/02-welcome-signin.png', caption: 'Welcome &amp; Sign In', desc: 'First launch — Sign In or Create Account' },
+  { src: 'screenshots/03-oauth-redirect.png', caption: 'OAuth Redirect', desc: 'VS Code asks to open the auth page' },
+  { src: 'screenshots/04-login-page.png', caption: 'Login Page', desc: 'Google, LinkedIn, GitHub or email login' },
+  { src: 'screenshots/05-login-success.png', caption: 'Login Success', desc: 'Browser confirms the connection' },
+  { src: 'screenshots/06-server-launch.png', caption: 'Server Launch', desc: 'Launch Headless, with GUI, or connect to a running server' },
+  { src: 'screenshots/07-tia-desktop.png', caption: 'T-IA Connect Desktop', desc: 'Desktop app with VS Code sidebar' },
+  { src: 'screenshots/08-settings.png', caption: 'Extension Settings', desc: 'API key, auto-compile, auto-reimport, MCP config' },
+  { src: 'screenshots/09-copilot-noproject.png', caption: 'Copilot — No Project', desc: 'AI sidebar shows "No project open" state' },
+  { src: 'screenshots/10-opening-project.png', caption: 'Opening Project', desc: 'Creating TIA Portal connection...' },
+  { src: 'screenshots/11-project-loading.png', caption: 'Project Loading', desc: 'Project opened, loading tree...' },
+  { src: 'screenshots/12-project-loading-logs.png', caption: 'Project Logs', desc: 'Output channel during project load' },
+  { src: 'screenshots/13-dashboard.png', caption: 'Project Dashboard', desc: 'Overview with device stats, block counts, tags, UDTs' },
+  { src: 'screenshots/14-project-tree.png', caption: 'Project Tree', desc: 'Full tree: blocks, tag tables, UDTs, watch tables' },
+  { src: 'screenshots/15-lad-viewer.png', caption: 'LAD Viewer', desc: 'FB_Motor — Ladder diagram with contacts, coils, TON timer' },
+  { src: 'screenshots/16-scl-editor.png', caption: 'SCL Editor', desc: 'FB_MotorStartStop — Full syntax highlighting and editing' },
+  { src: 'screenshots/17-instance-db.png', caption: 'Instance DB', desc: 'FB_MotorStartStop_DB — Interface viewer' },
+  { src: 'screenshots/18-scl-motor.png', caption: 'SCL Motor Control', desc: 'FB_SclMotor — Advanced SCL with ramp logic' },
+  { src: 'screenshots/19-stl-editor.png', caption: 'STL Editor', desc: 'FB_StlMotor — Statement List with syntax highlighting' },
+  { src: 'screenshots/20-tag-table.png', caption: 'Tag Table', desc: 'TestTags — Name, type, address, comments' },
+  { src: 'screenshots/21-udt-viewer.png', caption: 'UDT Viewer', desc: 'UDT_Motor — User-Defined Type with 6 members' },
+  { src: 'screenshots/22-watch-table.png', caption: 'Watch Table', desc: 'WatchTable_Test — Monitor trigger and display format' },
+  { src: 'screenshots/23-cross-references.png', caption: 'Cross-References', desc: 'FB_Motor — All references across networks' },
+  { src: 'screenshots/24-copilot-thinking.png', caption: 'AI Copilot — Thinking', desc: 'Copilot analyzing the project...' },
+  { src: 'screenshots/25-copilot-summary.png', caption: 'AI Copilot — Summary', desc: 'Complete project summary with clickable block links' },
+  { src: 'screenshots/26-context-menu-overview.png', caption: 'Context Menu — Overview', desc: 'Right-click actions on project tree' },
+  { src: 'screenshots/27-context-menu-export.png', caption: 'Context Menu — Export', desc: 'Export options for tags, blocks, UDTs' },
+  { src: 'screenshots/28-context-menu-compile.png', caption: 'Context Menu — Compile', desc: 'Compile and block operations' },
+];
+
+let current = 0;
+const inner = document.getElementById('carouselInner');
+const thumbs = document.getElementById('thumbnails');
+const counter = document.getElementById('counter');
+
+// Build slides
+slides.forEach((s, i) => {
+  // Carousel slide
+  const div = document.createElement('div');
+  div.className = 'carousel-slide';
+  div.innerHTML = `<img src="${s.src}" alt="${s.caption}" onclick="openLightbox(${i})">
+    <div class="caption"><strong>${s.caption}</strong><br><small>${s.desc}</small></div>`;
+  inner.appendChild(div);
+
+  // Thumbnail
+  const img = document.createElement('img');
+  img.src = s.src;
+  img.alt = s.caption;
+  img.onclick = () => goTo(i);
+  thumbs.appendChild(img);
+});
+
+function goTo(index) {
+  current = ((index % slides.length) + slides.length) % slides.length;
+  inner.style.transform = `translateX(-${current * 100}%)`;
+  counter.textContent = `${current + 1} / ${slides.length}`;
+  thumbs.querySelectorAll('img').forEach((t, i) => t.classList.toggle('active', i === current));
+}
+
+function navigate(dir) { goTo(current + dir); }
+
+function openLightbox(i) {
+  document.getElementById('lightboxImg').src = slides[i].src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('lightbox').classList.contains('open')) {
+    if (e.key === 'Escape') closeLightbox();
+    return;
+  }
+  if (e.key === 'ArrowLeft') navigate(-1);
+  if (e.key === 'ArrowRight') navigate(1);
+});
+
+goTo(0);
+</script>
+</body>
+</html>

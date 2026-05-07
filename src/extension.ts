@@ -89,6 +89,7 @@ export function activate(context: vscode.ExtensionContext): void {
         treeDataProvider: treeProvider,
         showCollapseAll: true,
     });
+    treeProvider.setTreeView(treeView);
     context.subscriptions.push(treeView);
 
     // Block editor (handles open/save/reimport)

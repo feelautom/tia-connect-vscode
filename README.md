@@ -13,6 +13,11 @@ This extension connects to a running [T-IA Connect](https://t-ia-connect.com) se
 [![i18n](https://img.shields.io/badge/i18n-EN_%7C_FR-lightgrey)](https://github.com/feelautom/tia-connect-vscode)
 [![Author](https://img.shields.io/badge/author-FEELAUTOM-00B4D8)](https://feelautom.com)
 
+<!-- GIF demo goes here — replace with actual recording -->
+<!-- ![T-IA Connect Demo](docs/screenshots/demo.gif) -->
+
+> **[View all screenshots](docs/screenshots.html)** — 28 screenshots showing the complete workflow.
+
 ---
 
 ## Quick Start
@@ -40,6 +45,8 @@ Browse your TIA Portal project structure directly in VS Code.
 - **Status indicators**: block language and consistency state at a glance
 - **Project Dashboard**: overview panel with device stats, block counts, tag summaries, and UDT counts
 
+![Project Explorer](docs/screenshots/14-project-tree.png)
+
 ### SCL / STL Editing
 
 Double-click any SCL or STL block to open it with full language support. Edit, save (**Ctrl+S**), and it's reimported into TIA Portal automatically.
@@ -62,6 +69,8 @@ Double-click any SCL or STL block to open it with full language support. Edit, s
 - **VS Code auto-save** is ignored — no accidental reimports
 - **Safety timer** saves to disk every 5/10/15 minutes without reimporting (configurable)
 
+![SCL Editor](docs/screenshots/16-scl-editor.png)
+
 ### LAD / FBD / GRAPH Viewer
 
 Non-editable blocks open in a graphical webview with SVG rendering.
@@ -70,6 +79,8 @@ Non-editable blocks open in a graphical webview with SVG rendering.
 - Parallel branches with vertical merge connectors and wire routing
 - Interface table with variable types
 - Read-only — no accidental modifications
+
+![LAD Viewer](docs/screenshots/15-lad-viewer.png)
 
 ### Create Blocks
 
@@ -152,6 +163,8 @@ Dedicated AI assistant in the secondary sidebar, independent of GitHub Copilot.
 - Chat history, clickable block links, auto-refresh after AI actions
 - Connection-aware: shows sign-in or offline state when not connected
 - Localized in French
+
+![Copilot Summary](docs/screenshots/25-copilot-summary.png)
 
 #### MCP Server (100+ Tools)
 

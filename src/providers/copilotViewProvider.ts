@@ -261,6 +261,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
             const block = await this.treeProvider.findBlockByName(blockName);
             if (block) {
                 vscode.commands.executeCommand('tiaConnect.openBlock', block);
+                this.treeProvider.revealItem(block);
                 return;
             }
 
@@ -275,6 +276,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                 const cmd = cmdMap[item.type];
                 if (cmd) {
                     vscode.commands.executeCommand(cmd, item);
+                    this.treeProvider.revealItem(item);
                     return;
                 }
             }

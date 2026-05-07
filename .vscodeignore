@@ -1,9 +1,13 @@
 .git/**
 .gitignore
+.github/**
 src/**
 test/**
 node_modules/**
 esbuild.mjs
+eslint.config.mjs
+vitest.config.ts
+deploy.sh
 tsconfig.json
 **/*.map
 *.vsix

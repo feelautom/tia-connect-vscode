@@ -518,7 +518,8 @@ body {
     text-align: center; padding: 24px; gap: 12px; z-index: 100;
 }
 #license-overlay.visible, #offline-overlay.visible, #auth-overlay.visible { display: flex; }
-#license-overlay .icon, #offline-overlay .icon, #auth-overlay .icon { font-size: 32px; opacity: 0.5; }
+#license-overlay .icon { font-size: 32px; opacity: 0.5; }
+#offline-overlay .icon, #auth-overlay .icon { opacity: 0.5; }
 #license-overlay p, #offline-overlay p, #auth-overlay p { color: var(--vscode-descriptionForeground); }
 #offline-overlay a {
     color: var(--vscode-textLink-foreground);
@@ -535,12 +536,12 @@ body {
     <p>${vscode.l10n.t('This feature requires an AI-enabled license.')}</p>
 </div>
 <div id="auth-overlay" class="visible">
-    <div class="icon">&#128100;</div>
+    <div class="icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.2 6.2A8 8 0 1 0 16.2 17.8" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><text x="12.5" y="14" font-family="Arial,sans-serif" font-weight="bold" font-size="7" fill="currentColor" text-anchor="middle">T-IA</text></svg></div>
     <p><strong>${vscode.l10n.t('Sign in required')}</strong></p>
     <p>${vscode.l10n.t('Sign in to your T-IA Connect account to use the AI assistant.')}</p>
 </div>
 <div id="offline-overlay">
-    <div class="icon">&#128268;</div>
+    <div class="icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16.2 6.2A8 8 0 1 0 16.2 17.8" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><text x="12.5" y="14" font-family="Arial,sans-serif" font-weight="bold" font-size="7" fill="currentColor" text-anchor="middle">T-IA</text></svg></div>
     <p><strong>${vscode.l10n.t('Not connected')}</strong></p>
     <p>${vscode.l10n.t('Connect to the T-IA Connect server to use the AI assistant.')}</p>
 </div>

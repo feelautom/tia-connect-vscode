@@ -13,10 +13,9 @@ This extension connects to a running [T-IA Connect](https://t-ia-connect.com) se
 [![i18n](https://img.shields.io/badge/i18n-EN_%7C_FR-lightgrey)](https://github.com/feelautom/tia-connect-vscode)
 [![Author](https://img.shields.io/badge/author-FEELAUTOM-00B4D8)](https://feelautom.com)
 
-<!-- GIF demo goes here — replace with actual recording -->
-<!-- ![T-IA Connect Demo](docs/screenshots/demo.gif) -->
+![T-IA Connect Demo](docs/screenshots/demo.gif)
 
-> **[View all screenshots](docs/screenshots.html)** — 28 screenshots showing the complete workflow.
+> **[Watch the full demo video](docs/screenshots/demo.mp4)** | **[View all screenshots](docs/screenshots.html)**
 
 ---
 

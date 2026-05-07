@@ -1,6 +1,16 @@
+import * as vscode from 'vscode';
 import { getServerUrl, getApiKey } from '../utils/config';
 import { ApiResponse } from './types';
 import { log, debug } from '../views/outputChannel';
+
+function getExtensionVersion(): string {
+    try {
+        const ext = vscode.extensions.getExtension('FEELAUTOM.tia-connect-vscode');
+        return ext?.packageJSON?.version ?? 'unknown';
+    } catch {
+        return 'unknown';
+    }
+}
 
 /** Recursively convert first char of each key to uppercase (PascalCase)
  * @internal Exported for testing */
@@ -31,6 +41,7 @@ export class TiaClient {
         const h: Record<string, string> = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
+            'X-Client-Id': `vscode/${getExtensionVersion()}`,
         };
         const key = getApiKey();
         if (key) {

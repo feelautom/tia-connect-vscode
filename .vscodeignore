@@ -10,4 +10,4 @@ tsconfig.json
 .tia-temp/**
 docs/screenshots/**
 docs/screenshots.html
-image-tia-connect-vscode/**
+internal/**

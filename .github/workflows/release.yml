@@ -36,7 +36,7 @@ jobs:
         run: echo "file=$(ls *.vsix)" >> "$GITHUB_OUTPUT"
 
       - name: Scan with VirusTotal
-        uses: crazy-max/ghaction-virustotal@v4
+        uses: crazy-max/ghaction-virustotal@v5
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
           files: ${{ steps.vsix.outputs.file }}

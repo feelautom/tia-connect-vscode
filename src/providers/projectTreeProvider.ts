@@ -365,6 +365,29 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
         return undefined;
     }
 
+    /** Find a UDT, tag table, or watch table by name across all devices */
+    async findItemByName(name: string): Promise<TiaTreeItem | undefined> {
+        if (!this.projectData) {
+            try { this.projectData = await getProjectOverview(); } catch { return undefined; }
+        }
+        if (!this.projectData?.Devices) { return undefined; }
+
+        for (const dev of this.projectData.Devices) {
+            const udts = await this.getUdtNodes(dev.Name);
+            const udt = udts.find(u => u.label === name);
+            if (udt) { return udt; }
+
+            const tags = await this.getTagTableNodes(dev.Name);
+            const tag = tags.find(t => t.label === name);
+            if (tag) { return tag; }
+
+            const watches = await this.getWatchTableNodes(dev.Name);
+            const watch = watches.find(w => w.label === name);
+            if (watch) { return watch; }
+        }
+        return undefined;
+    }
+
     private searchBlockTree(nodes: BlockTreeNode[], deviceName: string, blockName: string): TiaTreeItem | undefined {
         for (const node of nodes) {
             const isFolder = node.IsFolder || node.NodeType === 'Folder' || node.NodeType === 'UserFolder' || node.Type === 'Folder';

@@ -257,12 +257,29 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
     private async onOpenBlock(blockName: string): Promise<void> {
         if (!blockName || !this.treeProvider) { return; }
         try {
-            const item = await this.treeProvider.findBlockByName(blockName);
-            if (item) {
-                vscode.commands.executeCommand('tiaConnect.openBlock', item);
-            } else {
-                vscode.window.showWarningMessage(`Block "${blockName}" not found in project.`);
+            // Try program blocks first
+            const block = await this.treeProvider.findBlockByName(blockName);
+            if (block) {
+                vscode.commands.executeCommand('tiaConnect.openBlock', block);
+                return;
             }
+
+            // Try UDTs, tag tables, watch tables
+            const item = await this.treeProvider.findItemByName(blockName);
+            if (item) {
+                const cmdMap: Record<string, string> = {
+                    udt: 'tiaConnect.openUdt',
+                    tagTable: 'tiaConnect.openTagTable',
+                    watchTable: 'tiaConnect.openWatchTable',
+                };
+                const cmd = cmdMap[item.type];
+                if (cmd) {
+                    vscode.commands.executeCommand(cmd, item);
+                    return;
+                }
+            }
+
+            vscode.window.showWarningMessage(`Block "${blockName}" not found in project.`);
         } catch (err) {
             log(`[Copilot] Failed to open block ${blockName}: ${err}`);
         }

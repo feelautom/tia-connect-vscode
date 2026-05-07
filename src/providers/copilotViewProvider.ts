@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { sendCopilotMessage, getCopilotHistory, clearCopilotHistory, stopCopilot, ChatHistoryEntry } from '../api/copilot';
 import { getLicenseFeatures } from '../api/project';
 import { getSignalRClient } from '../api/signalr';
-import { log } from '../views/outputChannel';
+import { log, debug } from '../views/outputChannel';
 import { ProjectTreeProvider } from './projectTreeProvider';
 
 export class CopilotViewProvider implements vscode.WebviewViewProvider {
@@ -48,7 +48,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
     constructor(private readonly extensionUri: vscode.Uri) {
         this.signalRDispose = getSignalRClient().onMessage((_hub, method, args) => {
             const m = method.toLowerCase();
-            log(`[Copilot SignalR] ${method} args=${JSON.stringify(args).substring(0, 200)}`);
+            debug(`[Copilot SignalR] ${method} args=${JSON.stringify(args).substring(0, 200)}`);
 
             switch (m) {
                 case 'onintermediateresponse': {
@@ -64,7 +64,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                     const content = String(args[0] ?? '');
                     // Skip echo of our own message (already shown locally and already in chatHistory)
                     if (content && content !== this.lastSentText) {
-                        log(`[Copilot SignalR] onUserMessage (external): ${content.substring(0, 80)}`);
+                        debug(`[Copilot SignalR] onUserMessage (external): ${content.substring(0, 80)}`);
                         this.chatHistory.push({ Role: 'user', Content: content });
                         this.postMessage({ type: 'addMessage', role: 'user', content });
                     } else {
@@ -90,7 +90,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                     const success = data.Success ?? data.success;
                     const error = String(data.ErrorMessage ?? data.errorMessage ?? '');
 
-                    log(`[Copilot SignalR] Assistant response: success=${success} content=${content.substring(0, 100)}`);
+                    debug(`[Copilot SignalR] Assistant response: success=${success} content=${content.substring(0, 100)}`);
 
                     if (content) {
                         this.chatHistory.push({ Role: 'assistant', Content: content });
@@ -106,7 +106,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                 }
                 case 'ontokenusage': {
                     // Optional — log token usage
-                    log(`[Copilot SignalR] Token usage: ${JSON.stringify(args[0])}`);
+                    debug(`[Copilot SignalR] Token usage: ${JSON.stringify(args[0])}`);
                     break;
                 }
             }
@@ -193,7 +193,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
             if (history.length === 0 && this.projectPath) {
                 const unfiltered = await getCopilotHistory();
                 if (unfiltered.length > 0) {
-                    log('[Copilot] projectKey mismatch — switching to unfiltered');
+                    debug('[Copilot] projectKey mismatch — switching to unfiltered');
                     this.projectPath = undefined;
                     history = unfiltered;
                 }
@@ -858,6 +858,11 @@ window.addEventListener('message', (e) => {
             offlineOverlay.className = '';
             noProjectOverlay.className = '';
             inputWrapper.style.display = '';
+            // Show welcome if no messages yet
+            if (messagesEl.children.length === 0) {
+                welcomeEl.className = '';
+                messagesEl.className = 'hidden';
+            }
             break;
     }
 });

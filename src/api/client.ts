@@ -1,6 +1,6 @@
 import { getServerUrl, getApiKey } from '../utils/config';
 import { ApiResponse } from './types';
-import { log } from '../views/outputChannel';
+import { log, debug } from '../views/outputChannel';
 
 /** Recursively convert first char of each key to uppercase (PascalCase)
  * @internal Exported for testing */
@@ -75,7 +75,7 @@ export class TiaClient {
         this.abortControllers.add(controller);
 
         try {
-            log(`${method} ${path}`);
+            debug(`${method} ${path}`);
             let resp: Response;
             try {
                 resp = await fetch(url, {
@@ -139,7 +139,11 @@ export class TiaClient {
                 const msg = json.Message || `HTTP ${resp.status}`;
                 // "Not connected" / "not available" are normal when no project is open — don't log as ERROR
                 const isNotReady = /not connected|not available|aucun projet|no project/i.test(msg);
-                log(`${isNotReady ? 'INFO' : 'ERROR'} ${method} ${path}: ${msg}`);
+                if (isNotReady) {
+                    debug(`${method} ${path}: ${msg}`);
+                } else {
+                    log(`ERROR ${method} ${path}: ${msg}`);
+                }
                 throw new Error(msg);
             }
 

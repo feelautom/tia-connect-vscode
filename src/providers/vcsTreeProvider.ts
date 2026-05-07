@@ -145,7 +145,7 @@ export class VcsTreeProvider implements vscode.TreeDataProvider<VcsTreeItem>, vs
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             if (/not connected|not available|aucun projet|no project/i.test(msg)) {
-                log('VCS tree refresh skipped — no project open.');
+                // Silent — no project open
             } else {
                 logError('VCS tree refresh failed', err);
             }

@@ -104,7 +104,7 @@ export class TiaSourceControl implements vscode.Disposable {
         } catch (err) {
             const msg = err instanceof Error ? err.message : String(err);
             if (/not connected|not available|aucun projet|no project/i.test(msg)) {
-                log('VCS refresh skipped — no project open.');
+                // Silent — no project open
             } else {
                 logError('VCS refresh failed', err);
             }

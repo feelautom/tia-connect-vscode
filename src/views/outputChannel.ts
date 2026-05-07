@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { OUTPUT_CHANNEL_NAME } from '../utils/constants';
 
 let channel: vscode.OutputChannel;
+const isDev = process.env.NODE_ENV === 'development' || process.env.VSCODE_DEBUG_MODE === 'true';
 
 export function getOutputChannel(): vscode.OutputChannel {
     if (!channel) {
@@ -13,6 +14,13 @@ export function getOutputChannel(): vscode.OutputChannel {
 export function log(message: string): void {
     const ts = new Date().toLocaleTimeString();
     getOutputChannel().appendLine(`[${ts}] ${message}`);
+}
+
+/** Verbose log — only shown in dev/debug mode */
+export function debug(message: string): void {
+    if (!isDev) { return; }
+    const ts = new Date().toLocaleTimeString();
+    getOutputChannel().appendLine(`[${ts}] [DEBUG] ${message}`);
 }
 
 export function logError(message: string, error?: unknown): void {

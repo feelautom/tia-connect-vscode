@@ -48,7 +48,7 @@ export class AuthService implements vscode.Disposable {
         const profile = await this.fetchProfile(token);
         if (profile) {
             this.profile = profile;
-            log(`Authenticated as ${profile.email} (${profile.licenseType})`);
+            log(`Authenticated as ${profile.email}${profile.licenseType ? ` (${profile.licenseType})` : ''}`);
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, true);
             this._onDidChangeAuth.fire(true);
             return true;
@@ -153,7 +153,7 @@ export class AuthService implements vscode.Disposable {
             const profile = await this.fetchProfile(token);
             if (profile) {
                 this.profile = profile;
-                log(`Profile loaded: ${profile.email} (${profile.licenseType})`);
+                log(`Profile loaded: ${profile.email}${profile.licenseType ? ` (${profile.licenseType})` : ''}`);
             }
         } catch {
             log('Cannot reach auth server (offline?) — keeping session.');

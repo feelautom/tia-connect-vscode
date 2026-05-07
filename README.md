@@ -15,7 +15,7 @@ This extension connects to a running [T-IA Connect](https://t-ia-connect.com) se
 
 ![T-IA Connect Demo](docs/screenshots/demo.gif)
 
-> **[Watch the full demo video](docs/screenshots/demo.mp4)** | **[View all screenshots](docs/screenshots.html)**
+> **[View all screenshots](https://feelautom.github.io/tia-connect-vscode/screenshots.html)**
 
 ---
 

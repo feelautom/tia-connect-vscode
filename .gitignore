@@ -4,3 +4,4 @@ dist/
 .vscode-test/
 .tia-temp/
 internal/
+docs/screenshots/demo.mp4

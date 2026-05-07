@@ -11,13 +11,18 @@ import { log, logError, showOutput } from '../views/outputChannel';
 import { CONTEXT_KEYS } from '../utils/constants';
 import { getApiKey, setApiKey } from '../utils/config';
 import { getSignalRClient } from '../api/signalr';
+import { CopilotViewProvider } from '../providers/copilotViewProvider';
+
+let copilotProviderRef: CopilotViewProvider | undefined;
 
 export function registerProjectCommands(
     context: vscode.ExtensionContext,
     treeProvider: ProjectTreeProvider,
     scmProvider: TiaSourceControl,
     testProvider: TestTreeProvider,
+    copilotProvider?: CopilotViewProvider,
 ): void {
+    copilotProviderRef = copilotProvider;
     context.subscriptions.push(
         vscode.commands.registerCommand('tiaConnect.connect', () => connect(treeProvider, scmProvider, testProvider)),
         vscode.commands.registerCommand('tiaConnect.disconnect', () => disconnect(treeProvider, scmProvider)),
@@ -314,6 +319,7 @@ async function disconnect(treeProvider: ProjectTreeProvider, scmProvider: TiaSou
     setDisconnected();
     scmProvider.stopAutoRefresh();
     treeProvider.setConnected(false);
+    copilotProviderRef?.setConnected(false);
 
     if (pick.action === 'stop') {
         try {

@@ -16,9 +16,27 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
     private lastSentText = '';
     private treeProvider?: ProjectTreeProvider;
     private chatHistory: ChatHistoryEntry[] = [];
+    private isConnected = false;
+    private isAuthenticated = false;
 
     setTreeProvider(provider: ProjectTreeProvider): void {
         this.treeProvider = provider;
+    }
+
+    /** Called when auth state changes (from extension.ts onDidChangeAuth) */
+    setAuthenticated(authenticated: boolean): void {
+        this.isAuthenticated = authenticated;
+        if (!authenticated) {
+            this.postMessage({ type: 'notAuthenticated' });
+        } else if (!this.isConnected) {
+            this.postMessage({ type: 'offline' });
+        }
+    }
+
+    /** Called when connection state changes (from projectCommands) */
+    setConnected(connected: boolean): void {
+        this.isConnected = connected;
+        this.postMessage({ type: connected ? 'online' : 'offline' });
     }
 
     constructor(private readonly extensionUri: vscode.Uri) {
@@ -136,6 +154,16 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
     }
 
     private async onReady(): Promise<void> {
+        if (!this.isAuthenticated) {
+            this.postMessage({ type: 'notAuthenticated' });
+            return;
+        }
+
+        if (!this.isConnected) {
+            this.postMessage({ type: 'offline' });
+            return;
+        }
+
         try {
             const license = await getLicenseFeatures();
             const aiFeature = license.Features?.find(f => f.Key === 'ai' || f.Key === 'copilot' || f.Key === 'assistant');
@@ -144,9 +172,12 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                 return;
             }
         } catch {
-            // License check failed — continue anyway
+            // License check failed — show offline state
+            this.postMessage({ type: 'offline' });
+            return;
         }
 
+        this.postMessage({ type: 'online' });
         await this.loadHistory();
     }
 
@@ -480,15 +511,21 @@ body {
 #btn-stop { background: var(--vscode-statusBarItem-errorBackground, #c72e2e); display: none; }
 #btn-stop.visible { display: flex; }
 #btn-send.hidden { display: none; }
-#license-overlay {
+#license-overlay, #offline-overlay, #auth-overlay {
     position: fixed; inset: 0;
     background: var(--vscode-sideBar-background, var(--vscode-editor-background));
     display: none; flex-direction: column; align-items: center; justify-content: center;
     text-align: center; padding: 24px; gap: 12px; z-index: 100;
 }
-#license-overlay.visible { display: flex; }
-#license-overlay .icon { font-size: 32px; opacity: 0.5; }
-#license-overlay p { color: var(--vscode-descriptionForeground); }
+#license-overlay.visible, #offline-overlay.visible, #auth-overlay.visible { display: flex; }
+#license-overlay .icon, #offline-overlay .icon, #auth-overlay .icon { font-size: 32px; opacity: 0.5; }
+#license-overlay p, #offline-overlay p, #auth-overlay p { color: var(--vscode-descriptionForeground); }
+#offline-overlay a {
+    color: var(--vscode-textLink-foreground);
+    text-decoration: none;
+    cursor: pointer;
+}
+#offline-overlay a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -496,6 +533,16 @@ body {
     <div class="icon">&#128274;</div>
     <p><strong>${vscode.l10n.t('AI Assistant not available')}</strong></p>
     <p>${vscode.l10n.t('This feature requires an AI-enabled license.')}</p>
+</div>
+<div id="auth-overlay" class="visible">
+    <div class="icon">&#128100;</div>
+    <p><strong>${vscode.l10n.t('Sign in required')}</strong></p>
+    <p>${vscode.l10n.t('Sign in to your T-IA Connect account to use the AI assistant.')}</p>
+</div>
+<div id="offline-overlay">
+    <div class="icon">&#128268;</div>
+    <p><strong>${vscode.l10n.t('Not connected')}</strong></p>
+    <p>${vscode.l10n.t('Connect to the T-IA Connect server to use the AI assistant.')}</p>
 </div>
 <div id="welcome">
     <div class="welcome-icon"><svg width="64" height="64" viewBox="0 0 507.2 507.2" xmlns="http://www.w3.org/2000/svg"><path style="fill:#0B7F9E" d="M413.6,172.8c0,140.8-76,290.4-160,290.4s-160-148.8-160-290.4S170.4,0,253.6,0S413.6,32,413.6,172.8z"/><path style="fill:#0B6382" d="M253.6,0c83.2,0,160,32,160,172.8s-76,290.4-160,290.4s-160-148.8-160-290.4"/><path style="fill:#00233F" d="M253.6,0c83.2,0,160,32,160,172.8s-76,290.4-160,290.4"/><path style="fill:#022728" d="M216,80c0,13.6-11.2,35.2-25.6,35.2c-13.6,0-25.6-20.8-25.6-35.2c0-13.6,11.2-25.6,25.6-25.6C204,54.4,216,65.6,216,80z"/><circle style="fill:#00FFF2" cx="190.4" cy="80" r="25.6"/><circle style="fill:#00FFF2" cx="190.4" cy="80" r="14.4"/><g><circle style="fill:#EBFFFD" cx="179.2" cy="68.8" r="8.8"/><circle style="fill:#EBFFFD" cx="204.8" cy="92.8" r="4"/></g><path style="fill:#0B6382" d="M342.4,80c0,13.6-11.2,35.2-25.6,35.2c-13.6,0-25.6-20.8-25.6-35.2c0-13.6,11.2-25.6,25.6-25.6C331.2,54.4,342.4,65.6,342.4,80z"/><circle style="fill:#00FFF2" cx="316.8" cy="80" r="25.6"/><circle style="fill:#00FFF2" cx="316.8" cy="80" r="14.4"/><g><circle style="fill:#EBFFFD" cx="305.6" cy="68.8" r="8.8"/><circle style="fill:#EBFFFD" cx="331.2" cy="92.8" r="4"/></g><path style="fill:#00FFF2" d="M191.2,141.6l-33.6-40H96c-0.8,8-1.6,16-1.6,16h56.8l38.4,40h56v-16H191.2z"/><path style="fill:#00FFF2" d="M316,141.6l33.6-40h61.6c0.8,8,1.6,16,1.6,16H356l-38.4,40h-56v-16H316z"/><circle style="fill:#00FFF2" cx="253.6" cy="147.2" r="16"/><path style="fill:#0B7F9E" d="M94.4,173.6l-0.8-1.6c0,0.8-0.8,0.8-0.8,1.6c0,93.6,32,188.8,80,243.2v-216l-29.6-27.2H94.4z"/><path style="fill:#0B7F9E" d="M412,173.6l0.8-1.6c0,0.8,0.8,0.8,0.8,1.6c0,93.6-32,184.8-80,240V200.8l29.6-27.2H412z"/><circle style="fill:#0B6382" cx="50.4" cy="304.8" r="40.8"/><g><path style="fill:#00233F" d="M50.4,264.8c22.4,0,40.8,18.4,40.8,40.8s-18.4,40.8-40.8,40.8"/><circle style="fill:#00233F" cx="50.4" cy="247.2" r="9.6"/></g><path style="fill:#00FFF2" d="M69.6,313.6c0,2.4-1.6,4-4,4h-32c-2.4,0-4-1.6-4-4c0-2.4,1.6-4,4-4h32C68,309.6,69.6,311.2,69.6,313.6z"/><circle style="fill:#0B6382" cx="456.8" cy="304.8" r="40.8"/><g><path style="fill:#00233F" d="M456.8,264.8c-22.4,0-40.8,18.4-40.8,40.8s18.4,40.8,40.8,40.8"/><circle style="fill:#00233F" cx="456.8" cy="247.2" r="9.6"/></g><path style="fill:#00FFF2" d="M477.6,313.6c0-2.4-1.6-4-4-4h-32c-2.4,0-4,1.6-4,4c0,2.4,1.6,4,4,4h32C476,317.6,477.6,316,477.6,313.6z"/></svg></div>
@@ -525,6 +572,9 @@ const btnSend = document.getElementById('btn-send');
 const btnStop = document.getElementById('btn-stop');
 const inputStatus = document.getElementById('input-status');
 const licenseOverlay = document.getElementById('license-overlay');
+const offlineOverlay = document.getElementById('offline-overlay');
+const authOverlay = document.getElementById('auth-overlay');
+const inputWrapper = document.getElementById('input-wrapper');
 let busy = false;
 
 function showMessages() {
@@ -768,6 +818,23 @@ window.addEventListener('message', (e) => {
             break;
         case 'licenseBlocked':
             licenseOverlay.className = 'visible';
+            break;
+        case 'notAuthenticated':
+            authOverlay.className = 'visible';
+            offlineOverlay.className = '';
+            inputWrapper.style.display = 'none';
+            welcomeEl.className = 'hidden';
+            break;
+        case 'offline':
+            authOverlay.className = '';
+            offlineOverlay.className = 'visible';
+            inputWrapper.style.display = 'none';
+            welcomeEl.className = 'hidden';
+            break;
+        case 'online':
+            authOverlay.className = '';
+            offlineOverlay.className = '';
+            inputWrapper.style.display = '';
             break;
     }
 });

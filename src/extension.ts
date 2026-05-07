@@ -75,6 +75,7 @@ export function activate(context: vscode.ExtensionContext): void {
     // Sync tree auth state when auth changes + re-detect server
     authService.onDidChangeAuth(async (authenticated) => {
         treeProvider.setAuthenticated(authenticated);
+        copilotProvider.setAuthenticated(authenticated);
         if (authenticated) {
             // Re-run server detection so welcome views update
             const server = await detectServer();
@@ -179,6 +180,7 @@ export function activate(context: vscode.ExtensionContext): void {
         getSignalRClient().connect();
         // Set project path for copilot history filtering
         copilotProvider.setProjectPath(overview.Path);
+        copilotProvider.setConnected(true);
         // Show project dashboard
         showProjectDashboard(overview);
         // Auto-configure MCP for GitHub Copilot Chat
@@ -188,7 +190,7 @@ export function activate(context: vscode.ExtensionContext): void {
     });
 
     // Register commands
-    registerProjectCommands(context, treeProvider, scmProvider, testProvider);
+    registerProjectCommands(context, treeProvider, scmProvider, testProvider, copilotProvider);
     registerBlockCommands(context, blockEditor);
     registerPipelineCommands(context);
     registerExportImportCommands(context);

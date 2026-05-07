@@ -42,7 +42,7 @@ jobs:
           files: ${{ steps.vsix.outputs.file }}
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ steps.vsix.outputs.file }}
           generate_release_notes: true

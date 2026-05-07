@@ -55,14 +55,24 @@ tia-connect-vscode/
 │   │   ├── blockEditor.ts          # Ouverture, sauvegarde, reimport, prechargement blocs SCL/STL
 │   │   ├── blockFileManager.ts     # Fichiers temporaires + metadata .tia-meta.json + cache
 │   │   ├── crossRefWebview.ts      # Webview cross-references (sources, objets, locations)
-│   │   └── testResultWebview.ts   # Webview resultats de tests (steps, assertions, pass/fail)
+│   │   ├── testResultWebview.ts   # Webview resultats de tests (steps, assertions, pass/fail)
+│   │   ├── ladRenderer.ts         # Rendu LAD/FBD en SVG (contacts, bobines, branches OR)
+│   │   ├── ladWebview.ts          # Webview lecture seule pour blocs LAD/FBD
+│   │   ├── tagTableWebview.ts     # Webview tag tables (noms, adresses, types)
+│   │   ├── udtWebview.ts          # Webview detail UDT (membres, types)
+│   │   └── watchTableWebview.ts   # Webview watch tables (noms, adresses, formats)
 │   ├── chat/
 │   │   ├── languageModelTools.ts   # 30 Language Model Tools (VS Code LM API)
 │   │   └── tiaParticipant.ts       # @tia chat participant (GitHub Copilot Chat)
 │   ├── commands/
 │   │   ├── projectCommands.ts      # connect, disconnect, refresh, switch, browse, launch server
 │   │   ├── blockCommands.ts        # openBlock, compileDevice, compileBlock, exportBlock, crossRefs
-│   │   └── pipelineCommands.ts     # list, run, history, createFromTemplate
+│   │   ├── pipelineCommands.ts     # list, run, history, createFromTemplate
+│   │   ├── exportImportCommands.ts # Export/import tags (CSV/XLSX/XML), UDTs, watch tables, Export All
+│   │   ├── hmiCommands.ts          # Export/import ecrans HMI, tags HMI, connexions HMI
+│   │   ├── hwConfigCommands.ts     # Export/import configuration materielle
+│   │   ├── orphanCleanup.ts        # Detection elements orphelins (TIA vs VCS)
+│   │   └── workspaceCommands.ts    # Scaffolding workspace (.gitignore, copilot-instructions, CLAUDE.md)
 │   ├── views/
 │   │   ├── statusBar.ts            # Barre de statut (Connected/Disconnected/Error)
 │   │   ├── outputChannel.ts        # Canal de logs "T-IA Connect"
@@ -72,7 +82,10 @@ tia-connect-vscode/
 │   │   ├── config.ts               # Lecture/ecriture settings VS Code
 │   │   ├── jobPoller.ts            # Polling async avec callback progression
 │   │   ├── mcpConfig.ts            # Auto-config MCP pour GitHub Copilot Chat
-│   │   └── constants.ts            # IDs, noms, langages editables
+│   │   ├── constants.ts            # IDs, noms, langages editables
+│   │   ├── smartComparison.ts      # Comparaison XML normalisee (IDs, timestamps, whitespace)
+│   │   ├── dependencySort.ts       # Tri topologique pour import ordonne (UDT→FB→FC→OB→DB)
+│   │   └── diagnosticMapper.ts     # Resolution erreurs compilation → lignes source
 └── docs/
     ├── ARCHITECTURE.md             # Ce fichier
     └── ROADMAP.md                  # Roadmap par phases
@@ -200,9 +213,44 @@ Gestion CI/CD via QuickPick.
 - Historique des executions avec details par etape
 - Creation depuis templates
 
-### 7. Diagnostics (`views/diagnostics.ts`)
+### 7. Diagnostics (`views/diagnostics.ts` + `utils/diagnosticMapper.ts`)
 
 `DiagnosticCollection` pour afficher les erreurs/warnings de compilation TIA Portal directement dans l'editeur VS Code (soulignement rouge/jaune).
+
+**Mapping vers les lignes source :**
+Le `diagnosticMapper` resout les messages d'erreur TIA Portal vers des positions precises dans le code source, en 3 strategies (par priorite) :
+1. **Extraction regex** — detecte `Line 42, Column 5`, `(Line: 12; Col: 3)`, `Line 7:` dans le message
+2. **Recherche de symbole** — extrait les noms entre quotes (`'Running'`, `"Stop"`) et cherche la premiere occurrence dans le source
+3. **Fallback** — ligne 0 si aucune info disponible
+
+### 7b. Smart Comparison (`utils/smartComparison.ts`)
+
+Comparaison structuree de blocs XML exportes depuis TIA Portal.
+
+**Normalisation :**
+- Supprime les elements non-significatifs : IDs, UIds, timestamps, `DocumentInfo`, `Engineering`
+- Normalise les espaces et tri alphabetique des attributs XML
+- Extrait les sections (Interface, Networks, Attributes) pour un diff granulaire
+
+**Usage :** Compare les blocs avant/apres export pour detecter les vrais changements (ignore les modifications cosmetiques de TIA Portal).
+
+### 7c. Dependency Sort (`utils/dependencySort.ts`)
+
+Tri topologique des blocs pour un import dans le bon ordre (les dependances avant les dependants).
+
+**Algorithme :**
+- Construction du graphe de dependances via les cross-references
+- Kahn's algorithm avec tiebreaking par priorite de type : UDT(0) → FB(1) → FC(2) → OB(3) → DB(4) → InstanceDB(5)
+- Detection de cycles (DFS) avec rapport des blocs impliques
+- Fallback `sortByTypePriority()` sans cross-references
+
+### 7d. Orphan Cleanup (`commands/orphanCleanup.ts`)
+
+Detection des elements orphelins : blocs supprimes dans TIA Portal mais encore presents dans le VCS.
+
+- Compare la liste des blocs TIA (live) avec les fichiers VCS exportes
+- Comparaison case-insensitive des noms
+- QuickPick multi-selection pour marquer les orphelins a nettoyer au prochain commit
 
 ### 8. GitHub Copilot Integration (`chat/`)
 
@@ -236,6 +284,41 @@ A la connexion d'un projet, l'extension genere automatiquement `.vscode/mcp.json
 **d) Copilot Sidebar (`providers/copilotViewProvider.ts`)**
 
 Webview dans la sidebar secondaire connectee a l'API assistant du serveur (multi-provider : OpenAI, Anthropic, Google, Mistral, Ollama). Independant de GitHub Copilot — utilise le LLM configure cote serveur.
+
+### 9. Export/Import (`commands/exportImportCommands.ts`)
+
+Commandes pour exporter et importer les donnees du projet :
+- **Tag tables** : export CSV/XLSX/XML, import CSV/XLSX
+- **UDTs** : export/import XML
+- **Watch tables** : export/import
+- **Export All** : exporte tags + UDTs + watch tables d'un device en une seule commande
+
+### 10. HMI (`commands/hmiCommands.ts` + `api/hmi.ts`)
+
+Gestion des ecrans IHM (HMI) :
+- Export/import individuel d'ecrans HMI
+- Export bulk (ecrans + tags HMI + connexions HMI) vers un dossier
+- Import de fichiers HMI (ecrans, tags, connexions)
+
+### 11. Hardware Config (`commands/hwConfigCommands.ts` + `api/hardware.ts`)
+
+Export/import de la configuration materielle (rack, modules, adresses) au format AML.
+
+### 12. Workspace Scaffolding (`commands/workspaceCommands.ts`)
+
+Commande `tiaConnect.initWorkspace` qui genere les fichiers de base pour un projet TIA versionne :
+- `.gitignore` avec patterns TIA Portal (*.ap*, *.zap*, .tia-temp/)
+- `.github/copilot-instructions.md` (contexte pour GitHub Copilot)
+- `CLAUDE.md` (contexte pour Claude Code)
+- Ne touche pas aux fichiers existants (pas d'ecrasement)
+
+### 13. LAD Renderer (`editors/ladRenderer.ts`)
+
+Moteur de rendu SVG pour les blocs LAD/FBD en lecture seule :
+- Contacts (NO, NC), bobines, blocs fonctionnels (TON, CTU, MOVE...)
+- Branches OR avec connecteur vertical aux points de fusion
+- Detection des merge gates (O, AND implicites) pour le tracage des fils
+- Layout en grille (colonnes par profondeur, lignes par branche)
 
 ## Communication avec le serveur
 

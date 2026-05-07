@@ -206,12 +206,63 @@
 
 ---
 
+## Action Plan v0.5 — GitHub Copilot, Export/Import, Tooling avancé
+
+### Sprint 1 — @tia Participant + 30 Language Model Tools
+
+| Fonctionnalite | Statut | Notes |
+|----------------|--------|-------|
+| @tia chat participant (GitHub Copilot Chat) | DONE | `vscode.chat.createChatParticipant('tia.connect', handler)` |
+| 30 Language Model Tools | DONE | `vscode.lm.registerTool()` (VS Code 1.96+) |
+| Boucle agentique (max 10 tours) | DONE | ToolCallPart → invokeTool → résultats → retour modèle |
+| Vérification licence AI avant chaque appel | DONE | Cache 5 min TTL |
+| MCP auto-config (.vscode/mcp.json) | DONE | SSE endpoint + API key |
+| Copilot sidebar (webview multi-provider) | DONE | API assistant serveur (OpenAI, Anthropic, Google, Mistral, Ollama) |
+
+### Sprint 2 — Export/Import Tags, UDTs, Watch Tables
+
+| Fonctionnalite | Statut | Notes |
+|----------------|--------|-------|
+| Export tag tables (CSV, XLSX, XML) | DONE | Clic droit sur tag table dans tree |
+| Import tag tables (CSV, XLSX) | DONE | Dialog fichier, sélection device |
+| Export UDTs (XML) | DONE | Clic droit sur UDT |
+| Import UDTs (XML) | DONE | Dialog fichier |
+| Export watch tables | DONE | Clic droit sur watch table |
+| Import watch tables | DONE | Dialog fichier |
+| Export All (tags + UDTs + watch tables) | DONE | Commande globale par device |
+| Dashboard avec compteur UDTs | DONE | 4 stat boxes avec couleurs distinctes |
+
+### Sprint 3 — Smart Comparison, Dependency Sort, Orphan Cleanup
+
+| Fonctionnalite | Statut | Notes |
+|----------------|--------|-------|
+| Comparaison XML normalisée (smartComparison) | DONE | Strip IDs, timestamps, DocumentInfo; tri attributs |
+| Extraction de sections (Interface, Networks, Attributes) | DONE | Diff structuré par section |
+| Tri topologique des dépendances (dependencySort) | DONE | Kahn's algorithm, priorité UDT→FB→FC→OB→DB |
+| Détection de cycles dans le graphe | DONE | DFS-based |
+| Détection éléments orphelins (TIA vs VCS) | DONE | Commande `tiaConnect.detectOrphans` + QuickPick |
+
+### Sprint 4 — HMI, Hardware Config, Diagnostics, Workspace
+
+| Fonctionnalite | Statut | Notes |
+|----------------|--------|-------|
+| Export/import écrans HMI | DONE | Individuel ou bulk (écrans + tags + connexions) |
+| Export/import configuration matérielle | DONE | AML format |
+| Mapping diagnostics vers lignes source | DONE | 3 stratégies : regex line/col → symbol search → fallback |
+| Scaffolding workspace TIA | DONE | .gitignore, copilot-instructions.md, CLAUDE.md |
+| LAD renderer : barre verticale branches OR | DONE | Merge gate detection + vertical connector |
+| Copilot sidebar : localisation FR | DONE | vscode.l10n.t() dans template HTML |
+| Copilot sidebar : icône robot SVG | DONE | SVG inline (remplace emoji) |
+
+**Statut global Action Plan v0.5 : TERMINÉ (4/4 sprints)**
+
+---
+
 ## Phase 6 — Publication et futures ameliorations
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
 | Publication Marketplace | TODO | Quand la v1 sera stable |
-| Copilot sidebar (chat IA integre) | TODO | Feature future — assistant IA dans le panel lateral |
 | Validation licence/compte (matching local vs cloud) | TODO | Nice to have — verifier coherence entre les comptes |
 
 ---
@@ -278,3 +329,23 @@
 | Account profile (site web) | `GET /api/account/profile` | 5 |
 | Local API key (serveur) | `GET /api/auth/local-key` | 5 |
 | Download latest (site web) | `GET /api/downloads/latest` | 5 |
+| Tag table export CSV | `GET /api/devices/{d}/tag-tables/{t}/export/csv` | v0.5 |
+| Tag table export XLSX | `GET /api/devices/{d}/tag-tables/{t}/export/xlsx` | v0.5 |
+| Tag table export XML | `GET /api/devices/{d}/tag-tables/{t}/export/xml` | v0.5 |
+| Tag table import CSV | `POST /api/devices/{d}/tag-tables/import/csv` | v0.5 |
+| Tag table import XLSX | `POST /api/devices/{d}/tag-tables/import/xlsx` | v0.5 |
+| UDT export | `GET /api/devices/{d}/udts/{u}/export` | v0.5 |
+| UDT import | `POST /api/devices/{d}/udts/import` | v0.5 |
+| Watch tables list | `GET /api/devices/{d}/watch-tables` | v0.5 |
+| Watch table details | `GET /api/devices/{d}/watch-tables/{w}` | v0.5 |
+| Watch table export | `GET /api/devices/{d}/watch-tables/{w}/export` | v0.5 |
+| Watch table import | `POST /api/devices/{d}/watch-tables/import` | v0.5 |
+| HMI screens list | `GET /api/devices/{d}/hmi/screens` | v0.5 |
+| HMI screen export | `GET /api/devices/{d}/hmi/screens/{s}/export` | v0.5 |
+| HMI screen import | `POST /api/devices/{d}/hmi/screens/import` | v0.5 |
+| HMI tags list | `GET /api/devices/{d}/hmi/tags` | v0.5 |
+| HMI tags export | `GET /api/devices/{d}/hmi/tags/export` | v0.5 |
+| HMI connections list | `GET /api/devices/{d}/hmi/connections` | v0.5 |
+| HMI connections export | `GET /api/devices/{d}/hmi/connections/export` | v0.5 |
+| HW config export | `GET /api/devices/{d}/hardware/export` | v0.5 |
+| HW config import | `POST /api/devices/{d}/hardware/import` | v0.5 |

@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
 
-const DIAGNOSTIC_SOURCE = 'SCL';
-
 // Pairs of opening/closing keywords
 const BLOCK_PAIRS: [RegExp, RegExp, string][] = [
     [/^\s*IF\b/i, /\bEND_IF\s*;/i, 'END_IF'],

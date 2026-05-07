@@ -4,7 +4,6 @@
  */
 
 import * as vscode from 'vscode';
-import { getBlockTree } from '../api/blocks';
 import { vcsGetStatus } from '../api/sourceControl';
 import { getProjectOverview } from '../api/project';
 import { VcsFileChange } from '../api/types';

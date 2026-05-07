@@ -35,14 +35,16 @@ jobs:
         id: vsix
         run: echo "file=$(ls *.vsix)" >> "$GITHUB_OUTPUT"
 
-      - name: Scan with VirusTotal
-        uses: crazy-max/ghaction-virustotal@v5
-        with:
-          vt_api_key: ${{ secrets.VT_API_KEY }}
-          files: ${{ steps.vsix.outputs.file }}
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           files: ${{ steps.vsix.outputs.file }}
           generate_release_notes: true
+
+      - name: Scan with VirusTotal
+        uses: crazy-max/ghaction-virustotal@v5
+        with:
+          vt_api_key: ${{ secrets.VT_API_KEY }}
+          files: ${{ steps.vsix.outputs.file }}
+          update_release_body: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}

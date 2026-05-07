@@ -8,7 +8,6 @@ import {
     exportWatchTableXml,
     getTagTables, getUdts, getWatchTables,
 } from '../api/tags';
-import { exportBlockSource } from '../api/blocks';
 import { getProjectOverview } from '../api/project';
 import { log, logError, showOutput } from '../views/outputChannel';
 

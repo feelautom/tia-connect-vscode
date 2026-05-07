@@ -58,7 +58,7 @@ export class SclCompletionProvider implements vscode.CompletionItemProvider {
 export class StlCompletionProvider implements vscode.CompletionItemProvider {
     provideCompletionItems(
         document: vscode.TextDocument,
-        position: vscode.Position,
+        _position: vscode.Position,
     ): vscode.CompletionItem[] {
         const items: vscode.CompletionItem[] = [];
 

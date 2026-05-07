@@ -7,8 +7,8 @@ import { l10n } from 'vscode';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
 import {
     getHmiScreens, exportHmiScreen, importHmiScreen,
-    exportHmiTags, importHmiTags,
-    exportHmiConnections, importHmiConnections,
+    exportHmiTags,
+    exportHmiConnections,
 } from '../api/hmi';
 import { log, logError, showOutput } from '../views/outputChannel';
 

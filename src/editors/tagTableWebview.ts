@@ -170,18 +170,6 @@ function styles(): string {
     </style>`;
 }
 
-function loadingHtml(tableName: string): string {
-    return `<!DOCTYPE html><html><head>
-        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">
-        <style>
-        body { background: #1E1E1E; color: #C8C8C8; font-family: 'Segoe UI', sans-serif;
-               display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .spinner { border: 3px solid #3E3E42; border-top: 3px solid #569CD6; border-radius: 50%;
-                   width: 32px; height: 32px; animation: spin 1s linear infinite; margin: 0 auto 12px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style></head><body><div style="text-align:center"><div class="spinner"></div>Loading tags from ${esc(tableName)}...</div></body></html>`;
-}
-
 function errorHtml(tableName: string, message: string): string {
     return `<!DOCTYPE html><html><head>
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline';">

@@ -5,9 +5,9 @@
  */
 
 // ─── Constants ──────────────────────────────────────────────────────
-const CELL_W = 140;
-const ROW_H = 90;
-const WIRE_Y = 45;
+const CELL_W = 180;
+const ROW_H = 165;
+const WIRE_Y = 60;
 const WIRE_THICKNESS = 1.5;
 const RAIL_WIDTH = 2;
 const RAIL_PADDING = 15;
@@ -35,16 +35,103 @@ const C_NETWORK_NUM = '#808080';
 const OUTPUT_TYPES = new Set(['Coil', 'SCoil', 'RCoil']);
 const IMPLICIT_GATES = new Set(['O', 'A']);
 const BOX_TYPES = new Set([
-    'Move', 'Add', 'Sub', 'Mul', 'Div',
+    'Move', 'Add', 'Sub', 'Mul', 'Div', 'Mod',
     'CmpEq', 'CmpNe', 'CmpGt', 'CmpGe', 'CmpLt', 'CmpLe',
     'Eq', 'Ne', 'Gt', 'Ge', 'Lt', 'Le',
     'TON', 'TOF', 'TP', 'CTU', 'CTD', 'CTUD',
+    'R_TRIG', 'F_TRIG', 'SR', 'RS',
+    'And', 'Or', 'Xor', 'Not',
+    'Shl', 'Shr', 'Rol', 'Ror',
+    'Sqrt', 'Abs', 'Ln', 'Log', 'Exp', 'Sin', 'Cos', 'Tan',
+    'Convert', 'RoundInt', 'Trunc', 'Scale', 'Norm',
+    'Concat', 'Left', 'Right', 'Mid', 'Len',
     'Call',
 ]);
 
 function isBoxType(type: string): boolean {
     return BOX_TYPES.has(type);
 }
+
+// ─── Pin Configuration ───────────────────────────────────────────────
+interface PinConfig {
+    in: string[];
+    out: string[];
+    label?: string;
+    color?: string;
+}
+
+const PIN_CONFIG: Record<string, PinConfig> = {
+    // Timers IEC
+    'TON':  { in: ['IN', 'PT'],                     out: ['Q', 'ET'],           color: C_BOX_GREEN },
+    'TOF':  { in: ['IN', 'PT'],                     out: ['Q', 'ET'],           color: C_BOX_GREEN },
+    'TP':   { in: ['IN', 'PT'],                     out: ['Q', 'ET'],           color: C_BOX_GREEN },
+    // Counters IEC
+    'CTU':  { in: ['CU', 'R', 'PV'],               out: ['Q', 'CV'],           color: C_BOX_GREEN },
+    'CTD':  { in: ['CD', 'LD', 'PV'],              out: ['Q', 'CV'],           color: C_BOX_GREEN },
+    'CTUD': { in: ['CU', 'CD', 'R', 'LD', 'PV'],  out: ['QU', 'QD', 'CV'],   color: C_BOX_GREEN },
+    // Edge detection
+    'R_TRIG': { in: ['CLK'],  out: ['Q'], color: C_BOX_GREEN },
+    'F_TRIG': { in: ['CLK'],  out: ['Q'], color: C_BOX_GREEN },
+    // Flip-flops
+    'SR': { in: ['S', 'R1'],  out: ['Q1'], color: C_BOX_GREEN },
+    'RS': { in: ['R', 'S1'],  out: ['Q1'], color: C_BOX_GREEN },
+    // Move / conversion
+    'Move':     { in: ['IN'],           out: ['OUT'],   color: C_BOX_BLUE },
+    'Convert':  { in: ['IN'],           out: ['OUT'],   color: C_BOX_BLUE },
+    'RoundInt': { in: ['IN'],           out: ['OUT'],   color: C_BOX_BLUE },
+    'Trunc':    { in: ['IN'],           out: ['OUT'],   color: C_BOX_BLUE },
+    'Scale':    { in: ['VALUE'],        out: ['OUT'],   color: C_BOX_BLUE },
+    'Norm':     { in: ['VALUE'],        out: ['OUT'],   color: C_BOX_BLUE },
+    // Arithmetic
+    'Add':  { in: ['IN1', 'IN2'], out: ['OUT'], color: C_BOX_BLUE },
+    'Sub':  { in: ['IN1', 'IN2'], out: ['OUT'], color: C_BOX_BLUE },
+    'Mul':  { in: ['IN1', 'IN2'], out: ['OUT'], color: C_BOX_BLUE },
+    'Div':  { in: ['IN1', 'IN2'], out: ['OUT'], color: C_BOX_BLUE },
+    'Mod':  { in: ['IN1', 'IN2'], out: ['OUT'], color: C_BOX_BLUE },
+    // Comparison (no data output — pass/fail via ENO)
+    'CmpEq': { in: ['IN1', 'IN2'], out: [], label: '==', color: C_BOX_PURPLE },
+    'CmpNe': { in: ['IN1', 'IN2'], out: [], label: '<>', color: C_BOX_PURPLE },
+    'CmpGt': { in: ['IN1', 'IN2'], out: [], label: '>',  color: C_BOX_PURPLE },
+    'CmpGe': { in: ['IN1', 'IN2'], out: [], label: '>=', color: C_BOX_PURPLE },
+    'CmpLt': { in: ['IN1', 'IN2'], out: [], label: '<',  color: C_BOX_PURPLE },
+    'CmpLe': { in: ['IN1', 'IN2'], out: [], label: '<=', color: C_BOX_PURPLE },
+    'Eq': { in: ['IN1', 'IN2'], out: [], label: '==', color: C_BOX_PURPLE },
+    'Ne': { in: ['IN1', 'IN2'], out: [], label: '<>', color: C_BOX_PURPLE },
+    'Gt': { in: ['IN1', 'IN2'], out: [], label: '>',  color: C_BOX_PURPLE },
+    'Ge': { in: ['IN1', 'IN2'], out: [], label: '>=', color: C_BOX_PURPLE },
+    'Lt': { in: ['IN1', 'IN2'], out: [], label: '<',  color: C_BOX_PURPLE },
+    'Le': { in: ['IN1', 'IN2'], out: [], label: '<=', color: C_BOX_PURPLE },
+    // Bitwise
+    'And': { in: ['IN1', 'IN2'], out: ['OUT'], color: C_BOX_BLUE },
+    'Or':  { in: ['IN1', 'IN2'], out: ['OUT'], color: C_BOX_BLUE },
+    'Xor': { in: ['IN1', 'IN2'], out: ['OUT'], color: C_BOX_BLUE },
+    'Not': { in: ['IN'],         out: ['OUT'], color: C_BOX_BLUE },
+    // Shift/rotate
+    'Shl': { in: ['IN', 'N'], out: ['OUT'], color: C_BOX_BLUE },
+    'Shr': { in: ['IN', 'N'], out: ['OUT'], color: C_BOX_BLUE },
+    'Rol': { in: ['IN', 'N'], out: ['OUT'], color: C_BOX_BLUE },
+    'Ror': { in: ['IN', 'N'], out: ['OUT'], color: C_BOX_BLUE },
+    // Math functions
+    'Sqrt': { in: ['IN'], out: ['OUT'], color: C_BOX_BLUE },
+    'Abs':  { in: ['IN'], out: ['OUT'], color: C_BOX_BLUE },
+    'Ln':   { in: ['IN'], out: ['OUT'], color: C_BOX_BLUE },
+    'Log':  { in: ['IN'], out: ['OUT'], color: C_BOX_BLUE },
+    'Exp':  { in: ['IN'], out: ['OUT'], color: C_BOX_BLUE },
+    'Sin':  { in: ['IN'], out: ['OUT'], color: C_BOX_BLUE },
+    'Cos':  { in: ['IN'], out: ['OUT'], color: C_BOX_BLUE },
+    'Tan':  { in: ['IN'], out: ['OUT'], color: C_BOX_BLUE },
+    // String
+    'Concat': { in: ['IN1', 'IN2'],    out: ['OUT'], color: C_BOX_TEAL },
+    'Left':   { in: ['IN', 'L'],       out: ['OUT'], color: C_BOX_TEAL },
+    'Right':  { in: ['IN', 'L'],       out: ['OUT'], color: C_BOX_TEAL },
+    'Mid':    { in: ['IN', 'L', 'P'],  out: ['OUT'], color: C_BOX_TEAL },
+    'Len':    { in: ['IN'],            out: ['OUT'], color: C_BOX_TEAL },
+};
+
+const FB_BLOCK_W = 112;
+const FB_PIN_H = 26;
+const FB_HEADER_H = 20;
+const FB_INST_H = 14;
 
 interface LadPart {
     UId: string;
@@ -418,33 +505,27 @@ function renderPart(part: LadPart, x: number, y: number): string {
     const type = part.Type || '';
     const signal = part.Signal || '';
     const isBox = isBoxType(type);
-    const signalDisplay = type === 'Call' && part.BlockName ? part.BlockName : signal;
-    const cx = x + 60; // center of the 120px element
-    const symY = y + WIRE_Y; // vertical center (wire line)
+    const cx = x + 70;
+    const symY = y + WIRE_Y;
 
     let svg = '';
 
-    // Signal name above (skip for box instructions without a meaningful signal)
-    const signalX = cx;
-    const signalY = y + 12;
-    if (signalDisplay && signalDisplay !== 'OR' && signalDisplay !== 'AND') {
-        svg += `<text x="${signalX}" y="${signalY}" text-anchor="middle" fill="${C_SIGNAL}" font-size="11" font-family="Consolas, monospace">${escHtml(signalDisplay)}</text>`;
-    } else if (!isBox && !signalDisplay) {
-        svg += `<text x="${signalX}" y="${signalY}" text-anchor="middle" fill="${C_ERROR}" font-size="11" font-family="Consolas, monospace">???</text>`;
-    }
-
-    // Address below signal (if present)
-    if (part.Address) {
-        svg += `<text x="${signalX}" y="${signalY + 13}" text-anchor="middle" fill="${C_ADDRESS}" font-size="9" font-family="Consolas, monospace">${escHtml(part.Address)}</text>`;
+    if (!isBox) {
+        // Signal name above contacts/coils
+        const signalY = y + 14;
+        if (signal && signal !== 'OR' && signal !== 'AND') {
+            svg += `<text x="${cx}" y="${signalY}" text-anchor="middle" fill="${C_SIGNAL}" font-size="11" font-family="Consolas, monospace">${escHtml(signal)}</text>`;
+        } else if (!signal) {
+            svg += `<text x="${cx}" y="${signalY}" text-anchor="middle" fill="${C_ERROR}" font-size="11" font-family="Consolas, monospace">???</text>`;
+        }
+        if (part.Address) {
+            svg += `<text x="${cx}" y="${signalY + 13}" text-anchor="middle" fill="${C_ADDRESS}" font-size="9" font-family="Consolas, monospace">${escHtml(part.Address)}</text>`;
+        }
     }
 
     switch (type) {
         case 'Contact':
-            if (part.Negated) {
-                svg += drawContactNC(cx, symY, C_SYMBOL);
-            } else {
-                svg += drawContactNO(cx, symY, C_SYMBOL);
-            }
+            svg += part.Negated ? drawContactNC(cx, symY, C_SYMBOL) : drawContactNO(cx, symY, C_SYMBOL);
             break;
         case 'ContactNC':
             svg += drawContactNC(cx, symY, C_SYMBOL);
@@ -464,25 +545,18 @@ function renderPart(part: LadPart, x: number, y: number): string {
         case 'RCoil':
             svg += drawCoil(cx, symY, C_RESET, 'R');
             break;
-        case 'Move': case 'Add': case 'Sub': case 'Mul': case 'Div':
-            svg += drawBox(cx, symY, type.toUpperCase(), C_BOX_BLUE, part.Parameters);
+        case 'Call': {
+            const blockLabel = part.BlockName || 'CALL';
+            svg += drawFunctionBlock(cx, symY, blockLabel, signal, part.Parameters || {}, C_BOX_TEAL);
             break;
-        case 'CmpEq': case 'Eq': svg += drawBox(cx, symY, '==', C_BOX_PURPLE, part.Parameters); break;
-        case 'CmpNe': case 'Ne': svg += drawBox(cx, symY, '<>', C_BOX_PURPLE, part.Parameters); break;
-        case 'CmpGt': case 'Gt': svg += drawBox(cx, symY, '>', C_BOX_PURPLE, part.Parameters); break;
-        case 'CmpGe': case 'Ge': svg += drawBox(cx, symY, '>=', C_BOX_PURPLE, part.Parameters); break;
-        case 'CmpLt': case 'Lt': svg += drawBox(cx, symY, '<', C_BOX_PURPLE, part.Parameters); break;
-        case 'CmpLe': case 'Le': svg += drawBox(cx, symY, '<=', C_BOX_PURPLE, part.Parameters); break;
-        case 'TON': case 'TOF': case 'TP':
-        case 'CTU': case 'CTD': case 'CTUD':
-            svg += drawBox(cx, symY, type, C_BOX_GREEN, part.Parameters);
-            break;
-        case 'Call':
-            svg += drawBox(cx, symY, 'CALL', C_BOX_TEAL, part.Parameters);
-            break;
+        }
         default:
-            if (!IMPLICIT_GATES.has(type)) {
-                svg += drawBox(cx, symY, type, C_ADDRESS, part.Parameters);
+            if (IMPLICIT_GATES.has(type)) break;
+            if (isBox) {
+                const cfg = PIN_CONFIG[type];
+                const label = cfg?.label ?? type;
+                const color = cfg?.color ?? C_ADDRESS;
+                svg += drawFunctionBlock(cx, symY, label, signal, part.Parameters || {}, color);
             }
             break;
     }
@@ -534,20 +608,92 @@ function drawCoil(cx: number, cy: number, color: string, label: string | null): 
     return s;
 }
 
-function drawBox(cx: number, cy: number, label: string, color: string, params?: Record<string, string>): string {
-    const bw = 56, bh = 26;
-    const x0 = cx - bw / 2;
-    const y0 = cy - bh / 2;
-    let s = '';
-    s += `<rect x="${x0}" y="${y0}" width="${bw}" height="${bh}" fill="${C_BG}" stroke="${color}" stroke-width="1.5" rx="2"/>`;
-    s += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" fill="${color}" font-size="11" font-weight="bold" font-family="Consolas, monospace">${escHtml(label)}</text>`;
+function drawFunctionBlock(
+    cx: number,
+    wireY: number,
+    label: string,
+    instanceName: string,
+    params: Record<string, string>,
+    color: string,
+): string {
+    // Normalize param keys to UPPERCASE for case-insensitive lookup (API sends mixed case)
+    const p: Record<string, string> = {};
+    for (const [k, v] of Object.entries(params)) { p[k.toUpperCase()] = v; }
 
-    // Parameters below the box
-    if (params && Object.keys(params).length > 0) {
-        let py = cy + bh / 2 + 14;
-        for (const [key, val] of Object.entries(params)) {
-            s += `<text x="${cx}" y="${py}" text-anchor="middle" fill="${C_ADDRESS}" font-size="9" font-family="Consolas, monospace">${escHtml(key)}: ${escHtml(val)}</text>`;
-            py += 12;
+    const cfg = PIN_CONFIG[label] ?? { in: [], out: [] };
+    const inputPins  = cfg.in;
+    const outputPins = cfg.out;
+
+    // For unknown FB calls, derive pins from params keys (heuristic: keys ending with no suffix = input)
+    const resolvedIn  = inputPins.length  > 0 ? inputPins  : Object.keys(p).slice(0, 3);
+    const resolvedOut = outputPins.length > 0 ? outputPins : [];
+
+    const dataPinRows = Math.max(resolvedIn.length, resolvedOut.length);
+    const blockH = FB_HEADER_H + FB_INST_H + FB_PIN_H + dataPinRows * FB_PIN_H + 6;
+
+    const x0 = cx - FB_BLOCK_W / 2;
+    // EN row sits at wireY; block header floats above it
+    const blockTop = wireY - FB_HEADER_H - FB_INST_H - FB_PIN_H / 2;
+    const enRowY   = wireY;
+
+    let s = '';
+
+    // ── Outer border ──
+    s += `<rect x="${x0}" y="${blockTop}" width="${FB_BLOCK_W}" height="${blockH}" fill="${C_BG}" stroke="${color}" stroke-width="1.5" rx="3"/>`;
+
+    // ── Tinted header band ──
+    const hdrH = FB_HEADER_H + FB_INST_H;
+    s += `<rect x="${x0}" y="${blockTop}" width="${FB_BLOCK_W}" height="${hdrH}" fill="${color}" fill-opacity="0.12" rx="3"/>`;
+    s += `<line x1="${x0}" y1="${blockTop + hdrH}" x2="${x0 + FB_BLOCK_W}" y2="${blockTop + hdrH}" stroke="${color}" stroke-width="0.7" opacity="0.4"/>`;
+
+    // ── Instruction type label ──
+    s += `<text x="${cx}" y="${blockTop + 14}" text-anchor="middle" fill="${color}" font-size="11" font-weight="bold" font-family="Consolas, monospace">${escHtml(label)}</text>`;
+
+    // ── Instance / DB name (skip if same as type label to avoid duplication) ──
+    if (instanceName && instanceName.toLowerCase() !== label.toLowerCase()) {
+        const disp = instanceName.length > 14 ? instanceName.substring(0, 13) + '…' : instanceName;
+        s += `<text x="${cx}" y="${blockTop + hdrH - 3}" text-anchor="middle" fill="${C_SIGNAL}" font-size="9" font-family="Consolas, monospace">${escHtml(disp)}</text>`;
+    }
+
+    // ── EN pin (left) — power flow in ──
+    s += `<text x="${x0 + 4}" y="${enRowY + 10}" fill="${C_ADDRESS}" font-size="9" font-family="Consolas, monospace">EN</text>`;
+    // thin separator line at EN row
+    s += `<line x1="${x0 + 1}" y1="${enRowY + FB_PIN_H / 2}" x2="${x0 + FB_BLOCK_W - 1}" y2="${enRowY + FB_PIN_H / 2}" stroke="${color}" stroke-width="0.5" opacity="0.25" stroke-dasharray="3,3"/>`;
+
+    // ── ENO pin (right) — power flow out ──
+    s += `<text x="${x0 + FB_BLOCK_W - 4}" y="${enRowY + 10}" text-anchor="end" fill="${C_ADDRESS}" font-size="9" font-family="Consolas, monospace">ENO</text>`;
+
+    // ── Data input pins (left, below EN) ──
+    for (let i = 0; i < resolvedIn.length; i++) {
+        const pinY = enRowY + FB_PIN_H + i * FB_PIN_H;
+        const pinName = resolvedIn[i];
+        const pinVal  = p[pinName.toUpperCase()] ?? '';
+
+        // stub wire from left
+        s += `<line x1="${x0 - 14}" y1="${pinY + 6}" x2="${x0}" y2="${pinY + 6}" stroke="${C_WIRE}" stroke-width="1" stroke-dasharray="3,2" opacity="0.55"/>`;
+        // pin name (line 1 inside)
+        s += `<text x="${x0 + 4}" y="${pinY + 10}" fill="${C_ADDRESS}" font-size="9" font-family="Consolas, monospace">${escHtml(pinName)}</text>`;
+        // connected value (line 2 inside, cyan)
+        if (pinVal) {
+            const valDisp = pinVal.length > 13 ? pinVal.substring(0, 12) + '…' : pinVal;
+            s += `<text x="${x0 + 4}" y="${pinY + 22}" fill="${C_SIGNAL}" font-size="8" font-family="Consolas, monospace">${escHtml(valDisp)}</text>`;
+        }
+    }
+
+    // ── Data output pins (right, below ENO) ──
+    for (let i = 0; i < resolvedOut.length; i++) {
+        const pinY = enRowY + FB_PIN_H + i * FB_PIN_H;
+        const pinName = resolvedOut[i];
+        const pinVal  = p[pinName.toUpperCase()] ?? '';
+
+        // stub wire to right
+        s += `<line x1="${x0 + FB_BLOCK_W}" y1="${pinY + 6}" x2="${x0 + FB_BLOCK_W + 14}" y2="${pinY + 6}" stroke="${C_WIRE}" stroke-width="1" stroke-dasharray="3,2" opacity="0.55"/>`;
+        // pin name (line 1 inside, right-aligned)
+        s += `<text x="${x0 + FB_BLOCK_W - 4}" y="${pinY + 10}" text-anchor="end" fill="${C_ADDRESS}" font-size="9" font-family="Consolas, monospace">${escHtml(pinName)}</text>`;
+        // connected value (line 2 inside, cyan, right-aligned)
+        if (pinVal) {
+            const valDisp = pinVal.length > 13 ? pinVal.substring(0, 12) + '…' : pinVal;
+            s += `<text x="${x0 + FB_BLOCK_W - 4}" y="${pinY + 22}" text-anchor="end" fill="${C_SIGNAL}" font-size="8" font-family="Consolas, monospace">${escHtml(valDisp)}</text>`;
         }
     }
 

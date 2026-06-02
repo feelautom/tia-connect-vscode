@@ -123,6 +123,12 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
         this._onDidChangeTreeData.fire(undefined);
     }
 
+    /** Pre-populate project data from an already-fetched overview (avoids double API call on connect) */
+    preloadProjectData(overview: ProjectOverview): void {
+        this.projectData = overview;
+        this._authenticated = true; // Server is reachable and API key is valid — unblock the tree
+    }
+
     refresh(): void {
         this.projectData = null;
         this.blockTreeCache.clear();
@@ -258,7 +264,10 @@ export class ProjectTreeProvider implements vscode.TreeDataProvider<TiaTreeItem>
         }
 
         try {
-            this.projectData = await getProjectOverview();
+            // Use pre-loaded data if available (avoids double API call when connect() already fetched it)
+            if (!this.projectData) {
+                this.projectData = await getProjectOverview();
+            }
             if (!this.projectData?.Name) {
                 log('No project open in TIA Portal.');
                 return [];

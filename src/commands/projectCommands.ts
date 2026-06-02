@@ -148,9 +148,12 @@ async function connect(
                 const url = getServerUrl();
                 vscode.window.showErrorMessage(
                     l10n.t('Cannot reach T-IA Connect server at {0}. Launch the server first or check the URL in settings.', url),
+                    l10n.t('Launch Server'),
                     l10n.t('Open Settings'),
                 ).then(action => {
-                    if (action === l10n.t('Open Settings')) {
+                    if (action === l10n.t('Launch Server')) {
+                        vscode.commands.executeCommand('tiaConnect.launchHeadless');
+                    } else if (action === l10n.t('Open Settings')) {
                         vscode.commands.executeCommand('workbench.action.openSettings', 'tiaConnect.serverUrl');
                     }
                 });
@@ -175,11 +178,12 @@ async function connect(
         // Connect SignalR for real-time job notifications
         getSignalRClient().connect();
 
-        // Get project name for status bar
+        // Get project name for status bar — pre-load into tree to avoid a double API call
         try {
             const overview = await getProjectOverview();
             setConnected(overview.Name);
             log(`Connected. Project: ${overview.Name}`);
+            treeProvider.preloadProjectData(overview); // Tree uses this directly, no second fetch needed
             copilotProviderRef?.setConnected(true);
         } catch {
             setConnected();

@@ -1,7 +1,37 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import { getServerUrl, getApiKey, setApiKey } from '../utils/config';
 import { log } from '../views/outputChannel';
+
+export interface InstanceInfo {
+    Pid: number;
+    Port: number;
+    Url: string;
+    InstanceId?: string;
+    ProjectName?: string;
+}
+
+/**
+ * Reads the instance registry file written by T-IA Connect on startup.
+ * Located at %APPDATA%\FeelAutomCorp\T-IA-Connect\instances.json
+ * Returns the first live instance found, or null.
+ */
+export function discoverRunningInstance(): InstanceInfo | null {
+    try {
+        const appData = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+        const filePath = path.join(appData, 'FeelAutomCorp', 'T-IA-Connect', 'instances.json');
+        if (!fs.existsSync(filePath)) return null;
+        const raw = fs.readFileSync(filePath, 'utf-8');
+        const instances = JSON.parse(raw) as InstanceInfo[];
+        if (!Array.isArray(instances) || instances.length === 0) return null;
+        const instance = instances[0];
+        log(`Instance registry: found instance on port ${instance.Port} (PID ${instance.Pid})`);
+        return instance;
+    } catch {
+        return null;
+    }
+}
 
 const DEFAULT_INSTALL_PATHS = [
     'C:\\Program Files\\FeelAutomCorp\\TiaConnect\\TiaPortalApi.App.exe',

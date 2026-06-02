@@ -9,9 +9,10 @@ import { TestTreeProvider } from '../providers/testTreeProvider';
 import { setConnected, setDisconnected, setError } from '../views/statusBar';
 import { log, logError, showOutput } from '../views/outputChannel';
 import { CONTEXT_KEYS } from '../utils/constants';
-import { getApiKey, setApiKey } from '../utils/config';
+import { getApiKey, setApiKey, getServerUrl } from '../utils/config';
 import { getSignalRClient } from '../api/signalr';
 import { CopilotViewProvider } from '../providers/copilotViewProvider';
+import { discoverRunningInstance } from '../install/serverDetector';
 
 let copilotProviderRef: CopilotViewProvider | undefined;
 
@@ -115,12 +116,46 @@ async function connect(
         log('Connecting to T-IA Connect server...');
 
         // Step 1: Check server is reachable (health endpoint, no auth needed)
-        const reachable = await client.ping();
+        let reachable = await client.ping();
         if (!reachable) {
-            setError('Server not running');
-            vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, true);
-            log('Server unreachable. Launch options shown in sidebar.');
-            return;
+            // Try to discover the actual running port from the instance registry
+            const instance = discoverRunningInstance();
+            if (instance) {
+                const discoveredUrl = instance.Url.replace(/\/+$/, '');
+                log(`Server not at configured URL — found instance at ${discoveredUrl} via registry.`);
+                const action = await vscode.window.showWarningMessage(
+                    l10n.t(
+                        'T-IA Connect is running on port {0}, but the extension is configured for {1}. Update the server URL?',
+                        String(instance.Port),
+                        getServerUrl(),
+                    ),
+                    l10n.t('Update URL'),
+                    l10n.t('Cancel'),
+                );
+                if (action === l10n.t('Update URL')) {
+                    await vscode.workspace.getConfiguration('tiaConnect').update(
+                        'serverUrl',
+                        discoveredUrl,
+                        vscode.ConfigurationTarget.Global,
+                    );
+                    reachable = await client.ping();
+                }
+            }
+
+            if (!reachable) {
+                setError('Server not running');
+                vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, true);
+                const url = getServerUrl();
+                vscode.window.showErrorMessage(
+                    l10n.t('Cannot reach T-IA Connect server at {0}. Launch the server first or check the URL in settings.', url),
+                    l10n.t('Open Settings'),
+                ).then(action => {
+                    if (action === l10n.t('Open Settings')) {
+                        vscode.commands.executeCommand('workbench.action.openSettings', 'tiaConnect.serverUrl');
+                    }
+                });
+                return;
+            }
         }
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, false);
 
@@ -343,6 +378,26 @@ async function launchAndConnect(
     scmProvider: TiaSourceControl,
     testProvider: TestTreeProvider,
 ): Promise<void> {
+    // Check instance registry first — server may already be running on a different port
+    const existingInstance = discoverRunningInstance();
+    if (existingInstance) {
+        const discoveredUrl = existingInstance.Url.replace(/\/+$/, '');
+        log(`Instance registry: server already running on port ${existingInstance.Port} — connecting directly.`);
+        const currentUrl = getServerUrl().replace(/\/+$/, '');
+        if (discoveredUrl !== currentUrl) {
+            await vscode.workspace.getConfiguration('tiaConnect').update(
+                'serverUrl',
+                discoveredUrl,
+                vscode.ConfigurationTarget.Global,
+            );
+            log(`Server URL updated to ${discoveredUrl}`);
+        }
+        const { fetchLocalApiKey } = require('../install/serverDetector');
+        await fetchLocalApiKey();
+        await connect(treeProvider, scmProvider, testProvider);
+        return;
+    }
+
     const config = vscode.workspace.getConfiguration('tiaConnect');
     const exePath = config.get<string>('executablePath')
         || 'C:\\Program Files\\FeelAutomCorp\\TiaConnect\\TiaPortalApi.App.exe';

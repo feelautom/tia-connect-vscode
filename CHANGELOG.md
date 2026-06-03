@@ -2,6 +2,29 @@
 
 All notable changes to the T-IA Connect for VS Code extension will be documented in this file.
 
+## [1.0.2] - 2026-06-02
+
+### Added
+- **LAD function block renderer**: 40+ instruction types (TON, TOF, TP, CTU, CTD, CTUD, MOVE, ADD, SUB, MUL, DIV, CMP...) rendered with tinted header, EN/ENO row, and named input/output pins. Connected values (PT, PV, CV, IN1, OUT...) displayed inside each pin row.
+- **Auto-detect server port from instance registry**: if T-IA Connect starts on a non-default port (conflict in range 9000–9100), the extension reads `%APPDATA%\FeelAutomCorp\T-IA-Connect\instances.json` and automatically offers to update the configured server URL. Also checked before spawning a new process to avoid duplicates.
+
+### Fixed
+- Pre-load project data on connect to avoid a double API call and eliminate a race condition on tree population.
+
+## [1.0.1] - 2026-05-07
+
+### Added
+- `X-Client-Id: vscode` header sent on all API requests for server-side client identification.
+
+### Fixed
+- Relative image paths in the VSIX package for correct rendering on the VS Code Marketplace.
+
+## [1.0.0] - 2026-05-07
+
+Initial release on the VS Code Marketplace. Combines all features from the 0.x development cycle (Project Explorer, SCL/STL editing, LAD viewer, Source Control, AI integration, PLC Tests, Pipelines, Export/Import, OAuth authentication, server auto-launch).
+
+---
+
 ## [0.4.27] - 2026-05-06
 
 ### Added

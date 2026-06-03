@@ -74,9 +74,11 @@ Double-click any SCL or STL block to open it with full language support. Edit, s
 
 Non-editable blocks open in a graphical webview with SVG rendering.
 
-- Contact, coil, and box instructions rendered as network diagrams
-- Parallel branches with vertical merge connectors and wire routing
-- Interface table with variable types
+- **Contacts and coils** — NO, NC, positive/negative edge, Set/Reset
+- **Function blocks** — 40+ instruction types (TON, TOF, TP, CTU, CTD, CTUD, MOVE, ADD, SUB, MUL, DIV, CMP...) rendered with tinted header, EN/ENO row, and named input/output pins
+- **Connected values** — current values (PT, PV, CV, IN1, OUT...) displayed inside each block
+- **Parallel branches** — vertical merge connectors and wire routing
+- **Interface table** — variable types shown alongside the network
 - Read-only — no accidental modifications
 
 ![LAD Viewer](docs/screenshots/15-lad-viewer.png)
@@ -246,6 +248,8 @@ The extension can launch and stop the T-IA Connect server for you.
 | **Stop Server** | Shuts down the server (from the Disconnect menu) |
 
 The server is automatically detected if installed in the default location. You can configure a custom path in settings.
+
+If the server starts on a non-default port (conflict in the 9000–9100 range), the extension reads the instance registry (`%APPDATA%\FeelAutomCorp\T-IA-Connect\instances.json`) and automatically offers to update the server URL — no manual reconfiguration needed.
 
 ---
 

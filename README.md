@@ -2,7 +2,7 @@
 
 Explore, edit, and compile Siemens TIA Portal projects directly from VS Code, Cursor, or Windsurf.
 
-This extension connects to a running [T-IA Connect](https://t-ia-connect.com) server and provides a full development workflow for PLC programming — without leaving your editor.
+This extension connects to a running [T-IA Connect](https://t-ia-connect.com) server and provides a full development workflow for PLC programming: without leaving your editor.
 
 [![Version](https://img.shields.io/github/v/tag/feelautom/tia-connect-vscode?label=version&sort=semver)](https://github.com/feelautom/tia-connect-vscode/releases)
 [![VS Code](https://img.shields.io/badge/VS_Code-1.85+-007ACC?logo=visual-studio-code&logoColor=white)](https://code.visualstudio.com/)
@@ -15,7 +15,7 @@ This extension connects to a running [T-IA Connect](https://t-ia-connect.com) se
 
 ![T-IA Connect Demo](docs/screenshots/demo.gif)
 
-> **[View all screenshots](https://feelautom.github.io/tia-connect-vscode/screenshots.html)** — 28 screenshots showing the complete workflow.
+> **[View all screenshots](https://feelautom.github.io/tia-connect-vscode/screenshots.html)**: 28 screenshots showing the complete workflow.
 
 ---
 
@@ -26,7 +26,7 @@ This extension connects to a running [T-IA Connect](https://t-ia-connect.com) se
 3. **Sign in** with your T-IA Connect account (or create one for free)
 4. If T-IA Connect is not installed, follow the download link in the sidebar
 5. Click **Launch Headless** or **Launch with GUI** to start the server
-6. Open a TIA Portal project — you're ready to code!
+6. Open a TIA Portal project: you're ready to code!
 
 > The API key is configured automatically when the server runs on your machine. No manual setup needed.
 
@@ -38,9 +38,9 @@ This extension connects to a running [T-IA Connect](https://t-ia-connect.com) se
 
 Browse your TIA Portal project structure directly in VS Code.
 
-- **Device tree**: PLCs, HMIs, and their contents — blocks, tag tables, UDTs, watch tables
+- **Device tree**: PLCs, HMIs, and their contents: blocks, tag tables, UDTs, watch tables
 - **Block folders**: hierarchical view matching your TIA Portal structure
-- **Block icons**: color-coded by type — OB (blue), FB (green), FC (orange), DB (purple)
+- **Block icons**: color-coded by type: OB (blue), FB (green), FC (orange), DB (purple)
 - **Status indicators**: block language and consistency state at a glance
 - **Project Dashboard**: overview panel with device stats, block counts, tag summaries, and UDT counts
 
@@ -50,22 +50,22 @@ Browse your TIA Portal project structure directly in VS Code.
 
 Double-click any SCL or STL block to open it with full language support. Edit, save (**Ctrl+S**), and it's reimported into TIA Portal automatically.
 
-- **Syntax highlighting** — TextMate grammars for SCL and STL
-- **Autocompletion** — keywords, types, variables, and built-in functions
-- **Signature Help** — parameter hints for 30+ SCL functions
-- **Hover documentation** — type info, function docs, system block documentation (TON, CTU, R_TRIG...)
-- **Go-to-Definition** — Ctrl+click on local variables or block names (cross-file via API)
-- **Rename Symbol** (F2) — rename a variable across the entire file
-- **Diagnostics** — compilation errors mapped to precise source lines (regex + symbol search)
-- **Document Outline** — hierarchical view of blocks, sections, and variables
-- **15 SCL snippets** — FB, FC, OB, DB, IF, FOR, CASE, TON, R_TRIG...
+- **Syntax highlighting**: TextMate grammars for SCL and STL
+- **Autocompletion**: keywords, types, variables, and built-in functions
+- **Signature Help**: parameter hints for 30+ SCL functions
+- **Hover documentation**: type info, function docs, system block documentation (TON, CTU, R_TRIG...)
+- **Go-to-Definition**: Ctrl+click on local variables or block names (cross-file via API)
+- **Rename Symbol** (F2): rename a variable across the entire file
+- **Diagnostics**: compilation errors mapped to precise source lines (regex + symbol search)
+- **Document Outline**: hierarchical view of blocks, sections, and variables
+- **15 SCL snippets**: FB, FC, OB, DB, IF, FOR, CASE, TON, R_TRIG...
 - **Compilation errors** displayed directly in the editor (red/yellow squiggles at the correct line)
-- **Background preloading** — blocks are cached after project load for near-instant opening
+- **Background preloading**: blocks are cached after project load for near-instant opening
 
 #### Save behavior
 
 - **Ctrl+S** (manual save) triggers reimport into TIA Portal + optional auto-compile
-- **VS Code auto-save** is ignored — no accidental reimports
+- **VS Code auto-save** is ignored: no accidental reimports
 - **Safety timer** saves to disk every 5/10/15 minutes without reimporting (configurable)
 
 ![SCL Editor](docs/screenshots/16-scl-editor.png)
@@ -74,12 +74,12 @@ Double-click any SCL or STL block to open it with full language support. Edit, s
 
 Non-editable blocks open in a graphical webview with SVG rendering.
 
-- **Contacts and coils** — NO, NC, positive/negative edge, Set/Reset
-- **Function blocks** — 40+ instruction types (TON, TOF, TP, CTU, CTD, CTUD, MOVE, ADD, SUB, MUL, DIV, CMP...) rendered with tinted header, EN/ENO row, and named input/output pins
-- **Connected values** — current values (PT, PV, CV, IN1, OUT...) displayed inside each block
-- **Parallel branches** — vertical merge connectors and wire routing
-- **Interface table** — variable types shown alongside the network
-- Read-only — no accidental modifications
+- **Contacts and coils**: NO, NC, positive/negative edge, Set/Reset
+- **Function blocks**: 40+ instruction types (TON, TOF, TP, CTU, CTD, CTUD, MOVE, ADD, SUB, MUL, DIV, CMP...) rendered with tinted header, EN/ENO row, and named input/output pins
+- **Connected values**: current values (PT, PV, CV, IN1, OUT...) displayed inside each block
+- **Parallel branches**: vertical merge connectors and wire routing
+- **Interface table**: variable types shown alongside the network
+- Read-only: no accidental modifications
 
 ![LAD Viewer](docs/screenshots/15-lad-viewer.png)
 
@@ -129,9 +129,9 @@ Full bidirectional export and import for all project data.
 
 Version your TIA Portal project with Git-based source control, directly in the sidebar.
 
-1. **Export Preview** (eye icon) — export the project and detect changes since the last commit
-2. **Review** — click any changed file to open a read-only side-by-side diff
-3. **Commit** (checkmark icon) — save the current state with a message
+1. **Export Preview** (eye icon): export the project and detect changes since the last commit
+2. **Review**: click any changed file to open a read-only side-by-side diff
+3. **Commit** (checkmark icon): save the current state with a message
 
 Additional features:
 - Push / Pull to remote repositories
@@ -139,9 +139,9 @@ Additional features:
 - Commit log with diff viewer
 - Auto-export every minute (changes appear automatically)
 - Auto-refresh status every 30 seconds
-- **Smart Comparison** — normalized XML diff (strips IDs, timestamps, whitespace) to detect real changes
-- **Dependency Sort** — topological ordering (Kahn's algorithm) for correct import order
-- **Orphan Cleanup** — detect blocks deleted in TIA Portal but still in source control
+- **Smart Comparison**: normalized XML diff (strips IDs, timestamps, whitespace) to detect real changes
+- **Dependency Sort**: topological ordering (Kahn's algorithm) for correct import order
+- **Orphan Cleanup**: detect blocks deleted in TIA Portal but still in source control
 - License check (lock icon if VCS is not included in your edition)
 
 ### AI Integration
@@ -152,9 +152,9 @@ Three complementary AI features for PLC development:
 
 Type `@tia` in GitHub Copilot Chat to interact with your TIA Portal project using natural language.
 
-- **30 Language Model Tools** — project overview, block management, compilation, tags, UDTs, cross-references, PLCSim, VCS, pipelines, hardware
-- **Agentic loop** — the AI can chain multiple tool calls (up to 10 rounds) to complete complex tasks
-- **License check** — verifies AI license before consuming tokens
+- **30 Language Model Tools**: project overview, block management, compilation, tags, UDTs, cross-references, PLCSim, VCS, pipelines, hardware
+- **Agentic loop**: the AI can chain multiple tool calls (up to 10 rounds) to complete complex tasks
+- **License check**: verifies AI license before consuming tokens
 
 #### T-IA Connect Copilot (Sidebar)
 
@@ -214,7 +214,7 @@ The extension uses two independent layers:
 
 | Layer | Purpose | How it works |
 |-------|---------|--------------|
-| **T-IA Connect Account** | Identifies you, checks your license | Sign in via browser — token stored securely in your OS keyring |
+| **T-IA Connect Account** | Identifies you, checks your license | Sign in via browser: token stored securely in your OS keyring |
 | **Server API Key** | Authenticates REST calls to the local server | Auto-configured from the local server (no manual copy-paste) |
 
 On first launch:
@@ -230,9 +230,9 @@ On first launch:
 
 Use **T-IA Connect: Switch Project** (`Ctrl+Shift+P`) to open a project.
 
-- **Recent projects** — your project history, sorted by last access
-- **Browse...** — file dialog to pick any `.ap17` to `.ap21` file
-- **Archives** — `.zap17` to `.zap21` files are supported (prompts for extraction folder)
+- **Recent projects**: your project history, sorted by last access
+- **Browse...**: file dialog to pick any `.ap17` to `.ap21` file
+- **Archives**: `.zap17` to `.zap21` files are supported (prompts for extraction folder)
 - Default browse location: `Documents/Automation`
 
 ---
@@ -249,7 +249,7 @@ The extension can launch and stop the T-IA Connect server for you.
 
 The server is automatically detected if installed in the default location. You can configure a custom path in settings.
 
-If the server starts on a non-default port (conflict in the 9000–9100 range), the extension reads the instance registry (`%APPDATA%\FeelAutomCorp\T-IA-Connect\instances.json`) and automatically offers to update the server URL — no manual reconfiguration needed.
+If the server starts on a non-default port (conflict in the 9000–9100 range), the extension reads the instance registry (`%APPDATA%\FeelAutomCorp\T-IA-Connect\instances.json`) and automatically offers to update the server URL: no manual reconfiguration needed.
 
 ---
 
@@ -330,7 +330,7 @@ All commands are available via **Ctrl+Shift+P**:
 
 ## Requirements
 
-- **T-IA Connect server** v2.1.620+ — [t-ia-connect.com](https://t-ia-connect.com)
+- **T-IA Connect server** v2.1.620+: [t-ia-connect.com](https://t-ia-connect.com)
 - **TIA Portal** V17-V21 installed on the same machine as the server
 - Network access to the server (default: `http://localhost:9000`)
 
@@ -365,14 +365,14 @@ The extension is fully translated in **French**. It displays in French when VS C
 
 ## Documentation
 
-- [Architecture](docs/ARCHITECTURE.md) — Code structure, components, data flow
-- [Roadmap](docs/ROADMAP.md) — Development status by phase
-- [Changelog](changelog.md) — Version history
+- [Architecture](docs/ARCHITECTURE.md): Code structure, components, data flow
+- [Roadmap](docs/ROADMAP.md): Development status by phase
+- [Changelog](changelog.md): Version history
 
 ## License
 
-[Elastic License 2.0](LICENSE) — [FEELAUTOM](https://feelautom.com)
+[Elastic License 2.0](LICENSE): [FEELAUTOM](https://feelautom.com)
 
 This software is source-available. You may use, copy, distribute, and modify it, subject to the limitations in the license. You may **not** provide it as a hosted/managed service, and you may **not** circumvent the license key functionality.
 
-The T-IA Connect server requires a separate license — free trial available at [t-ia-connect.com](https://t-ia-connect.com).
+The T-IA Connect server requires a separate license: free trial available at [t-ia-connect.com](https://t-ia-connect.com).

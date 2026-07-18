@@ -1,4 +1,5 @@
 .git/**
+.codex/**
 .gitignore
 .github/**
 src/**

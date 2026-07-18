@@ -2,6 +2,25 @@
 
 All notable changes to the T-IA Connect for VS Code extension will be documented in this file.
 
+## [1.0.3] - 2026-07-18
+
+### Security
+- Store the local API key in VS Code SecretStorage and migrate legacy settings without normalizing the secret.
+- Harden OAuth state generation, one-time validation, token persistence, and sensitive logging.
+- Keep API keys out of SignalR query strings and workspace MCP configuration files.
+- Add a strict nonce-based CSP, validated messages, safe Markdown rendering, and HTTP(S)-only links to Copilot Chat.
+- Require native VS Code confirmation for destructive or industrial AI tool actions and fail closed when license verification is unavailable.
+
+### Fixed
+- Treat successful HTTP responses carrying `Success=false` as business failures.
+- Restrict unauthenticated local-key retrieval to literal loopback hosts.
+- Preserve malformed or ambiguous `.vscode/mcp.json` files instead of overwriting them.
+- Exclude local `.codex` coordination metadata from VSIX packages.
+
+### Maintenance
+- Update audited development dependencies; `npm audit` reports zero known vulnerabilities.
+- Add security and regression coverage, bringing the suite to 221 tests.
+
 ## [1.0.2] - 2026-06-02
 
 ### Added

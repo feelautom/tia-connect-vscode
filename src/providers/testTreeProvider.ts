@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 import { l10n } from 'vscode';
 import { listTests, getTest, runTest } from '../api/testHarness';
 import { getLicenseFeatures, getPlcSimStatus } from '../api/project';
@@ -37,12 +38,12 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
 
         context.subscriptions.push(
             treeView,
-            vscode.commands.registerCommand('tiaConnect.testRefresh', () => this.discoverTests()),
-            vscode.commands.registerCommand('tiaConnect.testRunAll', () => this.runAll()),
-            vscode.commands.registerCommand('tiaConnect.testRunSingle', (item: TestTreeItem) =>
+            registerWorkspaceCommand('tiaConnect.testRefresh', () => this.discoverTests()),
+            registerWorkspaceCommand('tiaConnect.testRunAll', () => this.runAll()),
+            registerWorkspaceCommand('tiaConnect.testRunSingle', (item: TestTreeItem) =>
                 this.runSingleTest(item)
             ),
-            vscode.commands.registerCommand('tiaConnect.testShowResult', (item: TestTreeItem) =>
+            registerWorkspaceCommand('tiaConnect.testShowResult', (item: TestTreeItem) =>
                 this.showResult(item)
             ),
         );

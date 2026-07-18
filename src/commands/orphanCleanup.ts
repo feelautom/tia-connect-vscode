@@ -4,6 +4,7 @@
  */
 
 import * as vscode from 'vscode';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 import { vcsGetStatus } from '../api/sourceControl';
 import { getProjectOverview } from '../api/project';
 import { VcsFileChange } from '../api/types';
@@ -69,7 +70,7 @@ export function findStaleVcsEntries(
  */
 export function registerOrphanCleanupCommands(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
-        vscode.commands.registerCommand('tiaConnect.detectOrphans', async () => {
+        registerWorkspaceCommand('tiaConnect.detectOrphans', async () => {
             await detectOrphansCommand();
         })
     );

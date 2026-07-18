@@ -1,18 +1,53 @@
 const path = require('node:path');
-const { runTests } = require('@vscode/test-electron');
+const { spawn } = require('node:child_process');
+const { downloadAndUnzipVSCode, runTests } = require('@vscode/test-electron');
+
+async function runUntrusted(options) {
+    const executable = await downloadAndUnzipVSCode({ version: options.version });
+    const args = [
+        options.workspacePath,
+        '--no-sandbox',
+        '--disable-gpu-sandbox',
+        '--disable-updates',
+        '--disable-extensions',
+        '--skip-welcome',
+        '--skip-release-notes',
+        '--user-data-dir', options.userDataPath,
+        '--extensions-dir', path.join(options.userDataPath, 'extensions'),
+        `--extensionDevelopmentPath=${options.extensionDevelopmentPath}`,
+        `--extensionTestsPath=${options.extensionTestsPath}`,
+    ];
+    await new Promise((resolve, reject) => {
+        const child = spawn(executable, args, {
+            env: { ...process.env, WORKSPACE_TRUST_EXPECTED: 'untrusted' },
+            stdio: 'inherit',
+        });
+        child.on('error', reject);
+        child.on('exit', code => code === 0 ? resolve() : reject(new Error(`Extension Host exited with code ${code}`)));
+    });
+}
 
 async function main() {
     const extensionDevelopmentPath = path.resolve(__dirname, '..', '..');
     const extensionTestsPath = path.resolve(__dirname, 'suite', 'index.cjs');
     const version = process.env.VSCODE_TEST_VERSION || 'stable';
+    const untrusted = process.argv.includes('--untrusted');
+    const workspacePath = path.resolve(__dirname, 'untrusted-workspace');
+    const isolatedUserData = path.resolve(__dirname, '..', '..', '.vscode-test', `untrusted-user-${process.pid}`);
+
+    if (untrusted) {
+        await runUntrusted({ version, extensionDevelopmentPath, extensionTestsPath, workspacePath, userDataPath: isolatedUserData });
+        return;
+    }
 
     await runTests({
         version,
         extensionDevelopmentPath,
         extensionTestsPath,
+        extensionTestsEnv: { WORKSPACE_TRUST_EXPECTED: 'trusted' },
         launchArgs: [
-            '--disable-extensions',
             '--disable-workspace-trust',
+            '--disable-extensions',
             '--skip-release-notes',
             '--skip-welcome',
         ],

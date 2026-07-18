@@ -3,6 +3,7 @@ import { ApiResponse } from './types';
 import { log, debug } from '../views/outputChannel';
 import { getClientIdentityHeaders } from './clientIdentity';
 import { categorizeApiPath, normalizeTelemetryError, trackTelemetry } from '../telemetry/telemetry';
+import { assertWorkspaceTrusted } from '../security/workspaceTrust';
 
 /** Recursively convert first char of each key to uppercase (PascalCase)
  * @internal Exported for testing */
@@ -73,6 +74,9 @@ export class TiaClient {
     }
 
     private async request<T>(method: string, path: string, body?: unknown): Promise<ApiResponse<T>> {
+        if (method !== 'GET') {
+            assertWorkspaceTrusted();
+        }
         const url = `${this.baseUrl}${path}`;
         const startedAt = Date.now();
         const controller = new AbortController();

@@ -13,6 +13,7 @@ import { getApiKey, setApiKey, getServerUrl } from '../utils/config';
 import { getSignalRClient } from '../api/signalr';
 import { CopilotViewProvider } from '../providers/copilotViewProvider';
 import { discoverRunningInstance } from '../install/serverDetector';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 
 let copilotProviderRef: CopilotViewProvider | undefined;
 
@@ -25,15 +26,16 @@ export function registerProjectCommands(
 ): void {
     copilotProviderRef = copilotProvider;
     context.subscriptions.push(
-        vscode.commands.registerCommand('tiaConnect.connect', () => connect(treeProvider, scmProvider, testProvider)),
-        vscode.commands.registerCommand('tiaConnect.disconnect', () => disconnect(treeProvider, scmProvider)),
-        vscode.commands.registerCommand('tiaConnect.refreshProject', () => treeProvider.refresh()),
-        vscode.commands.registerCommand('tiaConnect.switchProject', () => switchProject(treeProvider)),
-        vscode.commands.registerCommand('tiaConnect.openSettings', () =>
-            vscode.commands.executeCommand('workbench.action.openSettings', 'tiaConnect')
+        registerWorkspaceCommand('tiaConnect.connect', () => connect(treeProvider, scmProvider, testProvider)),
+        registerWorkspaceCommand('tiaConnect.disconnect', () => disconnect(treeProvider, scmProvider)),
+        registerWorkspaceCommand('tiaConnect.refreshProject', () => treeProvider.refresh()),
+        registerWorkspaceCommand('tiaConnect.switchProject', () => switchProject(treeProvider)),
+        registerWorkspaceCommand('tiaConnect.openSettings', () =>
+            vscode.commands.executeCommand('workbench.action.openSettings', 'tiaConnect'),
+            { allowUntrusted: true },
         ),
-        vscode.commands.registerCommand('tiaConnect.launchHeadless', () => launchAndConnect(true, treeProvider, scmProvider, testProvider)),
-        vscode.commands.registerCommand('tiaConnect.launchGui', () => launchAndConnect(false, treeProvider, scmProvider, testProvider)),
+        registerWorkspaceCommand('tiaConnect.launchHeadless', () => launchAndConnect(true, treeProvider, scmProvider, testProvider)),
+        registerWorkspaceCommand('tiaConnect.launchGui', () => launchAndConnect(false, treeProvider, scmProvider, testProvider)),
     );
 }
 

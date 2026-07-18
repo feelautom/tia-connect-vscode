@@ -12,8 +12,8 @@ export async function initializeApiKeyStorage(context: vscode.ExtensionContext):
     apiKeyStorage = context.secrets;
     const storedKey = await apiKeyStorage.get(API_KEY_SECRET);
     const config = vscode.workspace.getConfiguration('tiaConnect');
-    const legacyKey = config.get<string>('apiKey', '');
-    const inspectedLegacy = config.inspect<string>('apiKey');
+    const legacyKey = vscode.workspace.isTrusted ? config.get<string>('apiKey', '') : '';
+    const inspectedLegacy = vscode.workspace.isTrusted ? config.inspect<string>('apiKey') : undefined;
 
     if (storedKey !== undefined) {
         cachedApiKey = storedKey;

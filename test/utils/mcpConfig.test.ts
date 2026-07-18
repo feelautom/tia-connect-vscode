@@ -15,9 +15,19 @@ import { ensureMcpConfig } from '../../src/utils/mcpConfig';
 describe('ensureMcpConfig', () => {
     beforeEach(() => {
         vi.restoreAllMocks();
+        (workspace as any).isTrusted = true;
         (workspace as any).workspaceFolders = [{ uri: { fsPath: 'C:\\workspace' } }];
         vi.mocked(fs.existsSync).mockReturnValue(true);
         vi.mocked(fs.renameSync).mockImplementation(() => undefined);
+    });
+
+    it('does not read or write workspace MCP configuration in restricted mode', async () => {
+        (workspace as any).isTrusted = false;
+
+        await ensureMcpConfig();
+
+        expect(fs.readFileSync).not.toHaveBeenCalled();
+        expect(fs.writeFileSync).not.toHaveBeenCalled();
     });
 
     it('leaves malformed JSON unchanged and reports an error', async () => {

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 import { l10n } from 'vscode';
 import {
     listPipelines, getPipeline, runPipeline,
@@ -10,10 +11,10 @@ import { log, logError } from '../views/outputChannel';
 
 export function registerPipelineCommands(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
-        vscode.commands.registerCommand('tiaConnect.pipelineList', () => showPipelineList()),
-        vscode.commands.registerCommand('tiaConnect.pipelineRun', () => runPipelineCommand()),
-        vscode.commands.registerCommand('tiaConnect.pipelineHistory', () => showPipelineHistory()),
-        vscode.commands.registerCommand('tiaConnect.pipelineFromTemplate', () => createFromTemplate()),
+        registerWorkspaceCommand('tiaConnect.pipelineList', () => showPipelineList()),
+        registerWorkspaceCommand('tiaConnect.pipelineRun', () => runPipelineCommand()),
+        registerWorkspaceCommand('tiaConnect.pipelineHistory', () => showPipelineHistory()),
+        registerWorkspaceCommand('tiaConnect.pipelineFromTemplate', () => createFromTemplate()),
     );
 }
 

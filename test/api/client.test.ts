@@ -1,4 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
+import { workspace } from 'vscode';
 import { TiaClient, toPascalCaseKeys } from '../../src/api/client';
 
 describe('toPascalCaseKeys', () => {
@@ -63,6 +64,20 @@ describe('toPascalCaseKeys', () => {
 });
 
 describe('TiaClient business responses', () => {
+    beforeEach(() => {
+        (workspace as any).isTrusted = true;
+    });
+
+    it('rejects mutating requests before network access in restricted mode', async () => {
+        (workspace as any).isTrusted = false;
+        const fetchMock = vi.fn();
+        vi.stubGlobal('fetch', fetchMock);
+
+        await expect(new TiaClient().post('/api/project/save')).rejects.toThrow('trusted workspace');
+        expect(fetchMock).not.toHaveBeenCalled();
+        vi.unstubAllGlobals();
+    });
+
     it('adds the versioned VS Code client identity header', async () => {
         const fetchMock = vi.fn().mockResolvedValue({
             ok: true,

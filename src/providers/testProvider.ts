@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 import { listTests, getTest, runTest } from '../api/testHarness';
 import { pollJob } from '../api/jobs';
 import { TestRunResult } from '../api/types';
@@ -32,8 +33,8 @@ export class TiaTestProvider implements vscode.Disposable {
 
     activate(context: vscode.ExtensionContext): void {
         context.subscriptions.push(
-            vscode.commands.registerCommand('tiaConnect.testRefresh', () => this.discoverTests()),
-            vscode.commands.registerCommand('tiaConnect.testRunAll', () => this.runAll()),
+            registerWorkspaceCommand('tiaConnect.testRefresh', () => this.discoverTests()),
+            registerWorkspaceCommand('tiaConnect.testRunAll', () => this.runAll()),
         );
     }
 

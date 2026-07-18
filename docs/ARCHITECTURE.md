@@ -415,3 +415,9 @@ Les operations longues (commit VCS, execution pipeline, tests) retournent un `Jo
 - **Cursor**, **Windsurf** (meme API d'extension)
 - **T-IA Connect** v2.1.617+ (serveur)
 - **TIA Portal** V17-V21 (via le serveur)
+
+## Workspace Trust
+
+L'extension declare un support `limited` des workspaces non approuves. En Restricted Mode, l'authentification, les reglages, le diagnostic expurge et les fonctions de langage restent disponibles. Les commandes industrielles, le lancement Desktop, les imports/exports, les ecritures de fichiers, VCS, les tests et la configuration MCP sont desactives dans l'interface et bloques a l'execution. Les requetes REST mutantes disposent d'un second garde runtime. La confiance accordee relance automatiquement la detection Desktop et l'auto-connexion.
+
+La CI execute des tests Extension Host distincts en mode trusted et untrusted sur VS Code 1.85.2 et Stable. Le profil untrusted est isole et conserve Workspace Trust actif ; il ne doit jamais utiliser `--disable-workspace-trust`.

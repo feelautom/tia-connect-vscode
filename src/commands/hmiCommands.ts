@@ -5,6 +5,7 @@
 import * as vscode from 'vscode';
 import { l10n } from 'vscode';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 import {
     getHmiScreens, exportHmiScreen, importHmiScreen,
     exportHmiTags,
@@ -14,13 +15,13 @@ import { log, logError, showOutput } from '../views/outputChannel';
 
 export function registerHmiCommands(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
-        vscode.commands.registerCommand('tiaConnect.exportHmiScreen', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.exportHmiScreen', (item: TiaTreeItem) =>
             doExportHmiScreen(item)),
-        vscode.commands.registerCommand('tiaConnect.importHmiScreen', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.importHmiScreen', (item: TiaTreeItem) =>
             doImportHmiScreen(item)),
-        vscode.commands.registerCommand('tiaConnect.exportHmiAll', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.exportHmiAll', (item: TiaTreeItem) =>
             doExportHmiAll(item)),
-        vscode.commands.registerCommand('tiaConnect.importHmiAll', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.importHmiAll', (item: TiaTreeItem) =>
             doImportHmiAll(item)),
     );
 }

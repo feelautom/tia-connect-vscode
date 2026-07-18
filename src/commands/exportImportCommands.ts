@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { l10n } from 'vscode';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 import {
     exportTagTableCsv, exportTagTableXlsx, exportTagTableXml,
     importTagsCsv, importTagsXlsx,
@@ -14,27 +15,27 @@ import { log, logError, showOutput } from '../views/outputChannel';
 export function registerExportImportCommands(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
         // Tag table export
-        vscode.commands.registerCommand('tiaConnect.exportTagsCsv', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.exportTagsCsv', (item: TiaTreeItem) =>
             doExportTagTable(item, 'csv')),
-        vscode.commands.registerCommand('tiaConnect.exportTagsXlsx', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.exportTagsXlsx', (item: TiaTreeItem) =>
             doExportTagTable(item, 'xlsx')),
-        vscode.commands.registerCommand('tiaConnect.exportTagsXml', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.exportTagsXml', (item: TiaTreeItem) =>
             doExportTagTable(item, 'xml')),
         // Tag table import
-        vscode.commands.registerCommand('tiaConnect.importTagsCsv', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.importTagsCsv', (item: TiaTreeItem) =>
             doImportTags(item, 'csv')),
-        vscode.commands.registerCommand('tiaConnect.importTagsXlsx', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.importTagsXlsx', (item: TiaTreeItem) =>
             doImportTags(item, 'xlsx')),
         // UDT export/import
-        vscode.commands.registerCommand('tiaConnect.exportUdt', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.exportUdt', (item: TiaTreeItem) =>
             doExportUdt(item)),
-        vscode.commands.registerCommand('tiaConnect.importUdt', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.importUdt', (item: TiaTreeItem) =>
             doImportUdt(item)),
         // Watch table export
-        vscode.commands.registerCommand('tiaConnect.exportWatchTable', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.exportWatchTable', (item: TiaTreeItem) =>
             doExportWatchTable(item)),
         // Export All
-        vscode.commands.registerCommand('tiaConnect.exportAll', (item?: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.exportAll', (item?: TiaTreeItem) =>
             doExportAll(item)),
     );
 }

@@ -3,6 +3,7 @@ import { l10n } from 'vscode';
 import * as fs from 'fs';
 import { BlockEditor } from '../editors/blockEditor';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 import { compileDevice, compileBlock, getBlockContent, exportBlockSource, importAndGenerate, generateAndImportBlock } from '../api/blocks';
 import { getProjectOverview } from '../api/project';
 import { openCrossRefWebview } from '../editors/crossRefWebview';
@@ -16,34 +17,34 @@ export function registerBlockCommands(
     blockEditor: BlockEditor,
 ): void {
     context.subscriptions.push(
-        vscode.commands.registerCommand('tiaConnect.openBlock', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.openBlock', (item: TiaTreeItem) =>
             blockEditor.openBlock(item)
         ),
-        vscode.commands.registerCommand('tiaConnect.compileDevice', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.compileDevice', (item: TiaTreeItem) =>
             doCompileDevice(item)
         ),
-        vscode.commands.registerCommand('tiaConnect.compileBlock', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.compileBlock', (item: TiaTreeItem) =>
             doCompileBlock(item)
         ),
-        vscode.commands.registerCommand('tiaConnect.exportBlock', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.exportBlock', (item: TiaTreeItem) =>
             doExportBlock(item)
         ),
-        vscode.commands.registerCommand('tiaConnect.showCrossReferences', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.showCrossReferences', (item: TiaTreeItem) =>
             doShowCrossReferences(item)
         ),
-        vscode.commands.registerCommand('tiaConnect.openTagTable', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.openTagTable', (item: TiaTreeItem) =>
             doOpenTagTable(item)
         ),
-        vscode.commands.registerCommand('tiaConnect.openUdt', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.openUdt', (item: TiaTreeItem) =>
             doOpenUdt(item)
         ),
-        vscode.commands.registerCommand('tiaConnect.openWatchTable', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.openWatchTable', (item: TiaTreeItem) =>
             doOpenWatchTable(item)
         ),
-        vscode.commands.registerCommand('tiaConnect.importSourceFile', (item?: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.importSourceFile', (item?: TiaTreeItem) =>
             doImportSourceFile(item)
         ),
-        vscode.commands.registerCommand('tiaConnect.createBlock', (item?: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.createBlock', (item?: TiaTreeItem) =>
             doCreateBlock(item)
         ),
     );

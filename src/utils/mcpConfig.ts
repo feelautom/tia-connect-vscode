@@ -5,12 +5,14 @@ import { getServerUrl, getApiKey, getAutoConfigureMcp } from './config';
 import { log } from '../views/outputChannel';
 import { getClientId } from '../api/clientIdentity';
 import { normalizeTelemetryError, trackTelemetry } from '../telemetry/telemetry';
+import { isWorkspaceTrusted } from '../security/workspaceTrust';
 
 /**
  * Ensures .vscode/mcp.json contains the T-IA Connect MCP server entry.
  * Called when a project is loaded so GitHub Copilot Chat can use TIA tools.
  */
 export async function ensureMcpConfig(): Promise<void> {
+    if (!isWorkspaceTrusted()) { return; }
     if (!getAutoConfigureMcp()) { return; }
 
     const folders = vscode.workspace.workspaceFolders;

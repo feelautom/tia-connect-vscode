@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 import { l10n } from 'vscode';
 import { vcsGetStatus, vcsExportPreview, vcsInit, vcsCommit } from '../api/sourceControl';
 import { getLicenseFeatures } from '../api/project';
@@ -69,10 +70,10 @@ export class VcsTreeProvider implements vscode.TreeDataProvider<VcsTreeItem>, vs
 
     activate(context: vscode.ExtensionContext): void {
         const commands = [
-            vscode.commands.registerCommand('tiaConnect.vcsTreeRefresh', () => this.refresh()),
-            vscode.commands.registerCommand('tiaConnect.vcsExportPreview', () => this.exportPreview()),
-            vscode.commands.registerCommand('tiaConnect.vcsTreeInit', () => this.init()),
-            vscode.commands.registerCommand('tiaConnect.vcsTreeCommit', () => this.commit()),
+            registerWorkspaceCommand('tiaConnect.vcsTreeRefresh', () => this.refresh()),
+            registerWorkspaceCommand('tiaConnect.vcsExportPreview', () => this.exportPreview()),
+            registerWorkspaceCommand('tiaConnect.vcsTreeInit', () => this.init()),
+            registerWorkspaceCommand('tiaConnect.vcsTreeCommit', () => this.commit()),
         ];
         context.subscriptions.push(...commands);
         this.disposables.push(...commands);

@@ -692,275 +692,322 @@
         "command": "tiaConnect.connect",
         "title": "%command.connect%",
         "category": "T-IA Connect",
-        "icon": "$(plug)"
+        "icon": "$(plug)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.disconnect",
         "title": "%command.disconnect%",
         "category": "T-IA Connect",
-        "icon": "$(debug-disconnect)"
+        "icon": "$(debug-disconnect)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.refreshProject",
         "title": "%command.refreshProject%",
         "category": "T-IA Connect",
-        "icon": "$(refresh)"
+        "icon": "$(refresh)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.openBlock",
         "title": "%command.openBlock%",
         "category": "T-IA Connect",
-        "icon": "$(go-to-file)"
+        "icon": "$(go-to-file)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.compileDevice",
         "title": "%command.compileDevice%",
         "category": "T-IA Connect",
-        "icon": "$(gear)"
+        "icon": "$(gear)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.compileBlock",
         "title": "%command.compileBlock%",
         "category": "T-IA Connect",
-        "icon": "$(check)"
+        "icon": "$(check)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.exportBlock",
         "title": "%command.exportBlock%",
         "category": "T-IA Connect",
-        "icon": "$(desktop-download)"
+        "icon": "$(desktop-download)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsCommit",
         "title": "%command.vcsCommit%",
         "category": "T-IA Connect VCS",
-        "icon": "$(check)"
+        "icon": "$(check)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsRefresh",
         "title": "%command.vcsRefresh%",
         "category": "T-IA Connect VCS",
-        "icon": "$(refresh)"
+        "icon": "$(refresh)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsInit",
         "title": "%command.vcsInit%",
         "category": "T-IA Connect VCS",
-        "icon": "$(repo)"
+        "icon": "$(repo)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsPush",
         "title": "%command.vcsPush%",
         "category": "T-IA Connect VCS",
-        "icon": "$(cloud-upload)"
+        "icon": "$(cloud-upload)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsPull",
         "title": "%command.vcsPull%",
         "category": "T-IA Connect VCS",
-        "icon": "$(cloud-download)"
+        "icon": "$(cloud-download)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsRemote",
         "title": "%command.vcsRemote%",
         "category": "T-IA Connect VCS",
-        "icon": "$(remote)"
+        "icon": "$(remote)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsBranch",
         "title": "%command.vcsBranch%",
         "category": "T-IA Connect VCS",
-        "icon": "$(git-branch)"
+        "icon": "$(git-branch)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsLog",
         "title": "%command.vcsLog%",
         "category": "T-IA Connect VCS",
-        "icon": "$(history)"
+        "icon": "$(history)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.testRefresh",
         "title": "%command.testRefresh%",
         "category": "T-IA Connect Tests",
-        "icon": "$(refresh)"
+        "icon": "$(refresh)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.testRunAll",
         "title": "%command.testRunAll%",
         "category": "T-IA Connect Tests",
-        "icon": "$(run-all)"
+        "icon": "$(run-all)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.testRunSingle",
         "title": "%command.testRunSingle%",
         "category": "T-IA Connect Tests",
-        "icon": "$(play)"
+        "icon": "$(play)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.testShowResult",
         "title": "%command.testShowResult%",
         "category": "T-IA Connect Tests",
-        "icon": "$(open-preview)"
+        "icon": "$(open-preview)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.pipelineList",
         "title": "%command.pipelineList%",
         "category": "T-IA Connect Pipelines",
-        "icon": "$(list-flat)"
+        "icon": "$(list-flat)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.pipelineRun",
         "title": "%command.pipelineRun%",
         "category": "T-IA Connect Pipelines",
-        "icon": "$(play)"
+        "icon": "$(play)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.pipelineHistory",
         "title": "%command.pipelineHistory%",
         "category": "T-IA Connect Pipelines",
-        "icon": "$(history)"
+        "icon": "$(history)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.pipelineFromTemplate",
         "title": "%command.pipelineFromTemplate%",
         "category": "T-IA Connect Pipelines",
-        "icon": "$(file-add)"
+        "icon": "$(file-add)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.showCrossReferences",
         "title": "%command.showCrossReferences%",
         "category": "T-IA Connect",
-        "icon": "$(references)"
+        "icon": "$(references)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.openTagTable",
         "title": "%command.openTagTable%",
         "category": "T-IA Connect",
-        "icon": "$(table)"
+        "icon": "$(table)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.openUdt",
         "title": "%command.openUdt%",
         "category": "T-IA Connect",
-        "icon": "$(symbol-struct)"
+        "icon": "$(symbol-struct)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.openWatchTable",
         "title": "%command.openWatchTable%",
         "category": "T-IA Connect",
-        "icon": "$(eye)"
+        "icon": "$(eye)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.importSourceFile",
         "title": "%command.importSourceFile%",
         "category": "T-IA Connect",
-        "icon": "$(cloud-upload)"
+        "icon": "$(cloud-upload)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.exportTagsCsv",
         "title": "Export Tag Table (CSV)",
-        "category": "T-IA Connect"
+        "category": "T-IA Connect",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.exportTagsXlsx",
         "title": "Export Tag Table (XLSX)",
-        "category": "T-IA Connect"
+        "category": "T-IA Connect",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.exportTagsXml",
         "title": "Export Tag Table (XML)",
-        "category": "T-IA Connect"
+        "category": "T-IA Connect",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.importTagsCsv",
         "title": "Import Tags (CSV)",
-        "category": "T-IA Connect"
+        "category": "T-IA Connect",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.importTagsXlsx",
         "title": "Import Tags (XLSX)",
-        "category": "T-IA Connect"
+        "category": "T-IA Connect",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.exportUdt",
         "title": "Export UDT (XML)",
-        "category": "T-IA Connect"
+        "category": "T-IA Connect",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.importUdt",
         "title": "Import UDT (XML)",
-        "category": "T-IA Connect"
+        "category": "T-IA Connect",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.exportWatchTable",
         "title": "Export Watch Table (XML)",
-        "category": "T-IA Connect"
+        "category": "T-IA Connect",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.exportAll",
         "title": "%command.exportAll%",
         "category": "T-IA Connect",
-        "icon": "$(cloud-download)"
+        "icon": "$(cloud-download)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.detectOrphans",
         "title": "%command.detectOrphans%",
         "category": "T-IA Connect",
-        "icon": "$(search-remove)"
+        "icon": "$(search-remove)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.exportHmiScreen",
         "title": "%command.exportHmiScreen%",
         "category": "T-IA Connect",
-        "icon": "$(export)"
+        "icon": "$(export)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.importHmiScreen",
         "title": "%command.importHmiScreen%",
         "category": "T-IA Connect",
-        "icon": "$(import)"
+        "icon": "$(import)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.exportHmiAll",
         "title": "%command.exportHmiAll%",
         "category": "T-IA Connect",
-        "icon": "$(cloud-download)"
+        "icon": "$(cloud-download)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.importHmiAll",
         "title": "%command.importHmiAll%",
         "category": "T-IA Connect",
-        "icon": "$(cloud-upload)"
+        "icon": "$(cloud-upload)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.exportHwConfig",
         "title": "%command.exportHwConfig%",
         "category": "T-IA Connect",
-        "icon": "$(server)"
+        "icon": "$(server)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.importHwConfig",
         "title": "%command.importHwConfig%",
         "category": "T-IA Connect",
-        "icon": "$(server-process)"
+        "icon": "$(server-process)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.initWorkspace",
         "title": "%command.initWorkspace%",
         "category": "T-IA Connect",
-        "icon": "$(folder-active)"
+        "icon": "$(folder-active)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.createBlock",
         "title": "%command.createBlock%",
         "category": "T-IA Connect",
-        "icon": "$(file-add)"
+        "icon": "$(file-add)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.switchProject",
         "title": "%command.switchProject%",
         "category": "T-IA Connect",
-        "icon": "$(folder-opened)"
+        "icon": "$(folder-opened)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.openSettings",
@@ -972,43 +1019,50 @@
         "command": "tiaConnect.vcsTreeRefresh",
         "title": "%command.vcsTreeRefresh%",
         "category": "T-IA Connect VCS",
-        "icon": "$(refresh)"
+        "icon": "$(refresh)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsExportPreview",
         "title": "%command.vcsExportPreview%",
         "category": "T-IA Connect VCS",
-        "icon": "$(eye)"
+        "icon": "$(eye)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsTreeInit",
         "title": "%command.vcsTreeInit%",
         "category": "T-IA Connect VCS",
-        "icon": "$(repo)"
+        "icon": "$(repo)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsTreeCommit",
         "title": "%command.vcsTreeCommit%",
         "category": "T-IA Connect VCS",
-        "icon": "$(check)"
+        "icon": "$(check)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.vcsDiffFile",
         "title": "%command.vcsDiffFile%",
         "category": "T-IA Connect VCS",
-        "icon": "$(diff)"
+        "icon": "$(diff)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.launchHeadless",
         "title": "%command.launchHeadless%",
         "category": "T-IA Connect",
-        "icon": "$(terminal)"
+        "icon": "$(terminal)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.launchGui",
         "title": "%command.launchGui%",
         "category": "T-IA Connect",
-        "icon": "$(window)"
+        "icon": "$(window)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.login",
@@ -1032,13 +1086,15 @@
         "command": "tiaConnect.copilotClear",
         "title": "%command.copilotClear%",
         "category": "T-IA Connect",
-        "icon": "$(clear-all)"
+        "icon": "$(clear-all)",
+        "enablement": "isWorkspaceTrusted"
       },
       {
         "command": "tiaConnect.copilotStop",
         "title": "%command.copilotStop%",
         "category": "T-IA Connect",
-        "icon": "$(debug-stop)"
+        "icon": "$(debug-stop)",
+        "enablement": "isWorkspaceTrusted"
       }
     ],
     "viewsContainers": {
@@ -1372,7 +1428,20 @@
   },
   "extensionDependencies": [],
   "capabilities": {
-    "uriHandler": true
+    "uriHandler": true,
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "%workspaceTrust.description%",
+      "restrictedConfigurations": [
+        "tiaConnect.serverUrl",
+        "tiaConnect.autoReimportOnSave",
+        "tiaConnect.autoCompileOnReimport",
+        "tiaConnect.autoSaveInterval",
+        "tiaConnect.excludeFromReimport",
+        "tiaConnect.executablePath",
+        "tiaConnect.autoConfigureMcp"
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
@@ -1383,7 +1452,8 @@
     "test:integration": "node test/integration/runTest.cjs",
     "test:watch": "vitest",
     "lint": "eslint src/",
-    "package": "npx @vscode/vsce package"
+    "package": "npx @vscode/vsce package",
+    "test:integration:untrusted": "node test/integration/runTest.cjs --untrusted"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

@@ -1,4 +1,6 @@
 {
+  "Manage Workspace Trust": "Gérer l’approbation de l’espace de travail",
+  "T-IA Connect is limited in Restricted Mode. Trust this workspace to run industrial operations or write files.": "T-IA Connect est limité en mode restreint. Approuvez cet espace de travail pour exécuter des opérations industrielles ou écrire des fichiers.",
   "Collecting T-IA Connect diagnostic...": "Collecte du diagnostic T-IA Connect...",
   "Copy Report": "Copier le rapport",
   "T-IA Connect diagnostic report generated.": "Rapport de diagnostic T-IA Connect généré.",

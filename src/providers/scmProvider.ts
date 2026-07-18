@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 import { l10n } from 'vscode';
 import {
     vcsGetStatus, vcsCommit, vcsGetLog, vcsGetDiff,
@@ -47,15 +48,15 @@ export class TiaSourceControl implements vscode.Disposable {
 
     activate(context: vscode.ExtensionContext): void {
         const commands = [
-            vscode.commands.registerCommand('tiaConnect.vcsCommit', () => this.commit()),
-            vscode.commands.registerCommand('tiaConnect.vcsRefresh', () => this.refresh()),
-            vscode.commands.registerCommand('tiaConnect.vcsInit', () => this.init()),
-            vscode.commands.registerCommand('tiaConnect.vcsPush', () => this.push()),
-            vscode.commands.registerCommand('tiaConnect.vcsPull', () => this.pull()),
-            vscode.commands.registerCommand('tiaConnect.vcsBranch', () => this.branchMenu()),
-            vscode.commands.registerCommand('tiaConnect.vcsLog', () => this.showLog()),
-            vscode.commands.registerCommand('tiaConnect.vcsRemote', () => this.remoteMenu()),
-            vscode.commands.registerCommand('tiaConnect.vcsDiffFile', (change: VcsFileChange) => this.diffFile(change)),
+            registerWorkspaceCommand('tiaConnect.vcsCommit', () => this.commit()),
+            registerWorkspaceCommand('tiaConnect.vcsRefresh', () => this.refresh()),
+            registerWorkspaceCommand('tiaConnect.vcsInit', () => this.init()),
+            registerWorkspaceCommand('tiaConnect.vcsPush', () => this.push()),
+            registerWorkspaceCommand('tiaConnect.vcsPull', () => this.pull()),
+            registerWorkspaceCommand('tiaConnect.vcsBranch', () => this.branchMenu()),
+            registerWorkspaceCommand('tiaConnect.vcsLog', () => this.showLog()),
+            registerWorkspaceCommand('tiaConnect.vcsRemote', () => this.remoteMenu()),
+            registerWorkspaceCommand('tiaConnect.vcsDiffFile', (change: VcsFileChange) => this.diffFile(change)),
         ];
 
         context.subscriptions.push(...commands);

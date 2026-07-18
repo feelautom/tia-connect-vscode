@@ -30,6 +30,7 @@ import { registerWorkspaceCommands } from './commands/workspaceCommands';
 import { initializeApiKeyStorage } from './utils/config';
 import { trackTelemetry } from './telemetry/telemetry';
 import { registerDiagnosticCommands } from './commands/diagnosticCommands';
+import { isWorkspaceTrusted, registerWorkspaceCommand } from './security/workspaceTrust';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -67,7 +68,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     );
 
     // Validate session and detect server on startup
-    initAuthAndServer(context);
+    void initAuthAndServer(context);
+    context.subscriptions.push(vscode.workspace.onDidGrantWorkspaceTrust(() => initAuthAndServer(context)));
 
     // Status bar
     const statusBar = createStatusBar();
@@ -85,7 +87,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     authService.onDidChangeAuth(async (authenticated) => {
         treeProvider.setAuthenticated(authenticated);
         copilotProvider.setAuthenticated(authenticated);
-        if (authenticated) {
+        if (authenticated && isWorkspaceTrusted()) {
             // Re-run server detection so welcome views update
             const server = await detectServer();
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotInstalled, !server.installed);
@@ -150,9 +152,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         vscode.window.registerWebviewViewProvider(CopilotViewProvider.viewType, copilotProvider, {
             webviewOptions: { retainContextWhenHidden: true },
         }),
-        vscode.commands.registerCommand(COMMANDS.copilotClear, () => copilotProvider.clearHistory()),
-        vscode.commands.registerCommand(COMMANDS.copilotStop, () => copilotProvider.stop()),
-        vscode.commands.registerCommand('tiaConnect.refreshOpenBlocks', () => blockEditor.refreshOpenBlocks()),
+        registerWorkspaceCommand(COMMANDS.copilotClear, () => copilotProvider.clearHistory()),
+        registerWorkspaceCommand(COMMANDS.copilotStop, () => copilotProvider.stop()),
+        registerWorkspaceCommand('tiaConnect.refreshOpenBlocks', () => blockEditor.refreshOpenBlocks()),
     );
 
     // Auto-move Copilot to secondary sidebar (one-time)
@@ -212,7 +214,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
     // Dashboard command (click on project name in tree)
     context.subscriptions.push(
-        vscode.commands.registerCommand('tiaConnect.showDashboard', () => {
+        registerWorkspaceCommand('tiaConnect.showDashboard', () => {
             const overview = treeProvider.getProjectOverview();
             if (overview) { showProjectDashboard(overview); }
         }),
@@ -247,6 +249,12 @@ async function initAuthAndServer(_context: vscode.ExtensionContext): Promise<voi
     // 1. Validate auth session (non-blocking for the rest of activation)
     const isAuthenticated = await authService.validateSession();
     log(`Auth session: ${isAuthenticated ? 'valid' : 'none'}`);
+
+    if (!isWorkspaceTrusted()) {
+        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotInstalled, false);
+        vscode.commands.executeCommand('setContext', CONTEXT_KEYS.serverNotRunning, true);
+        return;
+    }
 
     // 2. Detect server installation and running status
     const server = await detectServer();

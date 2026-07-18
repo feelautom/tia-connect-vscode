@@ -87,6 +87,8 @@ export enum ProgressLocation {
 }
 
 export const workspace = {
+    isTrusted: true,
+    onDidGrantWorkspaceTrust: () => ({ dispose: () => {} }),
     getConfiguration: (_section?: string) => ({
         get: <T>(_key: string, defaultValue?: T) => defaultValue,
         inspect: <T>(_key: string) => undefined as any as { globalValue?: T; workspaceValue?: T; workspaceFolderValue?: T } | undefined,

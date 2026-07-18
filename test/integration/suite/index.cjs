@@ -6,6 +6,9 @@ async function run() {
     assert.ok(extension, 'The T-IA Connect extension must be discoverable');
 
     const manifest = extension.packageJSON;
+    const expectedTrust = process.env.WORKSPACE_TRUST_EXPECTED || 'trusted';
+    assert.equal(vscode.workspace.isTrusted, expectedTrust === 'trusted');
+    assert.equal(manifest.capabilities.untrustedWorkspaces.supported, 'limited');
     assert.equal(manifest.name, 'tia-connect-vscode');
     assert.equal(manifest.publisher, 'FEELAUTOM');
     assert.equal(manifest.engines.vscode, '^1.85.0');
@@ -41,6 +44,13 @@ async function run() {
     assert.match(diagnosticText, /## Privacy/);
     assert.doesNotMatch(diagnosticText, /[A-Za-z]:\\/);
     assert.doesNotMatch(diagnosticText, /Bearer\s+[A-Za-z0-9._-]+/i);
+
+    if (expectedTrust === 'untrusted') {
+        await vscode.commands.executeCommand('tiaConnect.initWorkspace');
+        const fs = require('node:fs');
+        const path = require('node:path');
+        assert.equal(fs.existsSync(path.join(vscode.workspace.workspaceFolders[0].uri.fsPath, '.vscode', 'tia-connect.json')), false);
+    }
 }
 
 module.exports = { run };

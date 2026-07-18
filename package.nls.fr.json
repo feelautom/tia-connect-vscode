@@ -1,4 +1,5 @@
 {
+  "workspaceTrust.description": "T-IA Connect conserve les fonctions de langage, l’authentification, les réglages et le diagnostic expurgé. Les opérations industrielles, le lancement Desktop, les imports, écritures de fichiers, VCS, tests et la configuration MCP exigent un espace de travail approuvé.",
   "displayName": "T-IA Connect pour VS Code",
   "description": "Explorer, éditer du SCL/STL et compiler des projets Siemens TIA Portal depuis VS Code via l'API REST T-IA Connect",
   "config.title": "T-IA Connect",

@@ -5,14 +5,15 @@
 import * as vscode from 'vscode';
 import { l10n } from 'vscode';
 import { TiaTreeItem } from '../providers/projectTreeProvider';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 import { exportHardwareConfig, importHardwareConfig } from '../api/hardware';
 import { log, logError } from '../views/outputChannel';
 
 export function registerHwConfigCommands(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
-        vscode.commands.registerCommand('tiaConnect.exportHwConfig', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.exportHwConfig', (item: TiaTreeItem) =>
             doExportHwConfig(item)),
-        vscode.commands.registerCommand('tiaConnect.importHwConfig', (item: TiaTreeItem) =>
+        registerWorkspaceCommand('tiaConnect.importHwConfig', (item: TiaTreeItem) =>
             doImportHwConfig(item)),
     );
 }

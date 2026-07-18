@@ -4,13 +4,14 @@
  */
 
 import * as vscode from 'vscode';
+import { registerWorkspaceCommand } from '../security/workspaceTrust';
 import { l10n } from 'vscode';
 import { getProjectOverview } from '../api/project';
 import { log } from '../views/outputChannel';
 
 export function registerWorkspaceCommands(context: vscode.ExtensionContext): void {
     context.subscriptions.push(
-        vscode.commands.registerCommand('tiaConnect.initWorkspace', () => doInitWorkspace()),
+        registerWorkspaceCommand('tiaConnect.initWorkspace', () => doInitWorkspace()),
     );
 }
 

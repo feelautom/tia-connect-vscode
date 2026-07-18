@@ -30,7 +30,9 @@ jobs:
       - run: npm run build
 
       - name: Test Extension Host
-        run: xvfb-run -a npm run test:integration
+        run: |
+          xvfb-run -a npm run test:integration
+          xvfb-run -a npm run test:integration:untrusted
         env:
           VSCODE_TEST_VERSION: stable
 

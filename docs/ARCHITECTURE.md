@@ -421,3 +421,11 @@ Les operations longues (commit VCS, execution pipeline, tests) retournent un `Jo
 L'extension declare un support `limited` des workspaces non approuves. En Restricted Mode, l'authentification, les reglages, le diagnostic expurge et les fonctions de langage restent disponibles. Les commandes industrielles, le lancement Desktop, les imports/exports, les ecritures de fichiers, VCS, les tests et la configuration MCP sont desactives dans l'interface et bloques a l'execution. Les requetes REST mutantes disposent d'un second garde runtime. La confiance accordee relance automatiquement la detection Desktop et l'auto-connexion.
 
 La CI execute des tests Extension Host distincts en mode trusted et untrusted sur VS Code 1.85.2 et Stable. Le profil untrusted est isole et conserve Workspace Trust actif ; il ne doit jamais utiliser `--disable-workspace-trust`.
+
+## Notifications et localisation
+
+- Les textes runtime utilisent les chaînes sources anglaises de `vscode.l10n` et le bundle `l10n/bundle.l10n.fr.json`.
+- Un test d'inventaire TypeScript vérifie que chaque clé littérale possède une traduction française et qu'aucun texte humain n'est transmis directement aux notifications VS Code.
+- Les erreurs et avertissements strictement identiques sont dédupliqués pendant 10 secondes. Le message reste exact et aucune donnée utilisateur supplémentaire n'est journalisée.
+- Les succès de fond fréquents, notamment la réimportation automatique et les tests PLC réussis, utilisent la barre d'état pendant 5 secondes. Les confirmations d'actions explicites et les erreurs bloquantes restent des notifications.
+- `npm run test:integration:fr` exécute l'Extension Host en français lorsqu'un pack de langue français est disponible dans le profil de test isolé.

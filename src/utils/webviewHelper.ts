@@ -33,11 +33,12 @@ export async function createWebviewWithHeartbeat(
         }
     }
 
+    const reloadWindow = vscode.l10n.t('Reload Window');
     const action = await vscode.window.showErrorMessage(
-        'Webview failed to load. This is a known VS Code issue.',
-        'Reload Window',
+        vscode.l10n.t('Webview failed to load. This is a known VS Code issue.'),
+        reloadWindow,
     );
-    if (action === 'Reload Window') {
+    if (action === reloadWindow) {
         vscode.commands.executeCommand('workbench.action.reloadWindow');
     }
     return undefined;

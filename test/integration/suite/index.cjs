@@ -7,7 +7,11 @@ async function run() {
 
     const manifest = extension.packageJSON;
     const expectedTrust = process.env.WORKSPACE_TRUST_EXPECTED || 'trusted';
+    const expectedLocale = process.env.VSCODE_TEST_LOCALE_EXPECTED;
     assert.equal(vscode.workspace.isTrusted, expectedTrust === 'trusted');
+    if (expectedLocale) {
+        assert.equal(vscode.env.language.toLowerCase().startsWith(expectedLocale.toLowerCase()), true);
+    }
     assert.equal(manifest.capabilities.untrustedWorkspaces.supported, 'limited');
     assert.equal(manifest.name, 'tia-connect-vscode');
     assert.equal(manifest.publisher, 'FEELAUTOM');

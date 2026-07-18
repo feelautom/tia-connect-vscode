@@ -114,6 +114,7 @@ export const window = {
     showInformationMessage: async () => {},
     showWarningMessage: async () => {},
     showErrorMessage: async () => {},
+    setStatusBarMessage: () => ({ dispose: () => {} }),
     showInputBox: async () => '',
     showQuickPick: async () => undefined,
     withProgress: async (_opts: any, task: any) => task({ report: () => {} }),

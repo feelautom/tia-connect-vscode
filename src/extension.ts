@@ -63,7 +63,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         }),
         vscode.commands.registerCommand('tiaConnect.logout', async () => {
             await authService.logout();
-            vscode.window.showInformationMessage('T-IA Connect: Logged out.');
+            vscode.window.showInformationMessage(vscode.l10n.t('T-IA Connect: Logged out.'));
         }),
     );
 

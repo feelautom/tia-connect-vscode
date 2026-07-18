@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { showDeduplicatedWarning } from '../utils/notifications';
 import { randomBytes, timingSafeEqual } from 'crypto';
 import { log, logError } from '../views/outputChannel';
 import { CONTEXT_KEYS } from '../utils/constants';
@@ -66,7 +67,7 @@ export class AuthService implements vscode.Disposable {
     async handleAuthCallback(token: string, state: string, expectedState: string): Promise<boolean> {
         if (!secureStateEquals(state, expectedState) || !this.claimAuthState(state)) {
             logError('Auth callback state mismatch — possible CSRF attack');
-            vscode.window.showErrorMessage('Authentication failed: invalid state parameter.');
+            vscode.window.showErrorMessage(vscode.l10n.t('Authentication failed: invalid state parameter.'));
             return false;
         }
 
@@ -145,7 +146,7 @@ export class AuthService implements vscode.Disposable {
                 log('Stored token is invalid or expired.');
                 await this.logout();
                 void trackTelemetry('VSCode_AuthFailed', { success: false, mode: 'REST', errorCode: 'unauthorized' });
-                vscode.window.showWarningMessage('T-IA Connect: Session expired. Please sign in again.');
+                showDeduplicatedWarning(vscode.l10n.t('T-IA Connect: Session expired. Please sign in again.'));
                 return;
             }
 
@@ -158,7 +159,7 @@ export class AuthService implements vscode.Disposable {
             if (!data.valid) {
                 log('Token rejected by server.');
                 await this.logout();
-                vscode.window.showWarningMessage('T-IA Connect: Session expired. Please sign in again.');
+                showDeduplicatedWarning(vscode.l10n.t('T-IA Connect: Session expired. Please sign in again.'));
                 return;
             }
 
@@ -191,7 +192,7 @@ export class AuthService implements vscode.Disposable {
                 log('Auth polling timed out after 5 minutes.');
                 this.activeState = null;
                 this.stopPolling();
-                vscode.window.showWarningMessage('T-IA Connect: Authentication timed out. Please try again.');
+                showDeduplicatedWarning(vscode.l10n.t('T-IA Connect: Authentication timed out. Please try again.'));
                 return;
             }
 
@@ -214,9 +215,9 @@ export class AuthService implements vscode.Disposable {
                     const success = await this.handleToken(data.token);
                     if (success) {
                         const name = this.profile?.name || this.profile?.email || '';
-                        vscode.window.showInformationMessage(`T-IA Connect: Connected as ${name}`);
+                        vscode.window.showInformationMessage(vscode.l10n.t('T-IA Connect: Connected as {0}', name));
                     } else {
-                        vscode.window.showErrorMessage('Authentication failed. Please try again.');
+                        vscode.window.showErrorMessage(vscode.l10n.t('Authentication failed. Please try again.'));
                     }
                 }
             } catch (err) {

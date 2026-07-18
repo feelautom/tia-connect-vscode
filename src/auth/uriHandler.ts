@@ -39,13 +39,13 @@ export class TiaUriHandler implements vscode.UriHandler {
 
         if (!token) {
             logError('Auth callback missing token parameter');
-            vscode.window.showErrorMessage('Authentication failed: no token received.');
+            vscode.window.showErrorMessage(vscode.l10n.t('Authentication failed: no token received.'));
             return;
         }
 
         if (!state || !this.pendingState) {
             logError('Auth callback missing state parameter');
-            vscode.window.showErrorMessage('Authentication failed: invalid state.');
+            vscode.window.showErrorMessage(vscode.l10n.t('Authentication failed: invalid state.'));
             return;
         }
 
@@ -55,9 +55,9 @@ export class TiaUriHandler implements vscode.UriHandler {
         if (success) {
             const profile = this.authService.getProfile();
             const name = profile?.name || profile?.email || '';
-            vscode.window.showInformationMessage(`T-IA Connect: Connected as ${name}`);
+            vscode.window.showInformationMessage(vscode.l10n.t('T-IA Connect: Connected as {0}', name));
         } else {
-            vscode.window.showErrorMessage('Authentication failed. Please try again.');
+            vscode.window.showErrorMessage(vscode.l10n.t('Authentication failed. Please try again.'));
         }
     }
 }

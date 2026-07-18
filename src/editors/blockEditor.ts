@@ -10,6 +10,7 @@ import { EDITABLE_LANGUAGES } from '../utils/constants';
 import { log, logError, showOutput } from '../views/outputChannel';
 import { updateDiagnostics, clearDiagnostics } from '../views/diagnostics';
 import { l10n } from 'vscode';
+import { showBackgroundStatus } from '../utils/notifications';
 
 export class BlockEditor {
     private fileManager = new BlockFileManager();
@@ -311,7 +312,7 @@ export class BlockEditor {
 
             if (res.Success) {
                 clearDiagnostics(doc.uri);
-                vscode.window.showInformationMessage(l10n.t('Block {0} reimported successfully.', meta.blockName));
+                showBackgroundStatus(l10n.t('Block {0} reimported successfully.', meta.blockName));
                 log(`Reimport OK: ${meta.blockName}`);
                 // Update QuickDiff original to current content (now synced with TIA)
                 this.originalProvider?.setOriginal(key, content);

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { registerWorkspaceCommand } from '../security/workspaceTrust';
+import { showDeduplicatedError } from '../utils/notifications';
 import { l10n } from 'vscode';
 import {
     listPipelines, getPipeline, runPipeline,
@@ -40,7 +41,7 @@ async function showPipelineList(): Promise<void> {
         await vscode.window.showTextDocument(doc, { preview: true });
     } catch (err) {
         logError('Pipeline list failed', err);
-        vscode.window.showErrorMessage(`Failed: ${err instanceof Error ? err.message : err}`);
+        showDeduplicatedError(l10n.t('Pipeline failed: {0}', err instanceof Error ? err.message : String(err)));
     }
 }
 
@@ -134,7 +135,7 @@ async function showPipelineHistory(): Promise<void> {
         await vscode.window.showTextDocument(doc, { preview: true });
     } catch (err) {
         logError('Pipeline history failed', err);
-        vscode.window.showErrorMessage(`Failed: ${err instanceof Error ? err.message : err}`);
+        showDeduplicatedError(l10n.t('Pipeline failed: {0}', err instanceof Error ? err.message : String(err)));
     }
 }
 
@@ -177,7 +178,7 @@ async function createFromTemplate(): Promise<void> {
         await vscode.window.showTextDocument(doc);
     } catch (err) {
         logError('Template instantiation failed', err);
-        vscode.window.showErrorMessage(`Failed: ${err instanceof Error ? err.message : err}`);
+        showDeduplicatedError(l10n.t('Pipeline failed: {0}', err instanceof Error ? err.message : String(err)));
     }
 }
 

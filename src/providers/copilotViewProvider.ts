@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { showDeduplicatedWarning } from '../utils/notifications';
 import { randomBytes } from 'crypto';
 import { sendCopilotMessage, getCopilotHistory, clearCopilotHistory, stopCopilot, ChatHistoryEntry } from '../api/copilot';
 import { getLicenseFeatures } from '../api/project';
@@ -330,7 +331,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                 }
             }
 
-            vscode.window.showWarningMessage(`Block "${blockName}" not found in project.`);
+            showDeduplicatedWarning(vscode.l10n.t('Block "{0}" not found in project.', blockName));
         } catch (err) {
             log(`[Copilot] Failed to open requested block: ${err}`);
         }

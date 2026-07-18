@@ -7,6 +7,7 @@ import { pollJob } from '../api/jobs';
 import { TestRunResult } from '../api/types';
 import { log, logError, showOutput } from '../views/outputChannel';
 import { openTestResultWebview } from '../editors/testResultWebview';
+import { showBackgroundStatus, showDeduplicatedError } from '../utils/notifications';
 
 type TestNodeType = 'test' | 'step' | 'message';
 
@@ -208,7 +209,7 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
                 log(`  ERROR: ${item.error}`);
                 for (const s of steps) { s.status = 'errored'; }
                 this._onDidChangeTreeData.fire(undefined);
-                vscode.window.showErrorMessage(`Test "${item.testName}": ${item.error}`);
+                showDeduplicatedError(l10n.t('Test "{0}": {1}', item.testName, item.error));
                 return;
             }
 
@@ -259,7 +260,7 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
             }
 
             if (testResult.Passed) {
-                vscode.window.showInformationMessage(l10n.t('Test "{0}" PASSED ({1}ms)', item.testName, String(testResult.DurationMs)));
+                showBackgroundStatus(l10n.t('Test "{0}" PASSED ({1}ms)', item.testName, String(testResult.DurationMs)));
             } else {
                 vscode.window.showWarningMessage(l10n.t('Test "{0}" FAILED. See results panel.', item.testName));
             }
@@ -271,7 +272,7 @@ export class TestTreeProvider implements vscode.TreeDataProvider<TestTreeItem>, 
             for (const s of steps) { s.status = 'errored'; }
             this._onDidChangeTreeData.fire(undefined);
             logError(`Test ${item.testName} error`, err);
-            vscode.window.showErrorMessage(`Test "${item.testName}": ${item.error}`);
+            showDeduplicatedError(l10n.t('Test "{0}": {1}', item.testName, item.error));
         }
     }
 

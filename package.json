@@ -1450,6 +1450,7 @@
     "watch": "node esbuild.mjs --watch",
     "test": "vitest run",
     "test:integration": "node test/integration/runTest.cjs",
+    "test:integration:fr": "node test/integration/runTest.cjs",
     "test:watch": "vitest",
     "lint": "eslint src/",
     "package": "npx @vscode/vsce package",

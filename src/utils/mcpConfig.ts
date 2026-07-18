@@ -53,7 +53,7 @@ export async function ensureMcpConfig(): Promise<void> {
         if (apiKey) {
             if (config.inputs !== undefined && !Array.isArray(config.inputs)) {
                 log('MCP config not changed: existing inputs property is not an array.');
-                vscode.window.showErrorMessage('T-IA Connect: .vscode/mcp.json has an invalid inputs property and was left unchanged.');
+                vscode.window.showErrorMessage(vscode.l10n.t('T-IA Connect: .vscode/mcp.json has an invalid inputs property and was left unchanged.'));
                 throw new Error('Cannot update MCP configuration: inputs must be an array.');
             }
             const existingInputs = config.inputs ?? [];
@@ -83,7 +83,7 @@ export async function ensureMcpConfig(): Promise<void> {
         const malformed = err instanceof SyntaxError;
         if (malformed) {
             log('MCP config not changed: existing .vscode/mcp.json is malformed.');
-            vscode.window.showErrorMessage('T-IA Connect: .vscode/mcp.json is malformed and was left unchanged.');
+            vscode.window.showErrorMessage(vscode.l10n.t('T-IA Connect: .vscode/mcp.json is malformed and was left unchanged.'));
         }
         void trackTelemetry('VSCode_McpConfigurationFailed', {
             success: false,

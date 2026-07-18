@@ -23,9 +23,16 @@ jobs:
 
       - run: npm run lint
 
+      - run: npm run typecheck
+
       - run: npm test
 
       - run: npm run build
+
+      - name: Test Extension Host
+        run: xvfb-run -a npm run test:integration
+        env:
+          VSCODE_TEST_VERSION: stable
 
       - run: npx @vscode/vsce package --no-dependencies
         env:

@@ -21,6 +21,8 @@ jobs:
 
       - run: npm run lint
 
+      - run: npm run typecheck
+
       - run: npm test
 
       - run: npm run build
@@ -34,3 +36,27 @@ jobs:
           name: vsix
           path: "*.vsix"
           retention-days: 30
+
+  extension-host:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        vscode: ["1.85.2", "stable"]
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Test Extension Host on VS Code ${{ matrix.vscode }}
+        run: xvfb-run -a npm run test:integration
+        env:
+          VSCODE_TEST_VERSION: ${{ matrix.vscode }}

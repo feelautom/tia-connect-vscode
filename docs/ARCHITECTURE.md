@@ -223,6 +223,16 @@ Le `diagnosticMapper` resout les messages d'erreur TIA Portal vers des positions
 2. **Recherche de symbole** — extrait les noms entre quotes (`'Running'`, `"Stop"`) et cherche la premiere occurrence dans le source
 3. **Fallback** — ligne 0 si aucune info disponible
 
+### 7a. Diagnostic support (`diagnostics/supportDiagnostic.ts`)
+
+La commande `tiaConnect.diagnostic` ouvre un document Markdown temporaire et propose une copie explicite dans le presse-papiers.
+
+- Etats couverts : versions extension/VS Code/Desktop, OAuth, cle API configuree, installation Desktop, REST, SignalR, MCP et licence.
+- La latence REST est bornee et les erreurs sont converties en codes normalises.
+- Les chemins, projets, emails, identifiants de compte, tokens, cles, reponses brutes et messages utilisateur sont exclus par construction.
+- Les URLs loopback sont reduites a `scheme://host:port`; les hotes distants deviennent `<remote-host>` et les credentials rendent la configuration invalide.
+- Un `mcp.json` contenant une cle en clair est signale par l'etat `unsafe_secret_detected`, sans lire ni afficher sa valeur.
+
 ### 7b. Smart Comparison (`utils/smartComparison.ts`)
 
 Comparaison structuree de blocs XML exportes depuis TIA Portal.

@@ -15,6 +15,7 @@
   "config.executablePath.description": "Chemin vers l'exécutable du serveur T-IA Connect. Utilisé pour lancer le serveur quand il n'est pas en cours d'exécution.",
   "config.autoConfigureMcp.description": "Configurer automatiquement le serveur MCP dans .vscode/mcp.json pour l'intégration avec GitHub Copilot Chat",
   "command.connect": "Se connecter au serveur",
+  "command.diagnostic": "Diagnostic",
   "command.disconnect": "Se déconnecter du serveur",
   "command.refreshProject": "Rafraîchir l'arborescence projet",
   "command.openBlock": "Ouvrir le bloc",

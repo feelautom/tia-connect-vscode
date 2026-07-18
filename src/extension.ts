@@ -29,6 +29,7 @@ import { registerHwConfigCommands } from './commands/hwConfigCommands';
 import { registerWorkspaceCommands } from './commands/workspaceCommands';
 import { initializeApiKeyStorage } from './utils/config';
 import { trackTelemetry } from './telemetry/telemetry';
+import { registerDiagnosticCommands } from './commands/diagnosticCommands';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -207,6 +208,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     registerHmiCommands(context);
     registerHwConfigCommands(context);
     registerWorkspaceCommands(context);
+    registerDiagnosticCommands(context, authService);
 
     // Dashboard command (click on project name in tree)
     context.subscriptions.push(

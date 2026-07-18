@@ -131,6 +131,16 @@ export const commands = {
 export const env = {
     language: 'en',
     openExternal: async () => true,
+    clipboard: {
+        writeText: async (_value: string) => {},
+    },
+};
+
+export const l10n = {
+    t: (value: string, ...args: unknown[]) => args.reduce(
+        (result, arg, index) => result.replace(`{${index}}`, String(arg)),
+        value,
+    ),
 };
 
 export const version = '1.99.0-test';

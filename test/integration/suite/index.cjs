@@ -26,6 +26,7 @@ async function run() {
         'tiaConnect.connect',
         'tiaConnect.showDashboard',
         'tiaConnect.compileDevice',
+        'tiaConnect.diagnostic',
     ]) {
         assert.ok(commands.has(command), `Command ${command} must be registered`);
     }
@@ -33,6 +34,13 @@ async function run() {
     const languages = new Set(await vscode.languages.getLanguages());
     assert.ok(languages.has('scl'), 'The SCL language contribution must be registered');
     assert.ok(languages.has('stl'), 'The STL language contribution must be registered');
+
+    await vscode.commands.executeCommand('tiaConnect.diagnostic');
+    const diagnosticText = vscode.window.activeTextEditor?.document.getText() ?? '';
+    assert.match(diagnosticText, /^# T-IA Connect Diagnostic/m);
+    assert.match(diagnosticText, /## Privacy/);
+    assert.doesNotMatch(diagnosticText, /[A-Za-z]:\\/);
+    assert.doesNotMatch(diagnosticText, /Bearer\s+[A-Za-z0-9._-]+/i);
 }
 
 module.exports = { run };

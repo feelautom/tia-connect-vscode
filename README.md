@@ -99,6 +99,7 @@ Compile a single block or an entire device from the context menu or the Command 
 - Progress notification with error/warning count
 - Detailed messages in the Output channel
 - Compilation errors appear as diagnostics at the correct line in the editor
+- **T-IA Connect: Diagnostic** opens a copyable, privacy-safe support report with versions, Desktop/REST/SignalR/MCP/license state, bounded latency, and normalized error codes
 - Keyboard shortcut: **Ctrl+Shift+B**
 
 ### Export / Import

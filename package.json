@@ -683,6 +683,12 @@
     ],
     "commands": [
       {
+        "command": "tiaConnect.diagnostic",
+        "title": "%command.diagnostic%",
+        "category": "T-IA Connect",
+        "icon": "$(pulse)"
+      },
+      {
         "command": "tiaConnect.connect",
         "title": "%command.connect%",
         "category": "T-IA Connect",

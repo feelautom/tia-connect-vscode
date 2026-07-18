@@ -15,6 +15,7 @@
   "config.executablePath.description": "Path to the T-IA Connect server executable. Used to launch the server when it is not running.",
   "config.autoConfigureMcp.description": "Automatically configure MCP server in .vscode/mcp.json for GitHub Copilot Chat integration",
   "command.connect": "Connect to Server",
+  "command.diagnostic": "Diagnostic",
   "command.disconnect": "Disconnect from Server",
   "command.refreshProject": "Refresh Project Tree",
   "command.openBlock": "Open Block",

@@ -1,4 +1,10 @@
 {
+  "Collecting T-IA Connect diagnostic...": "Collecte du diagnostic T-IA Connect...",
+  "Copy Report": "Copier le rapport",
+  "T-IA Connect diagnostic report generated.": "Rapport de diagnostic T-IA Connect généré.",
+  "Diagnostic report copied.": "Rapport de diagnostic copié.",
+  "T-IA Connect diagnostic could not be generated.": "Le diagnostic T-IA Connect n'a pas pu être généré.",
+  "Diagnostic report could not be copied.": "Le rapport de diagnostic n'a pas pu être copié.",
   "Cannot open this block: missing metadata.": "Impossible d'ouvrir ce bloc : métadonnées manquantes.",
   "Failed to open block: {0}": "Échec de l'ouverture du bloc : {0}",
   "Loading {0}...": "Chargement de {0}...",

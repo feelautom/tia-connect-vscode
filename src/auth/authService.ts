@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { randomBytes, timingSafeEqual } from 'crypto';
 import { log, logError } from '../views/outputChannel';
 import { CONTEXT_KEYS } from '../utils/constants';
+import { getClientIdentityHeaders } from '../api/clientIdentity';
+import { normalizeTelemetryError, trackTelemetry } from '../telemetry/telemetry';
 
 const TOKEN_KEY = 'tiaConnect.authToken';
 const AUTH_BASE_URL = 'https://t-ia-connect.com';
@@ -52,9 +54,11 @@ export class AuthService implements vscode.Disposable {
             log(`Authenticated as ${profile.email}${profile.licenseType ? ` (${profile.licenseType})` : ''}`);
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, true);
             this._onDidChangeAuth.fire(true);
+            void trackTelemetry('VSCode_AuthSucceeded', { success: true, mode: 'REST' });
             return true;
         }
 
+        void trackTelemetry('VSCode_AuthFailed', { success: false, mode: 'REST', errorCode: 'unauthorized' });
         return false;
     }
 
@@ -134,12 +138,13 @@ export class AuthService implements vscode.Disposable {
     private async validateTokenInBackground(token: string): Promise<void> {
         try {
             const resp = await fetch(`${AUTH_BASE_URL}/api/auth/validate-token`, {
-                headers: { 'Authorization': `Bearer ${token}` },
+                headers: { ...getClientIdentityHeaders(), 'Authorization': `Bearer ${token}` },
             });
 
             if (resp.status === 401 || resp.status === 403) {
                 log('Stored token is invalid or expired.');
                 await this.logout();
+                void trackTelemetry('VSCode_AuthFailed', { success: false, mode: 'REST', errorCode: 'unauthorized' });
                 vscode.window.showWarningMessage('T-IA Connect: Session expired. Please sign in again.');
                 return;
             }
@@ -194,7 +199,7 @@ export class AuthService implements vscode.Disposable {
 
             try {
                 this.pollRequestInFlight = true;
-                const resp = await fetch(pollUrl);
+                const resp = await fetch(pollUrl, { headers: getClientIdentityHeaders() });
                 const text = await resp.text();
                 log(`Auth poll response: HTTP ${resp.status}`);
 
@@ -216,6 +221,11 @@ export class AuthService implements vscode.Disposable {
                 }
             } catch (err) {
                 log(`Auth poll request failed${err instanceof SyntaxError ? ': invalid response format' : ''}.`);
+                void trackTelemetry('VSCode_AuthFailed', {
+                    success: false,
+                    mode: 'REST',
+                    errorCode: normalizeTelemetryError(err),
+                });
             } finally {
                 this.pollRequestInFlight = false;
             }
@@ -238,7 +248,7 @@ export class AuthService implements vscode.Disposable {
     private async fetchProfile(token: string): Promise<UserProfile | null> {
         try {
             const resp = await fetch(`${AUTH_BASE_URL}/api/account/profile`, {
-                headers: { 'Authorization': `Bearer ${token}` },
+                headers: { ...getClientIdentityHeaders(), 'Authorization': `Bearer ${token}` },
             });
 
             if (!resp.ok) {

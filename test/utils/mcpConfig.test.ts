@@ -52,6 +52,7 @@ describe('ensureMcpConfig', () => {
         expect(written).not.toContain('actual-secret-key');
         const config = JSON.parse(written);
         expect(config.servers.existing.command).toBe('safe-tool');
+        expect(config.servers['tia-connect'].headers['X-Client-Id']).toBe('vscode/1.0.3-test');
         expect(config.servers['tia-connect'].headers['X-API-Key']).toBe('${input:tiaConnectApiKey}');
         expect(config.inputs).toEqual(expect.arrayContaining([
             expect.objectContaining({ id: 'existingInput' }),

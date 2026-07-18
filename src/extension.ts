@@ -28,6 +28,7 @@ import { registerHmiCommands } from './commands/hmiCommands';
 import { registerHwConfigCommands } from './commands/hwConfigCommands';
 import { registerWorkspaceCommands } from './commands/workspaceCommands';
 import { initializeApiKeyStorage } from './utils/config';
+import { trackTelemetry } from './telemetry/telemetry';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -39,6 +40,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     log('T-IA Connect for VS Code activating...');
 
     await initializeApiKeyStorage(context);
+    void trackTelemetry('VSCode_ExtensionActivated', { success: true, mode: 'REST' });
 
     // Auth service + URI handler
     authService = new AuthService(context);
@@ -227,7 +229,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     log('T-IA Connect for VS Code activated.');
 }
 
-export function deactivate(): void {
+export async function deactivate(): Promise<void> {
+    await trackTelemetry('VSCode_ExtensionDeactivated', { success: true, mode: 'REST' });
     disposeSignalR();
     blockEditor?.dispose();
     scmProvider?.dispose();

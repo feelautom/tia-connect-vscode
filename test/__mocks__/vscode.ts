@@ -133,6 +133,12 @@ export const env = {
     openExternal: async () => true,
 };
 
+export const version = '1.99.0-test';
+
+export const extensions = {
+    getExtension: (_id: string) => ({ packageJSON: { version: '1.0.3-test' } }),
+};
+
 export const scm = {
     createSourceControl: () => ({
         inputBox: { placeholder: '', value: '' },

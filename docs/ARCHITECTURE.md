@@ -98,7 +98,7 @@ tia-connect-vscode/
 Singleton `TiaClient` utilisant l'API `fetch` native.
 
 **Particularites :**
-- Header `X-API-Key` automatique depuis les settings
+- Headers `X-API-Key` depuis `SecretStorage` et `X-Client-Id: vscode/<version-extension>`
 - **Double enveloppe** : le serveur retourne `{ status, response: { success, data } }`. Le client extrait `response.data` automatiquement.
 - **Normalisation PascalCase** : le serveur retourne du camelCase, le client convertit recursivement en PascalCase pour correspondre aux interfaces TypeScript.
 - `AbortController` pour annuler les requetes en cours (deconnexion)
@@ -364,6 +364,14 @@ Deux niveaux d'authentification independants :
    - Fallback : prompt interactif si la cle n'est pas detectee automatiquement
    - **Important** : le token OAuth cloud ne remplace jamais la cle API locale
 
+### Telemetrie privee et correlation
+
+- `api/clientIdentity.ts` centralise l'identite `vscode/<version-extension>` utilisee par REST, SignalR, detection Desktop, authentification cloud et configuration MCP.
+- `telemetry/telemetry.ts` envoie en best-effort vers `POST /api/telemetry/client-events`. Le recepteur Desktop est suivi par `TKT-999815`.
+- Seuls les noms d'evenements et champs allowlistes sont serialises : versions, succes, duree bornee, mode, categorie et code d'erreur normalise.
+- Les contenus PLC/SCL/STL, chemins, messages, tokens, cles API et reponses brutes ne sont jamais ajoutes au corps de telemetrie.
+- Une panne reseau est ignoree. Un statut `404`, `405` ou `501` desactive les envois pour la session afin de rester compatible avec les anciennes versions Desktop.
+
 ### Jobs asynchrones
 
 Les operations longues (commit VCS, execution pipeline, tests) retournent un `JobId`.
@@ -371,7 +379,8 @@ Les operations longues (commit VCS, execution pipeline, tests) retournent un `Jo
 **Mode principal : SignalR push** (`api/signalr.ts`)
 - Client SignalR legacy compatible ASP.NET SignalR (pas Core)
 - Transport `longPolling` (negotiate → start → poll loop)
-- Authentification via query string `?apiKey=xxx`
+- Authentification via header `X-API-Key`; la cle n'apparait jamais dans la query string
+- Correlation via header `X-Client-Id`
 - Recoit `jobStatusChanged(jobId, status, result, description)` et `jobProgressChanged(jobId, percent, message)` en temps reel
 - Reconnexion automatique en cas de perte de connexion
 - Se connecte au hub `jobHub` a la connexion au serveur
@@ -385,7 +394,7 @@ Les operations longues (commit VCS, execution pipeline, tests) retournent un `Jo
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
 | `tiaConnect.serverUrl` | string | `http://localhost:9000` | URL du serveur T-IA Connect |
-| `tiaConnect.apiKey` | string | *(vide)* | Cle API (header X-API-Key) |
+| Cle API locale | secret | *(vide)* | Stockee dans `vscode.SecretStorage`, jamais dans les settings/workspace |
 | `tiaConnect.autoReimportOnSave` | boolean | `true` | Reimporter dans TIA sur Ctrl+S |
 | `tiaConnect.autoCompileOnReimport` | boolean | `false` | Compiler apres reimport |
 | `tiaConnect.autoSaveInterval` | number | `5` | Auto-save securite (0/5/10/15 min) |

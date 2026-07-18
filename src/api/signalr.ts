@@ -1,5 +1,7 @@
 import { getServerUrl, getApiKey } from '../utils/config';
 import { log } from '../views/outputChannel';
+import { getClientIdentityHeaders } from './clientIdentity';
+import { normalizeTelemetryError, trackTelemetry } from '../telemetry/telemetry';
 
 type MessageHandler = (hubName: string, method: string, args: unknown[]) => void;
 
@@ -50,15 +52,28 @@ export class SignalRClient {
 
         try {
             const token = await this.negotiate();
-            if (!token) { return; }
+            if (!token) {
+                void trackTelemetry('VSCode_SignalRFailed', {
+                    success: false,
+                    mode: 'SignalR',
+                    errorCode: 'rejected',
+                });
+                return;
+            }
             this.connectionToken = token;
             await this.startConnection();
             this._connected = true;
             this.polling = true;
             log('[SignalR] Connected.');
+            void trackTelemetry('VSCode_SignalRConnected', { success: true, mode: 'SignalR' });
             this.pollLoop();
         } catch (err) {
             log(`[SignalR] Connection failed${err instanceof Error ? `: ${err.name}` : ''}.`);
+            void trackTelemetry('VSCode_SignalRFailed', {
+                success: false,
+                mode: 'SignalR',
+                errorCode: normalizeTelemetryError(err),
+            });
         }
     }
 
@@ -98,7 +113,9 @@ export class SignalRClient {
 
     private get headers(): Record<string, string> {
         const apiKey = getApiKey();
-        return apiKey ? { 'X-API-Key': apiKey } : {};
+        const headers = getClientIdentityHeaders();
+        if (apiKey) { headers['X-API-Key'] = apiKey; }
+        return headers;
     }
 
     private async negotiate(): Promise<string | null> {

@@ -3,6 +3,8 @@ import * as os from 'os';
 import * as path from 'path';
 import { getServerUrl, getApiKey, setApiKey } from '../utils/config';
 import { log } from '../views/outputChannel';
+import { getClientIdentityHeaders } from '../api/clientIdentity';
+import { trackTelemetry } from '../telemetry/telemetry';
 
 export interface InstanceInfo {
     Pid: number;
@@ -55,6 +57,13 @@ export async function detectServer(): Promise<ServerStatus> {
 
     log(`Server detection: running=${running}, installed=${installed}${exePath ? ` (${exePath})` : ''}`);
 
+    void trackTelemetry('VSCode_DesktopDetected', { success: installed, mode: 'REST' });
+    if (running) {
+        void trackTelemetry('VSCode_DesktopConnected', { success: true, mode: 'REST' });
+    } else if (installed) {
+        void trackTelemetry('VSCode_DesktopConnectionFailed', { success: false, mode: 'REST', errorCode: 'offline' });
+    }
+
     return { running, installed, exePath };
 }
 
@@ -66,6 +75,7 @@ export async function isServerRunning(): Promise<boolean> {
         const timeout = setTimeout(() => controller.abort(), 3000);
 
         const resp = await fetch(`${url}/api/health`, {
+            headers: getClientIdentityHeaders(),
             signal: controller.signal,
         });
         clearTimeout(timeout);
@@ -124,6 +134,7 @@ export async function fetchLocalApiKey(): Promise<boolean> {
         const timeout = setTimeout(() => controller.abort(), 3000);
 
         const resp = await fetch(`${url}/api/auth/local-key`, {
+            headers: getClientIdentityHeaders(),
             signal: controller.signal,
         });
         clearTimeout(timeout);

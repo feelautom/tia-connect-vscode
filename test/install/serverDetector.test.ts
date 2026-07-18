@@ -105,11 +105,15 @@ describe('detectServer', () => {
 
     it('returns running=true when health endpoint responds 200', async () => {
         existsSyncMock.mockReturnValue(true);
-        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
+        const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+        vi.stubGlobal('fetch', fetchMock);
 
         const result = await detectServer();
         expect(result.running).toBe(true);
         expect(result.installed).toBe(true);
+        expect(fetchMock.mock.calls[0][1].headers).toEqual({
+            'X-Client-Id': 'vscode/1.0.3-test',
+        });
 
         vi.unstubAllGlobals();
     });

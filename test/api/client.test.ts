@@ -63,6 +63,23 @@ describe('toPascalCaseKeys', () => {
 });
 
 describe('TiaClient business responses', () => {
+    it('adds the versioned VS Code client identity header', async () => {
+        const fetchMock = vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            text: async () => JSON.stringify({ Success: true }),
+            headers: new Headers(),
+        });
+        vi.stubGlobal('fetch', fetchMock);
+
+        await new TiaClient().get('/api/project');
+
+        expect(fetchMock.mock.calls[0][1].headers).toMatchObject({
+            'X-Client-Id': 'vscode/1.0.3-test',
+        });
+        vi.unstubAllGlobals();
+    });
+
     it('rejects HTTP 2xx responses whose business result is Success=false', async () => {
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
             ok: true,

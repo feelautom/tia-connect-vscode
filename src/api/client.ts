@@ -1,16 +1,8 @@
-import * as vscode from 'vscode';
 import { getServerUrl, getApiKey } from '../utils/config';
 import { ApiResponse } from './types';
 import { log, debug } from '../views/outputChannel';
-
-function getExtensionVersion(): string {
-    try {
-        const ext = vscode.extensions.getExtension('FEELAUTOM.tia-connect-vscode');
-        return ext?.packageJSON?.version ?? 'unknown';
-    } catch {
-        return 'unknown';
-    }
-}
+import { getClientIdentityHeaders } from './clientIdentity';
+import { categorizeApiPath, normalizeTelemetryError, trackTelemetry } from '../telemetry/telemetry';
 
 /** Recursively convert first char of each key to uppercase (PascalCase)
  * @internal Exported for testing */
@@ -39,9 +31,9 @@ export class TiaClient {
 
     private get headers(): Record<string, string> {
         const h: Record<string, string> = {
+            ...getClientIdentityHeaders(),
             'Content-Type': 'application/json',
             'Accept': 'application/json',
-            'X-Client-Id': `vscode/${getExtensionVersion()}`,
         };
         const key = getApiKey();
         if (key) {
@@ -82,6 +74,7 @@ export class TiaClient {
 
     private async request<T>(method: string, path: string, body?: unknown): Promise<ApiResponse<T>> {
         const url = `${this.baseUrl}${path}`;
+        const startedAt = Date.now();
         const controller = new AbortController();
         this.abortControllers.add(controller);
 
@@ -164,7 +157,22 @@ export class TiaClient {
                 throw new Error(msg);
             }
 
+            void trackTelemetry('VSCode_CommandExecuted', {
+                success: true,
+                durationMs: Date.now() - startedAt,
+                mode: 'REST',
+                commandCategory: categorizeApiPath(path),
+            });
             return json;
+        } catch (error) {
+            void trackTelemetry('VSCode_CommandExecuted', {
+                success: false,
+                durationMs: Date.now() - startedAt,
+                mode: 'REST',
+                commandCategory: categorizeApiPath(path),
+                errorCode: normalizeTelemetryError(error),
+            });
+            throw error;
         } finally {
             this.abortControllers.delete(controller);
         }

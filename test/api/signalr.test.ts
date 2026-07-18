@@ -16,6 +16,9 @@ describe('SignalRClient authentication', () => {
 
         expect(url).not.toContain('Opaque');
         expect(url).not.toContain('apiKey');
-        expect(headers).toEqual({ 'X-API-Key': 'Opaque+Secret/Key=' });
+        expect(headers).toEqual({
+            'X-API-Key': 'Opaque+Secret/Key=',
+            'X-Client-Id': 'vscode/1.0.3-test',
+        });
     });
 });

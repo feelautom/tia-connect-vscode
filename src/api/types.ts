@@ -21,7 +21,19 @@ export interface ProjectOverview {
 export interface DeviceInfo {
     Name: string;
     TypeIdentifier: string;
+    Type?: string;
+    ArticleNumber?: string;
+    Version?: string;
+    Blocks?: ProjectBlockInfo[];
+    TagTables?: TagTableInfo[];
+    Udts?: UdtSummary[];
     DeviceItems?: DeviceItemInfo[];
+}
+
+export interface ProjectBlockInfo {
+    Name: string;
+    Type?: string;
+    Language?: string;
 }
 
 export interface DeviceItemInfo {

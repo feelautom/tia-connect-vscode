@@ -89,6 +89,7 @@ export enum ProgressLocation {
 export const workspace = {
     getConfiguration: (_section?: string) => ({
         get: <T>(_key: string, defaultValue?: T) => defaultValue,
+        inspect: <T>(_key: string) => undefined as any as { globalValue?: T; workspaceValue?: T; workspaceFolderValue?: T } | undefined,
         update: async () => {},
     }),
     workspaceFolders: undefined as any,
@@ -125,6 +126,11 @@ export const window = {
 export const commands = {
     registerCommand: () => ({ dispose: () => {} }),
     executeCommand: async () => {},
+};
+
+export const env = {
+    language: 'en',
+    openExternal: async () => true,
 };
 
 export const scm = {

@@ -56,7 +56,8 @@ export function registerChatParticipant(
                     return;
                 }
             } catch {
-                // License check failed — continue anyway
+                response.markdown('**Unable to verify the AI license.** T-IA Connect blocks AI tools until license verification is available.');
+                return;
             }
 
             const projectContext = `Current TIA Portal project: "${overview.Name}"\nDevices: ${overview.Devices?.map(d => `${d.Name} (${d.TypeIdentifier || 'PLC'})`).join(', ') || 'none'}`;
@@ -92,7 +93,7 @@ export function registerChatParticipant(
                 // Execute each tool and collect results
                 const toolResultParts: (vscode.LanguageModelTextPart | vscode.LanguageModelToolResultPart)[] = [];
                 for (const call of toolCalls) {
-                    log(`[Chat] Tool call: ${call.name}(${JSON.stringify(call.input)})`);
+                    log(`[Chat] Tool call: ${call.name}`);
                     try {
                         const result = await vscode.lm.invokeTool(call.name, {
                             input: call.input,

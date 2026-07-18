@@ -27,6 +27,7 @@ import { registerOrphanCleanupCommands } from './commands/orphanCleanup';
 import { registerHmiCommands } from './commands/hmiCommands';
 import { registerHwConfigCommands } from './commands/hwConfigCommands';
 import { registerWorkspaceCommands } from './commands/workspaceCommands';
+import { initializeApiKeyStorage } from './utils/config';
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
@@ -34,8 +35,10 @@ let testProvider: TestTreeProvider;
 let vcsTreeProvider: VcsTreeProvider;
 let authService: AuthService;
 
-export function activate(context: vscode.ExtensionContext): void {
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
     log('T-IA Connect for VS Code activating...');
+
+    await initializeApiKeyStorage(context);
 
     // Auth service + URI handler
     authService = new AuthService(context);
@@ -50,7 +53,10 @@ export function activate(context: vscode.ExtensionContext): void {
             const state = await authService.login();
             uriHandler.setPendingState(state);
         }),
-        vscode.commands.registerCommand('tiaConnect.register', () => authService.register()),
+        vscode.commands.registerCommand('tiaConnect.register', async () => {
+            const state = await authService.register();
+            uriHandler.setPendingState(state);
+        }),
         vscode.commands.registerCommand('tiaConnect.logout', async () => {
             await authService.logout();
             vscode.window.showInformationMessage('T-IA Connect: Logged out.');

@@ -140,7 +140,7 @@ export class TiaClient {
                 }
                 if (resp.status === 401) {
                     log(`AUTH ${method} ${path}: unauthorized`);
-                    throw new Error('Authentication failed. Check your API key in T-IA Connect settings.');
+                    throw new Error('Authentication failed. Configure your T-IA Connect API key and try again.');
                 }
                 if (resp.status === 403) {
                     const featureMsg = json.Message || 'This feature is not available in your license edition.';
@@ -155,6 +155,12 @@ export class TiaClient {
                 } else {
                     log(`ERROR ${method} ${path}: ${msg}`);
                 }
+                throw new Error(msg);
+            }
+
+            if (!json.Success) {
+                const msg = json.Message || `T-IA Connect rejected ${method} ${path}.`;
+                log(`BUSINESS ${method} ${path}: ${msg}`);
                 throw new Error(msg);
             }
 

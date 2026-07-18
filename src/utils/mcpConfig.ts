@@ -26,7 +26,8 @@ export async function ensureMcpConfig(): Promise<void> {
         url: `${serverUrl}/mcp/sse`,
     };
     if (apiKey) {
-        tiaEntry.headers = { 'X-API-Key': apiKey };
+        // VS Code prompts for the key at runtime; the secret is never written to the workspace.
+        tiaEntry.headers = { 'X-API-Key': '${input:tiaConnectApiKey}' };
     }
 
     let config: Record<string, unknown> = {};
@@ -36,9 +37,10 @@ export async function ensureMcpConfig(): Promise<void> {
         try {
             const raw = fs.readFileSync(mcpFilePath, 'utf-8');
             config = JSON.parse(raw);
-        } catch {
-            // Malformed JSON — overwrite
-            log('mcp.json malformed, recreating');
+        } catch (err) {
+            log('MCP config not changed: existing .vscode/mcp.json is malformed.');
+            vscode.window.showErrorMessage('T-IA Connect: .vscode/mcp.json is malformed and was left unchanged.');
+            throw new Error(`Cannot update malformed MCP configuration: ${err}`);
         }
     }
 
@@ -48,10 +50,32 @@ export async function ensureMcpConfig(): Promise<void> {
     }
     (config.servers as Record<string, unknown>)['tia-connect'] = tiaEntry;
 
+    if (apiKey) {
+        if (config.inputs !== undefined && !Array.isArray(config.inputs)) {
+            log('MCP config not changed: existing inputs property is not an array.');
+            vscode.window.showErrorMessage('T-IA Connect: .vscode/mcp.json has an invalid inputs property and was left unchanged.');
+            throw new Error('Cannot update MCP configuration: inputs must be an array.');
+        }
+        const existingInputs = config.inputs ?? [];
+        config.inputs = [
+            ...existingInputs.filter(input => {
+                return !input || typeof input !== 'object' || (input as Record<string, unknown>).id !== 'tiaConnectApiKey';
+            }),
+            {
+                id: 'tiaConnectApiKey',
+                type: 'promptString',
+                description: 'T-IA Connect local API key',
+                password: true,
+            },
+        ];
+    }
+
     // Write
     if (!fs.existsSync(vscodeDir)) {
         fs.mkdirSync(vscodeDir, { recursive: true });
     }
-    fs.writeFileSync(mcpFilePath, JSON.stringify(config, null, 2), 'utf-8');
+    const tempPath = `${mcpFilePath}.${process.pid}.${Date.now()}.tmp`;
+    fs.writeFileSync(tempPath, JSON.stringify(config, null, 2), { encoding: 'utf-8', flag: 'wx' });
+    fs.renameSync(tempPath, mcpFilePath);
     log('MCP config written to .vscode/mcp.json');
 }

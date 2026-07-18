@@ -8,6 +8,8 @@ const existsSyncMock = vi.mocked(fs.existsSync);
 // Mock config to avoid vscode dependency
 vi.mock('../../src/utils/config', () => ({
     getServerUrl: () => 'http://localhost:9000',
+    getApiKey: () => '',
+    setApiKey: vi.fn(),
 }));
 
 // Mock outputChannel
@@ -16,7 +18,28 @@ vi.mock('../../src/views/outputChannel', () => ({
     logError: () => {},
 }));
 
-import { isServerInstalled, detectServer } from '../../src/install/serverDetector';
+import { isServerInstalled, detectServer, isLoopbackServerUrl } from '../../src/install/serverDetector';
+
+describe('isLoopbackServerUrl', () => {
+    it.each([
+        'http://localhost:9000',
+        'https://127.0.0.1:9000',
+        'http://[::1]:9000',
+    ])('allows literal loopback URL %s', (value) => {
+        expect(isLoopbackServerUrl(value)).toBe(true);
+    });
+
+    it.each([
+        'http://192.168.1.10:9000',
+        'https://example.com',
+        'http://localhost.example.com:9000',
+        'file://localhost/key',
+        'http://user:pass@localhost:9000',
+        'not a URL',
+    ])('rejects non-loopback or unsafe URL %s', (value) => {
+        expect(isLoopbackServerUrl(value)).toBe(false);
+    });
+});
 
 describe('isServerInstalled', () => {
     beforeEach(() => {

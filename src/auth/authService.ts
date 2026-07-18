@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { randomBytes, timingSafeEqual } from 'crypto';
 import { log, logError } from '../views/outputChannel';
 import { CONTEXT_KEYS } from '../utils/constants';
 
@@ -24,6 +25,8 @@ export class AuthService implements vscode.Disposable {
     private _onDidChangeAuth = new vscode.EventEmitter<boolean>();
     readonly onDidChangeAuth = this._onDidChangeAuth.event;
     private pollTimer: ReturnType<typeof setInterval> | undefined;
+    private pollRequestInFlight = false;
+    private activeState: string | null = null;
 
     constructor(context: vscode.ExtensionContext) {
         this.secrets = context.secrets;
@@ -40,13 +43,11 @@ export class AuthService implements vscode.Disposable {
         return this.secrets.get(TOKEN_KEY);
     }
 
-    /** Store token and fetch profile (used by both polling and URI callback) */
+    /** Validate the token before persisting it (used by polling and URI callback). */
     async handleToken(token: string): Promise<boolean> {
-        await this.secrets.store(TOKEN_KEY, token);
-        log('Auth token stored successfully.');
-
         const profile = await this.fetchProfile(token);
         if (profile) {
+            await this.secrets.store(TOKEN_KEY, token);
             this.profile = profile;
             log(`Authenticated as ${profile.email}${profile.licenseType ? ` (${profile.licenseType})` : ''}`);
             vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, true);
@@ -59,7 +60,7 @@ export class AuthService implements vscode.Disposable {
 
     /** Store token received from OAuth URI callback (fallback) */
     async handleAuthCallback(token: string, state: string, expectedState: string): Promise<boolean> {
-        if (state !== expectedState) {
+        if (!secureStateEquals(state, expectedState) || !this.claimAuthState(state)) {
             logError('Auth callback state mismatch — possible CSRF attack');
             vscode.window.showErrorMessage('Authentication failed: invalid state parameter.');
             return false;
@@ -86,6 +87,7 @@ export class AuthService implements vscode.Disposable {
 
 
         const state = generateState();
+        this.activeState = state;
         const redirectUri = 'vscode://feelautom.tia-connect-vscode/auth-callback';
         const modeParam = mode === 'register' ? '&mode=register' : '';
         const url = `${AUTH_BASE_URL}/auth/vscode?state=${state}&redirect_uri=${encodeURIComponent(redirectUri)}${modeParam}`;
@@ -101,6 +103,7 @@ export class AuthService implements vscode.Disposable {
     async logout(): Promise<void> {
         await this.secrets.delete(TOKEN_KEY);
         this.profile = null;
+        this.activeState = null;
         this.stopPolling();
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.authenticated, false);
         this._onDidChangeAuth.fire(false);
@@ -134,10 +137,15 @@ export class AuthService implements vscode.Disposable {
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
-            if (!resp.ok) {
+            if (resp.status === 401 || resp.status === 403) {
                 log('Stored token is invalid or expired.');
                 await this.logout();
                 vscode.window.showWarningMessage('T-IA Connect: Session expired. Please sign in again.');
+                return;
+            }
+
+            if (!resp.ok) {
+                log(`Auth validation temporarily unavailable (HTTP ${resp.status}) — keeping session.`);
                 return;
             }
 
@@ -169,14 +177,14 @@ export class AuthService implements vscode.Disposable {
     private startPolling(state: string): void {
         this.stopPolling();
         const startTime = Date.now();
-        const shortState = state.substring(0, 8);
-
-        log(`Polling for auth token (state=${shortState}...)...`);
+        log('Polling for auth token...');
 
 
         this.pollTimer = setInterval(async () => {
+            if (this.pollRequestInFlight || !secureStateEquals(this.activeState, state)) { return; }
             if (Date.now() - startTime > POLL_TIMEOUT_MS) {
                 log('Auth polling timed out after 5 minutes.');
+                this.activeState = null;
                 this.stopPolling();
                 vscode.window.showWarningMessage('T-IA Connect: Authentication timed out. Please try again.');
                 return;
@@ -185,18 +193,17 @@ export class AuthService implements vscode.Disposable {
             const pollUrl = `${AUTH_BASE_URL}/api/auth/vscode-poll?state=${encodeURIComponent(state)}`;
 
             try {
+                this.pollRequestInFlight = true;
                 const resp = await fetch(pollUrl);
                 const text = await resp.text();
-                log(`Poll response (state=${shortState}): ${resp.status} ${text}`);
+                log(`Auth poll response: HTTP ${resp.status}`);
 
-
-                if (!resp.ok) return;
+                if (!resp.ok) { return; }
 
                 const data = JSON.parse(text) as { status: string; token?: string };
 
                 if (data.status === 'complete' && data.token) {
-                    log('Auth token received via polling.');
-
+                    if (!this.claimAuthState(state)) { return; }
                     this.stopPolling();
 
                     const success = await this.handleToken(data.token);
@@ -208,8 +215,9 @@ export class AuthService implements vscode.Disposable {
                     }
                 }
             } catch (err) {
-                log(`Poll error (state=${shortState}): ${err}`);
-
+                log(`Auth poll request failed${err instanceof SyntaxError ? ': invalid response format' : ''}.`);
+            } finally {
+                this.pollRequestInFlight = false;
             }
         }, POLL_INTERVAL_MS);
     }
@@ -219,6 +227,12 @@ export class AuthService implements vscode.Disposable {
             clearInterval(this.pollTimer);
             this.pollTimer = undefined;
         }
+    }
+
+    private claimAuthState(state: string): boolean {
+        if (!secureStateEquals(this.activeState, state)) { return false; }
+        this.activeState = null;
+        return true;
     }
 
     private async fetchProfile(token: string): Promise<UserProfile | null> {
@@ -240,16 +254,19 @@ export class AuthService implements vscode.Disposable {
     }
 
     dispose(): void {
+        this.activeState = null;
         this.stopPolling();
         this._onDidChangeAuth.dispose();
     }
 }
 
 function generateState(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < 32; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+    return randomBytes(32).toString('base64url');
+}
+
+function secureStateEquals(left: string | null, right: string | null): boolean {
+    if (left === null || right === null) { return false; }
+    const leftBytes = Buffer.from(left, 'utf8');
+    const rightBytes = Buffer.from(right, 'utf8');
+    return leftBytes.length === rightBytes.length && timingSafeEqual(leftBytes, rightBytes);
 }

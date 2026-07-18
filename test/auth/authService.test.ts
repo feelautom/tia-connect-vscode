@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock outputChannel before importing
 vi.mock('../../src/views/outputChannel', () => ({
-    log: () => {},
-    logError: () => {},
+    log: vi.fn(),
+    logError: vi.fn(),
 }));
 
 // Mock config
@@ -14,6 +14,7 @@ vi.mock('../../src/utils/config', () => ({
 
 import { AuthService, UserProfile } from '../../src/auth/authService';
 import { commands } from 'vscode';
+import { log } from '../../src/views/outputChannel';
 
 // Create a mock ExtensionContext with SecretStorage
 function createMockContext() {
@@ -90,6 +91,7 @@ describe('AuthService', () => {
             const result = await authService.handleToken('bad-token');
             expect(result).toBe(false);
             expect(authService.getProfile()).toBeNull();
+            expect(await authService.getToken()).toBeUndefined();
 
             vi.unstubAllGlobals();
         });
@@ -97,7 +99,8 @@ describe('AuthService', () => {
 
     describe('handleAuthCallback', () => {
         it('rejects mismatched state', async () => {
-            const result = await authService.handleAuthCallback('token', 'state-A', 'state-B');
+            const expectedState = await authService.login();
+            const result = await authService.handleAuthCallback('token', 'state-A', expectedState);
             expect(result).toBe(false);
         });
 
@@ -112,9 +115,51 @@ describe('AuthService', () => {
                 json: async () => mockProfile,
             }));
 
-            const result = await authService.handleAuthCallback('tok', 'state-X', 'state-X');
+            const state = await authService.login();
+            const result = await authService.handleAuthCallback('tok', state, state);
             expect(result).toBe(true);
 
+            const replay = await authService.handleAuthCallback('other', state, state);
+            expect(replay).toBe(false);
+
+            vi.unstubAllGlobals();
+        });
+
+        it('generates distinct cryptographic state values', async () => {
+            const first = await authService.login();
+            const second = await authService.login();
+            expect(first).not.toBe(second);
+            expect(first).toMatch(/^[A-Za-z0-9_-]{43}$/);
+            expect(second).toMatch(/^[A-Za-z0-9_-]{43}$/);
+        });
+    });
+
+    describe('polling logs', () => {
+        it('never writes the raw response or token to logs', async () => {
+            vi.useFakeTimers();
+            vi.stubGlobal('fetch', vi.fn()
+                .mockResolvedValueOnce({
+                    ok: true,
+                    status: 200,
+                    text: async () => JSON.stringify({ status: 'complete', token: 'TOP_SECRET_JWT' }),
+                })
+                .mockResolvedValueOnce({
+                    ok: true,
+                    json: async () => ({
+                        id: '1', email: 'a@b.com', name: 'A',
+                        licenseType: 'free', apiKey: 'k', features: [],
+                    }),
+                }));
+
+            await authService.login();
+            await vi.advanceTimersByTimeAsync(3000);
+
+            const logged = vi.mocked(log).mock.calls.flat().join('\n');
+            expect(logged).not.toContain('TOP_SECRET_JWT');
+            expect(logged).not.toContain('"token"');
+
+            authService.dispose();
+            vi.useRealTimers();
             vi.unstubAllGlobals();
         });
     });

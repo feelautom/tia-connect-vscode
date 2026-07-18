@@ -18,21 +18,28 @@ function enc(s: string): string {
     return encodeURIComponent(s);
 }
 
+function confirmation(title: string, message: string): vscode.PreparedToolInvocation {
+    return {
+        confirmationMessages: { title, message },
+    };
+}
+
 // License check cache (avoid checking on every tool call)
 let aiLicenseChecked = false;
-let aiLicenseAllowed = true;
+let aiLicenseAllowed = false;
 
 async function checkAiLicense(): Promise<boolean> {
     if (aiLicenseChecked) { return aiLicenseAllowed; }
     try {
         const license = await getLicenseFeatures();
         const aiFeature = license.Features?.find(f => f.Key === 'ai' || f.Key === 'copilot' || f.Key === 'assistant');
-        aiLicenseAllowed = !aiFeature || aiFeature.Enabled;
+        aiLicenseAllowed = aiFeature?.Enabled === true;
         aiLicenseChecked = true;
         // Reset cache after 5 minutes
         setTimeout(() => { aiLicenseChecked = false; }, 5 * 60 * 1000);
     } catch {
-        // License check failed — allow
+        aiLicenseAllowed = false;
+        aiLicenseChecked = false;
     }
     return aiLicenseAllowed;
 }
@@ -97,7 +104,11 @@ class GetBlockSourceTool implements vscode.LanguageModelTool<{ device: string; b
     }
 }
 
-class CreateBlockTool implements vscode.LanguageModelTool<{ device: string; blockType: string; name: string; language: string }> {
+export class CreateBlockTool implements vscode.LanguageModelTool<{ device: string; blockType: string; name: string; language: string }> {
+    prepareInvocation(options: vscode.LanguageModelToolInvocationPrepareOptions<{ device: string; blockType: string; name: string; language: string }>): vscode.PreparedToolInvocation {
+        return confirmation('Create a TIA Portal block?', `Create ${options.input.blockType} “${options.input.name}” on device “${options.input.device}”.`);
+    }
+
     async invoke(options: vscode.LanguageModelToolInvocationOptions<{ device: string; blockType: string; name: string; language: string }>): Promise<vscode.LanguageModelToolResult> {
         return safeCall(async () => {
             const { device, ...body } = options.input;
@@ -111,7 +122,11 @@ class CreateBlockTool implements vscode.LanguageModelTool<{ device: string; bloc
     }
 }
 
-class ImportSclTool implements vscode.LanguageModelTool<{ device: string; sclContent: string; sourceName?: string }> {
+export class ImportSclTool implements vscode.LanguageModelTool<{ device: string; sclContent: string; sourceName?: string }> {
+    prepareInvocation(options: vscode.LanguageModelToolInvocationPrepareOptions<{ device: string; sclContent: string; sourceName?: string }>): vscode.PreparedToolInvocation {
+        return confirmation('Import and generate PLC source?', `Import SCL source into device “${options.input.device}”. Existing project content may be changed.`);
+    }
+
     async invoke(options: vscode.LanguageModelToolInvocationOptions<{ device: string; sclContent: string; sourceName?: string }>): Promise<vscode.LanguageModelToolResult> {
         return safeCall(async () => {
             const res = await client.post<unknown>(
@@ -136,7 +151,11 @@ class ExportBlockTool implements vscode.LanguageModelTool<{ device: string; bloc
     }
 }
 
-class DeleteBlockTool implements vscode.LanguageModelTool<{ device: string; block: string }> {
+export class DeleteBlockTool implements vscode.LanguageModelTool<{ device: string; block: string }> {
+    prepareInvocation(options: vscode.LanguageModelToolInvocationPrepareOptions<{ device: string; block: string }>): vscode.PreparedToolInvocation {
+        return confirmation('Delete this TIA Portal block?', `Permanently delete block “${options.input.block}” from device “${options.input.device}”.`);
+    }
+
     async invoke(options: vscode.LanguageModelToolInvocationOptions<{ device: string; block: string }>): Promise<vscode.LanguageModelToolResult> {
         return safeCall(async () => {
             const res = await client.delete<unknown>(`/api/devices/${enc(options.input.device)}/blocks/${enc(options.input.block)}`);
@@ -228,7 +247,11 @@ class SaveProjectTool implements vscode.LanguageModelTool<Record<string, never>>
     }
 }
 
-class DownloadToPlcTool implements vscode.LanguageModelTool<{ device: string; scope?: string }> {
+export class DownloadToPlcTool implements vscode.LanguageModelTool<{ device: string; scope?: string }> {
+    prepareInvocation(options: vscode.LanguageModelToolInvocationPrepareOptions<{ device: string; scope?: string }>): vscode.PreparedToolInvocation {
+        return confirmation('Download to PLC?', `Download ${options.input.scope || 'Software'} to device “${options.input.device}”. This changes the target PLC or simulator.`);
+    }
+
     async invoke(options: vscode.LanguageModelToolInvocationOptions<{ device: string; scope?: string }>): Promise<vscode.LanguageModelToolResult> {
         return safeCall(async () => {
             const res = await client.post<unknown>(
@@ -258,7 +281,11 @@ class PlcSimReadTagTool implements vscode.LanguageModelTool<{ tagName: string }>
     }
 }
 
-class PlcSimWriteTagTool implements vscode.LanguageModelTool<{ tagName: string; value: string }> {
+export class PlcSimWriteTagTool implements vscode.LanguageModelTool<{ tagName: string; value: string }> {
+    prepareInvocation(options: vscode.LanguageModelToolInvocationPrepareOptions<{ tagName: string; value: string }>): vscode.PreparedToolInvocation {
+        return confirmation('Write a PLCSim tag?', `Write the requested value to tag “${options.input.tagName}”. This changes simulator state.`);
+    }
+
     async invoke(options: vscode.LanguageModelToolInvocationOptions<{ tagName: string; value: string }>): Promise<vscode.LanguageModelToolResult> {
         return safeCall(async () => {
             const res = await client.post<unknown>(
@@ -288,7 +315,11 @@ class VcsStatusTool implements vscode.LanguageModelTool<Record<string, never>> {
     }
 }
 
-class VcsCommitTool implements vscode.LanguageModelTool<{ message: string }> {
+export class VcsCommitTool implements vscode.LanguageModelTool<{ message: string }> {
+    prepareInvocation(): vscode.PreparedToolInvocation {
+        return confirmation('Commit project changes?', 'Create a source-control commit from the current TIA project changes.');
+    }
+
     async invoke(options: vscode.LanguageModelToolInvocationOptions<{ message: string }>): Promise<vscode.LanguageModelToolResult> {
         return safeCall(async () => {
             const res = await client.post<unknown>('/api/source-control/commit', { Message: options.input.message });
@@ -306,7 +337,11 @@ class VcsDiffTool implements vscode.LanguageModelTool<Record<string, never>> {
     }
 }
 
-class PipelineRunTool implements vscode.LanguageModelTool<{ pipeline: string }> {
+export class PipelineRunTool implements vscode.LanguageModelTool<{ pipeline: string }> {
+    prepareInvocation(options: vscode.LanguageModelToolInvocationPrepareOptions<{ pipeline: string }>): vscode.PreparedToolInvocation {
+        return confirmation('Run this pipeline?', `Run pipeline “${options.input.pipeline}”. The pipeline may change external systems.`);
+    }
+
     async invoke(options: vscode.LanguageModelToolInvocationOptions<{ pipeline: string }>): Promise<vscode.LanguageModelToolResult> {
         return safeCall(async () => {
             const res = await client.post<unknown>(`/api/pipelines/${enc(options.input.pipeline)}/run`);
@@ -333,7 +368,12 @@ class SearchCatalogTool implements vscode.LanguageModelTool<{ query: string }> {
     }
 }
 
-class AddDeviceTool implements vscode.LanguageModelTool<{ orderNumber: string; name?: string }> {
+export class AddDeviceTool implements vscode.LanguageModelTool<{ orderNumber: string; name?: string }> {
+    prepareInvocation(options: vscode.LanguageModelToolInvocationPrepareOptions<{ orderNumber: string; name?: string }>): vscode.PreparedToolInvocation {
+        const displayName = options.input.name ? ` as “${options.input.name}”` : '';
+        return confirmation('Add a device to the TIA project?', `Add hardware “${options.input.orderNumber}”${displayName}.`);
+    }
+
     async invoke(options: vscode.LanguageModelToolInvocationOptions<{ orderNumber: string; name?: string }>): Promise<vscode.LanguageModelToolResult> {
         return safeCall(async () => {
             const res = await client.post<unknown>('/api/projects/devices', {

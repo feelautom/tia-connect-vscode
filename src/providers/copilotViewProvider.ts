@@ -1,9 +1,52 @@
 import * as vscode from 'vscode';
+import { randomBytes } from 'crypto';
 import { sendCopilotMessage, getCopilotHistory, clearCopilotHistory, stopCopilot, ChatHistoryEntry } from '../api/copilot';
 import { getLicenseFeatures } from '../api/project';
 import { getSignalRClient } from '../api/signalr';
 import { log, debug } from '../views/outputChannel';
 import { ProjectTreeProvider } from './projectTreeProvider';
+import { renderSafeMarkdown } from '../utils/safeMarkdown';
+
+type CopilotWebviewMessage =
+    | { type: 'ready' | 'stop' | 'clear' }
+    | { type: 'send'; text: string }
+    | { type: 'openBlock'; blockName: string }
+    | { type: 'openExternal'; href: string };
+
+function isAllowedExternalUrl(value: string): boolean {
+    try {
+        const parsed = new URL(value);
+        return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+    } catch {
+        return false;
+    }
+}
+
+function containsControlCharacters(value: string): boolean {
+    return Array.from(value).some(character => {
+        const code = character.charCodeAt(0);
+        return code <= 0x1f || code === 0x7f;
+    });
+}
+
+function isCopilotWebviewMessage(value: unknown): value is CopilotWebviewMessage {
+    if (!value || typeof value !== 'object') { return false; }
+    const message = value as Record<string, unknown>;
+    if (message.type === 'ready' || message.type === 'stop' || message.type === 'clear') { return true; }
+    if (message.type === 'send') {
+        return typeof message.text === 'string' && message.text.length <= 100_000;
+    }
+    if (message.type === 'openBlock') {
+        return typeof message.blockName === 'string'
+            && message.blockName.length > 0
+            && message.blockName.length <= 256
+            && !containsControlCharacters(message.blockName);
+    }
+    return message.type === 'openExternal'
+        && typeof message.href === 'string'
+        && message.href.length <= 2048
+        && isAllowedExternalUrl(message.href);
+}
 
 export class CopilotViewProvider implements vscode.WebviewViewProvider {
 
@@ -64,7 +107,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                     const content = String(args[0] ?? '');
                     // Skip echo of our own message (already shown locally and already in chatHistory)
                     if (content && content !== this.lastSentText) {
-                        debug(`[Copilot SignalR] onUserMessage (external): ${content.substring(0, 80)}`);
+                        debug('[Copilot SignalR] External user message received.');
                         this.chatHistory.push({ Role: 'user', Content: content });
                         this.postMessage({ type: 'addMessage', role: 'user', content });
                     } else {
@@ -90,7 +133,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                     const success = data.Success ?? data.success;
                     const error = String(data.ErrorMessage ?? data.errorMessage ?? '');
 
-                    debug(`[Copilot SignalR] Assistant response: success=${success} content=${content.substring(0, 100)}`);
+                    debug(`[Copilot SignalR] Assistant response received: success=${success}.`);
 
                     if (content) {
                         this.chatHistory.push({ Role: 'assistant', Content: content });
@@ -105,8 +148,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                     break;
                 }
                 case 'ontokenusage': {
-                    // Optional — log token usage
-                    debug(`[Copilot SignalR] Token usage: ${JSON.stringify(args[0])}`);
+                    debug('[Copilot SignalR] Token usage event received.');
                     break;
                 }
             }
@@ -128,9 +170,13 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
             enableScripts: true,
         };
 
-        webviewView.webview.html = this.getHtml();
+        webviewView.webview.html = this.getHtml(webviewView.webview);
 
-        webviewView.webview.onDidReceiveMessage(async (msg) => {
+        webviewView.webview.onDidReceiveMessage(async (msg: unknown) => {
+            if (!isCopilotWebviewMessage(msg)) {
+                log('[Copilot] Rejected invalid webview message.');
+                return;
+            }
             switch (msg.type) {
                 case 'ready':
                     await this.onReady();
@@ -146,6 +192,9 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                     break;
                 case 'openBlock':
                     await this.onOpenBlock(msg.blockName);
+                    break;
+                case 'openExternal':
+                    await vscode.env.openExternal(vscode.Uri.parse(msg.href, true));
                     break;
             }
         });
@@ -223,7 +272,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
                 ? this.chatHistory.slice(-(maxHistory + 1), -1)  // exclude current message
                 : this.chatHistory.slice(0, -1);  // exclude current message
 
-            log(`[Copilot] Sending: "${text.substring(0, 60)}" with ${historyToSend.length} history msgs`);
+            log(`[Copilot] Sending message with ${historyToSend.length} history msgs`);
             await sendCopilotMessage(text, historyToSend, vscode.env.language);
             log('[Copilot] Message sent — waiting for SignalR events');
             this.setBusy(true);
@@ -283,7 +332,7 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
 
             vscode.window.showWarningMessage(`Block "${blockName}" not found in project.`);
         } catch (err) {
-            log(`[Copilot] Failed to open block ${blockName}: ${err}`);
+            log(`[Copilot] Failed to open requested block: ${err}`);
         }
     }
 
@@ -330,7 +379,22 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
     }
 
     private postMessage(msg: Record<string, unknown>): void {
-        this.view?.webview.postMessage(msg);
+        let safeMessage = msg;
+        if (msg.type === 'addMessage' && msg.role === 'assistant' && typeof msg.content === 'string') {
+            safeMessage = { ...msg, renderedHtml: renderSafeMarkdown(msg.content) };
+        } else if (msg.type === 'history' && Array.isArray(msg.messages)) {
+            safeMessage = {
+                ...msg,
+                messages: msg.messages.map(item => {
+                    if (!item || typeof item !== 'object') { return item; }
+                    const message = item as Record<string, unknown>;
+                    return String(message.Role).toLowerCase() === 'assistant' && typeof message.Content === 'string'
+                        ? { ...message, RenderedHtml: renderSafeMarkdown(message.Content) }
+                        : message;
+                }),
+            };
+        }
+        this.view?.webview.postMessage(safeMessage);
     }
 
     dispose(): void {
@@ -338,13 +402,16 @@ export class CopilotViewProvider implements vscode.WebviewViewProvider {
         this.signalRDispose?.();
     }
 
-    private getHtml(): string {
+    private getHtml(webview: vscode.Webview): string {
+        const nonce = randomBytes(24).toString('base64');
         return /*html*/`<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'; img-src data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none';">
+<meta name="webview-source" content="${webview.cspSource}">
+<style nonce="${nonce}">
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
     font-family: var(--vscode-font-family);
@@ -594,7 +661,7 @@ body {
         <button id="btn-stop" title="${vscode.l10n.t('Stop')}">&#9632;</button>
     </div>
 </div>
-<script>
+<script nonce="${nonce}">
 const vscode = acquireVsCodeApi();
 const welcomeEl = document.getElementById('welcome');
 const messagesEl = document.getElementById('messages');
@@ -621,141 +688,13 @@ document.querySelectorAll('.suggestion').forEach(el => {
     });
 });
 
-function escapeHtml(s) {
-    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function renderMarkdown(text) {
-    const lines = text.split('\\n');
-    const blocks = [];
-    let i = 0;
-
-    while (i < lines.length) {
-        const line = lines[i];
-
-        // Code fence
-        if (line.trimStart().startsWith('\x60\x60\x60')) {
-            const codeLines = [];
-            i++;
-            while (i < lines.length && !lines[i].trimStart().startsWith('\x60\x60\x60')) {
-                codeLines.push(lines[i]);
-                i++;
-            }
-            i++; // skip closing fence
-            blocks.push('<pre>' + escapeHtml(codeLines.join('\\n')) + '</pre>');
-            continue;
-        }
-
-        // Table: line starts with | and next line is separator |---|
-        if (line.trim().startsWith('|') && i + 1 < lines.length && /^\\|?[\\s-:|]+\\|/.test(lines[i + 1])) {
-            const tableLines = [];
-            while (i < lines.length && lines[i].trim().startsWith('|')) {
-                tableLines.push(lines[i]);
-                i++;
-            }
-            blocks.push(renderTable(tableLines));
-            continue;
-        }
-
-        // Unordered list: collect consecutive lines starting with - or *
-        if (/^\\s*[-*]\\s+/.test(line)) {
-            const items = [];
-            while (i < lines.length && /^\\s*[-*]\\s+/.test(lines[i])) {
-                items.push('<li>' + renderInline(lines[i].replace(/^\\s*[-*]\\s+/, '')) + '</li>');
-                i++;
-            }
-            blocks.push('<ul>' + items.join('') + '</ul>');
-            continue;
-        }
-
-        // Ordered list: collect consecutive lines starting with digits.
-        if (/^\\s*\\d+\\.\\s+/.test(line)) {
-            const items = [];
-            while (i < lines.length && /^\\s*\\d+\\.\\s+/.test(lines[i])) {
-                items.push('<li>' + renderInline(lines[i].replace(/^\\s*\\d+\\.\\s+/, '')) + '</li>');
-                i++;
-            }
-            blocks.push('<ol>' + items.join('') + '</ol>');
-            continue;
-        }
-
-        // Empty line → paragraph break
-        if (line.trim() === '') {
-            blocks.push('');
-            i++;
-            continue;
-        }
-
-        // Regular line
-        blocks.push(renderInline(line));
-        i++;
-    }
-
-    return blocks.join('\\n');
-}
-
-function renderTable(lines) {
-    if (lines.length < 2) return lines.map(escapeHtml).join('\\n');
-
-    function parseCells(line) {
-        return line.split('|').slice(1, -1).map(c => c.trim());
-    }
-
-    const headers = parseCells(lines[0]);
-    // Skip separator line (line[1])
-    const rows = lines.slice(2).map(parseCells);
-
-    let html = '<table><thead><tr>';
-    headers.forEach(h => { html += '<th>' + renderInline(h) + '</th>'; });
-    html += '</tr></thead><tbody>';
-    rows.forEach(row => {
-        html += '<tr>';
-        row.forEach(cell => { html += '<td>' + renderInline(cell) + '</td>'; });
-        html += '</tr>';
-    });
-    html += '</tbody></table>';
-    return html;
-}
-
-function renderInline(line) {
-    let html = escapeHtml(line);
-
-    // Headers
-    html = html.replace(/^#{4}\\s+(.+)$/, '<h4>$1</h4>');
-    html = html.replace(/^#{3}\\s+(.+)$/, '<h3>$1</h3>');
-    html = html.replace(/^#{2}\\s+(.+)$/, '<h2>$1</h2>');
-    html = html.replace(/^#{1}\\s+(.+)$/, '<h1>$1</h1>');
-
-    // Inline code
-    html = html.replace(/\x60([^\x60]+)\x60/g, '<code>$1</code>');
-
-    // Bold + italic
-    html = html.replace(/\\*\\*\\*(.+?)\\*\\*\\*/g, '<strong><em>$1</em></strong>');
-    html = html.replace(/\\*\\*(.+?)\\*\\*/g, '<strong>$1</strong>');
-    html = html.replace(/\\*(.+?)\\*/g, '<em>$1</em>');
-
-    // Links [text](url)
-    html = html.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '<a href="$2">$1</a>');
-
-    // Block names: FB_xxx, FC_xxx, OB_xxx, DB_xxx, UDT_xxx (clickable links)
-    // Skip if already inside a tag (code, a, etc.)
-    html = html.replace(/(?:<[^>]+>)|\\b((?:FB|FC|OB|DB|UDT)_[A-Za-z0-9_]+)\\b/g, function(match, name) {
-        if (!name) return match; // HTML tag — pass through
-        return '<a class="block-link" href="#" data-block="' + name + '">' + name + '</a>';
-    });
-
-    // Horizontal rule
-    html = html.replace(/^---+$/, '<hr>');
-
-    return html;
-}
-
-function addMessage(role, content) {
+function addMessage(role, content, renderedHtml) {
     showMessages();
     const div = document.createElement('div');
     div.className = 'msg msg-' + role;
-    if (role === 'assistant') {
-        div.innerHTML = renderMarkdown(content);
+    if (role === 'assistant' && typeof renderedHtml === 'string') {
+        const parsed = new DOMParser().parseFromString(renderedHtml, 'text/html');
+        Array.from(parsed.body.childNodes).forEach(node => div.appendChild(node));
     } else if (role === 'error') {
         div.textContent = content;
     } else {
@@ -812,6 +751,15 @@ document.addEventListener('click', (e) => {
         if (blockName) {
             vscode.postMessage({ type: 'openBlock', blockName });
         }
+        return;
+    }
+    const anchor = target && target.closest ? target.closest('a[href]') : null;
+    if (anchor) {
+        e.preventDefault();
+        const href = anchor.getAttribute('href');
+        if (href) {
+            vscode.postMessage({ type: 'openExternal', href });
+        }
     }
 });
 
@@ -819,7 +767,7 @@ window.addEventListener('message', (e) => {
     const msg = e.data;
     switch (msg.type) {
         case 'addMessage':
-            addMessage(msg.role, msg.content);
+            addMessage(msg.role, msg.content, msg.renderedHtml);
             break;
         case 'toolExecution':
             addToolMsg(msg.message);
@@ -828,19 +776,19 @@ window.addEventListener('message', (e) => {
             setBusy(msg.status === 'busy');
             break;
         case 'history':
-            messagesEl.innerHTML = '';
+            messagesEl.replaceChildren();
             if (msg.messages && msg.messages.length > 0) {
                 showMessages();
                 msg.messages.forEach(m => {
                     const role = (m.Role || '').toLowerCase();
                     if (role === 'user' || role === 'assistant') {
-                        addMessage(role, m.Content);
+                        addMessage(role, m.Content, m.RenderedHtml);
                     }
                 });
             }
             break;
         case 'clearAll':
-            messagesEl.innerHTML = '';
+            messagesEl.replaceChildren();
             messagesEl.className = 'hidden';
             welcomeEl.className = '';
             setBusy(false);

@@ -112,9 +112,13 @@ export function isServerInstalled(): { installed: boolean; exePath?: string } {
 }
 
 /** Fetch the API key from the local server (localhost-only endpoint, no auth required).
- *  Stores it in settings if the current key is empty or different. */
+ *  Stores it in VS Code SecretStorage if the current key is empty or different. */
 export async function fetchLocalApiKey(): Promise<boolean> {
     const url = getServerUrl().replace(/\/+$/, '');
+    if (!isLoopbackServerUrl(url)) {
+        log('Local API key request refused: server URL is not loopback.');
+        return false;
+    }
     try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 3000);
@@ -147,6 +151,18 @@ export async function fetchLocalApiKey(): Promise<boolean> {
         return true;
     } catch {
         // Endpoint not available (older server version)
+        return false;
+    }
+}
+
+/** Only the literal loopback hosts may use the unauthenticated local-key endpoint. */
+export function isLoopbackServerUrl(value: string): boolean {
+    try {
+        const parsed = new URL(value);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') { return false; }
+        if (parsed.username !== '' || parsed.password !== '') { return false; }
+        return parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || parsed.hostname === '[::1]';
+    } catch {
         return false;
     }
 }

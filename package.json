@@ -35,11 +35,6 @@
           "default": "http://localhost:9000",
           "description": "%config.serverUrl.description%"
         },
-        "tiaConnect.apiKey": {
-          "type": "string",
-          "default": "",
-          "description": "%config.apiKey.description%"
-        },
         "tiaConnect.autoReimportOnSave": {
           "type": "boolean",
           "default": true,

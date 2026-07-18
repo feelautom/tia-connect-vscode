@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { toPascalCaseKeys } from '../../src/api/client';
+import { describe, it, expect, vi } from 'vitest';
+import { TiaClient, toPascalCaseKeys } from '../../src/api/client';
 
 describe('toPascalCaseKeys', () => {
     it('converts simple object keys to PascalCase', () => {
@@ -59,5 +59,32 @@ describe('toPascalCaseKeys', () => {
         expect(result).toHaveProperty('ErrorCount', 0);
         expect(result).toHaveProperty('WarningCount', 1);
         expect(result).toHaveProperty('Messages');
+    });
+});
+
+describe('TiaClient business responses', () => {
+    it('rejects HTTP 2xx responses whose business result is Success=false', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            text: async () => JSON.stringify({ Success: false, Message: 'Operation refused' }),
+            headers: new Headers(),
+        }));
+
+        await expect(new TiaClient().get('/api/test')).rejects.toThrow('Operation refused');
+        vi.unstubAllGlobals();
+    });
+
+    it('returns successful business responses', async () => {
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            text: async () => JSON.stringify({ Success: true, Data: { value: 1 } }),
+            headers: new Headers(),
+        }));
+
+        const response = await new TiaClient().get<{ Value: number }>('/api/test');
+        expect(response.Data).toEqual({ Value: 1 });
+        vi.unstubAllGlobals();
     });
 });

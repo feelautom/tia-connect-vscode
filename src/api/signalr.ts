@@ -3,6 +3,17 @@ import { log } from '../views/outputChannel';
 
 type MessageHandler = (hubName: string, method: string, args: unknown[]) => void;
 
+interface NegotiateResponse {
+    ConnectionToken?: string;
+    MessageId?: string;
+}
+
+interface SignalREnvelope {
+    C?: string;
+    G?: string;
+    M?: Array<{ H?: string; M?: string; A?: unknown[] }>;
+}
+
 /**
  * Lightweight ASP.NET SignalR (legacy) client using longPolling transport.
  * Compatible with Microsoft.AspNet.SignalR hubs.
@@ -47,7 +58,7 @@ export class SignalRClient {
             log('[SignalR] Connected.');
             this.pollLoop();
         } catch (err) {
-            log(`[SignalR] Connection failed: ${err}`);
+            log(`[SignalR] Connection failed${err instanceof Error ? `: ${err.name}` : ''}.`);
         }
     }
 
@@ -77,36 +88,39 @@ export class SignalRClient {
     }
 
     private buildUrl(endpoint: string, extra: Record<string, string> = {}): string {
-        const apiKey = getApiKey();
         const params = new URLSearchParams({
             connectionData: JSON.stringify(this.hubs.map(h => ({ name: h }))),
             ...extra,
         });
-        if (apiKey) { params.set('apiKey', apiKey); }
         if (this.connectionToken) { params.set('connectionToken', this.connectionToken); }
         return `${this.baseUrl}/signalr/${endpoint}?${params.toString()}`;
+    }
+
+    private get headers(): Record<string, string> {
+        const apiKey = getApiKey();
+        return apiKey ? { 'X-API-Key': apiKey } : {};
     }
 
     private async negotiate(): Promise<string | null> {
         const url = this.buildUrl('negotiate');
         try {
-            const resp = await fetch(url, { method: 'POST' });
+            const resp = await fetch(url, { method: 'POST', headers: this.headers });
             if (!resp.ok) {
                 log(`[SignalR] Negotiate failed: HTTP ${resp.status}`);
                 return null;
             }
-            const data = await resp.json();
+            const data = await resp.json() as NegotiateResponse;
             this.messageId = data.MessageId ?? null;
             return data.ConnectionToken ?? null;
         } catch (err) {
-            log(`[SignalR] Negotiate error: ${err}`);
+            log(`[SignalR] Negotiate error${err instanceof Error ? `: ${err.name}` : ''}.`);
             return null;
         }
     }
 
     private async startConnection(): Promise<void> {
         const url = this.buildUrl('start', { transport: 'longPolling' });
-        const resp = await fetch(url);
+        const resp = await fetch(url, { headers: this.headers });
         if (!resp.ok) {
             throw new Error(`Start failed: HTTP ${resp.status}`);
         }
@@ -114,7 +128,7 @@ export class SignalRClient {
 
     private async sendAbort(): Promise<void> {
         const url = this.buildUrl('abort', { transport: 'longPolling' });
-        await fetch(url, { method: 'POST' });
+        await fetch(url, { method: 'POST', headers: this.headers });
     }
 
     private async pollLoop(): Promise<void> {
@@ -128,6 +142,7 @@ export class SignalRClient {
                 const url = this.buildUrl('poll', params);
                 const resp = await fetch(url, {
                     signal: this.abortController.signal,
+                    headers: this.headers,
                 });
 
                 if (!resp.ok) {
@@ -136,7 +151,7 @@ export class SignalRClient {
                     return;
                 }
 
-                const data = await resp.json();
+                const data = await resp.json() as SignalREnvelope;
 
                 // Update cursors
                 if (data.C) { this.messageId = data.C; }
@@ -149,16 +164,16 @@ export class SignalRClient {
                             for (const handler of this.handlers) {
                                 try {
                                     handler(msg.H.toLowerCase(), msg.M, msg.A);
-                                } catch (err) {
-                                    log(`[SignalR] Handler error: ${err}`);
+                } catch (err) {
+                                    log(`[SignalR] Handler error${err instanceof Error ? `: ${err.name}` : ''}.`);
                                 }
                             }
                         }
                     }
                 }
-            } catch (err: any) {
-                if (err?.name === 'AbortError') { return; }
-                log(`[SignalR] Poll error: ${err}`);
+            } catch (err: unknown) {
+                if (err instanceof Error && err.name === 'AbortError') { return; }
+                log(`[SignalR] Poll error${err instanceof Error ? `: ${err.name}` : ''}.`);
                 this.scheduleReconnect();
                 return;
             }

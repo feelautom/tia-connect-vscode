@@ -75,6 +75,7 @@ function waitJobViaSignalR(
 
             if (method === 'jobStatusChanged') {
                 const statusStr = args[1] as string;
+                if (!isJobStatusValue(statusStr)) { return; }
                 const result = args[2];
                 const description = args[3] as string | undefined;
 
@@ -84,6 +85,8 @@ function waitJobViaSignalR(
                     Result: result,
                     Message: description || '',
                     Error: statusStr === 'Failed' ? (description || '') : undefined,
+                    Progress: statusStr === 'Completed' ? 100 : 0,
+                    CreatedAt: new Date().toISOString(),
                 };
                 onProgress?.(status);
 
@@ -102,12 +105,18 @@ function waitJobViaSignalR(
                     Status: 'Running',
                     Message: message || `${percent}%`,
                     Result: null,
+                    Progress: Number.isFinite(percent) ? Math.max(0, Math.min(100, percent)) : 0,
+                    CreatedAt: new Date().toISOString(),
                 });
             }
         };
 
         unsubscribe = signalr.onMessage(handler);
     });
+}
+
+function isJobStatusValue(value: string): value is JobStatus['Status'] {
+    return value === 'Pending' || value === 'Running' || value === 'Completed' || value === 'Failed';
 }
 
 /** Fallback: poll job status via HTTP */

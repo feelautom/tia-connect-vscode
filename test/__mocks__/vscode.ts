@@ -131,6 +131,99 @@ export const commands = {
     executeCommand: async () => {},
 };
 
+export class TestMessage {
+    location?: any;
+    constructor(public message: string) {}
+}
+
+export enum TestRunProfileKind {
+    Run = 1,
+    Debug = 2,
+    Coverage = 3,
+}
+
+export class TestRunRequest {
+    constructor(
+        public include?: TestItem[],
+        public exclude?: TestItem[],
+        public profile?: any,
+        public continuous?: boolean,
+    ) {}
+}
+
+export class TestItemCollection {
+    private readonly values = new Map<string, TestItem>();
+    get size(): number { return this.values.size; }
+    add(item: TestItem): void { this.values.set(item.id, item); }
+    delete(id: string): void { this.values.delete(id); }
+    get(id: string): TestItem | undefined { return this.values.get(id); }
+    replace(items: readonly TestItem[]): void {
+        this.values.clear();
+        items.forEach(item => this.add(item));
+    }
+    forEach(callback: (item: TestItem, collection: TestItemCollection) => unknown): void {
+        this.values.forEach(item => callback(item, this));
+    }
+    entries(): IterableIterator<[string, TestItem]> { return this.values.entries(); }
+}
+
+export class TestItem {
+    readonly children = new TestItemCollection();
+    canResolveChildren = false;
+    error?: TestMessage | string;
+    busy = false;
+    description?: string | boolean;
+    sortText?: string;
+    range?: any;
+    tags: readonly any[] = [];
+    constructor(public readonly id: string, public label: string, public readonly uri?: Uri) {}
+}
+
+class MockTestRun {
+    readonly events: Array<{ state: string; item?: TestItem; messages?: TestMessage | readonly TestMessage[]; duration?: number }> = [];
+    enqueued = (item: TestItem) => this.events.push({ state: 'enqueued', item });
+    started = (item: TestItem) => this.events.push({ state: 'started', item });
+    skipped = (item: TestItem) => this.events.push({ state: 'skipped', item });
+    passed = (item: TestItem, duration?: number) => this.events.push({ state: 'passed', item, duration });
+    failed = (item: TestItem, messages: TestMessage | readonly TestMessage[], duration?: number) =>
+        this.events.push({ state: 'failed', item, messages, duration });
+    errored = (item: TestItem, messages: TestMessage | readonly TestMessage[], duration?: number) =>
+        this.events.push({ state: 'errored', item, messages, duration });
+    appendOutput = () => {};
+    end = () => this.events.push({ state: 'end' });
+}
+
+class MockTestController {
+    readonly items = new TestItemCollection();
+    readonly profiles: Array<{ label: string; kind: TestRunProfileKind; handler: Function; isDefault?: boolean }> = [];
+    readonly runs: MockTestRun[] = [];
+    resolveHandler?: (item?: TestItem) => void | Promise<void>;
+    refreshHandler?: (() => void | Promise<void>) | undefined;
+    constructor(public readonly id: string, public readonly label: string) {}
+    createTestItem(id: string, label: string, uri?: Uri): TestItem { return new TestItem(id, label, uri); }
+    createRunProfile(label: string, kind: TestRunProfileKind, handler: Function, isDefault?: boolean) {
+        const profile = { label, kind, handler, isDefault, dispose: () => {} };
+        this.profiles.push(profile);
+        return profile;
+    }
+    createTestRun(_request: TestRunRequest): MockTestRun {
+        const run = new MockTestRun();
+        this.runs.push(run);
+        return run;
+    }
+    dispose(): void {}
+}
+
+export const tests = {
+    createdControllers: [] as MockTestController[],
+    createTestController(id: string, label: string): MockTestController {
+        const controller = new MockTestController(id, label);
+        this.createdControllers.push(controller);
+        return controller;
+    },
+    reset(): void { this.createdControllers.length = 0; },
+};
+
 export const env = {
     language: 'en',
     openExternal: async () => true,

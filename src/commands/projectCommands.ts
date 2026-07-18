@@ -5,7 +5,7 @@ import { getProjectOverview, listProjectFiles, getProjectHistory, openProject, c
 import { pollJob } from '../api/jobs';
 import { ProjectTreeProvider } from '../providers/projectTreeProvider';
 import { TiaSourceControl } from '../providers/scmProvider';
-import { TestTreeProvider } from '../providers/testTreeProvider';
+import { TiaTestProvider } from '../providers/testProvider';
 import { setConnected, setDisconnected, setError } from '../views/statusBar';
 import { log, logError, showOutput } from '../views/outputChannel';
 import { CONTEXT_KEYS } from '../utils/constants';
@@ -21,7 +21,7 @@ export function registerProjectCommands(
     context: vscode.ExtensionContext,
     treeProvider: ProjectTreeProvider,
     scmProvider: TiaSourceControl,
-    testProvider: TestTreeProvider,
+    testProvider: TiaTestProvider,
     copilotProvider?: CopilotViewProvider,
 ): void {
     copilotProviderRef = copilotProvider;
@@ -112,7 +112,7 @@ async function ensureApiKey(): Promise<boolean> {
 async function connect(
     treeProvider: ProjectTreeProvider,
     scmProvider: TiaSourceControl,
-    testProvider: TestTreeProvider,
+    testProvider: TiaTestProvider,
 ): Promise<void> {
     try {
         log('Connecting to T-IA Connect server...');
@@ -382,7 +382,7 @@ async function launchAndConnect(
     headless: boolean,
     treeProvider: ProjectTreeProvider,
     scmProvider: TiaSourceControl,
-    testProvider: TestTreeProvider,
+    testProvider: TiaTestProvider,
 ): Promise<void> {
     // Check instance registry first — server may already be running on a different port
     const existingInstance = discoverRunningInstance();

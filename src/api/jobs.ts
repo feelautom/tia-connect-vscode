@@ -5,6 +5,23 @@ import { getSignalRClient } from './signalr';
 const DEFAULT_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 const POLL_FALLBACK_INTERVAL_MS = 1000;
 
+interface JobCancellationToken {
+    readonly isCancellationRequested: boolean;
+    onCancellationRequested?: (listener: () => void) => { dispose(): unknown };
+}
+
+export class JobPollingCancelledError extends Error {
+    constructor() {
+        super('Job polling cancelled.');
+        this.name = 'JobPollingCancelledError';
+    }
+}
+
+export function isJobPollingCancellationError(error: unknown): error is JobPollingCancelledError {
+    return error instanceof JobPollingCancelledError
+        || (error instanceof Error && error.name === 'JobPollingCancelledError');
+}
+
 export async function getJobStatus(jobId: string): Promise<JobStatus> {
     const res = await client.get<JobStatus>(`/api/jobs/${encodeURIComponent(jobId)}`);
     return res.Data;
@@ -16,7 +33,7 @@ export async function pollJob(
     onProgress?: (status: JobStatus) => void,
     intervalMs = POLL_FALLBACK_INTERVAL_MS,
     timeoutMs = DEFAULT_TIMEOUT_MS,
-    cancellationToken?: { isCancellationRequested: boolean },
+    cancellationToken?: JobCancellationToken,
 ): Promise<JobStatus> {
     const signalr = getSignalRClient();
 
@@ -33,14 +50,17 @@ function waitJobViaSignalR(
     jobId: string,
     onProgress: ((status: JobStatus) => void) | undefined,
     timeoutMs: number,
-    cancellationToken?: { isCancellationRequested: boolean },
+    cancellationToken?: JobCancellationToken,
 ): Promise<JobStatus> {
     return new Promise((resolve, reject) => {
         const signalr = getSignalRClient();
         let settled = false;
         let unsubscribe: (() => void) | null = null;
-
-        const cleanup = () => { unsubscribe?.(); };
+        const cancellationState: { subscription?: { dispose(): unknown } } = {};
+        const cleanup = () => {
+            unsubscribe?.();
+            cancellationState.subscription?.dispose();
+        };
 
         const timer = setTimeout(() => {
             if (settled) { return; }
@@ -49,6 +69,14 @@ function waitJobViaSignalR(
             reject(new Error(`Job ${jobId} timed out after ${timeoutMs / 1000}s.`));
         }, timeoutMs);
 
+        cancellationState.subscription = cancellationToken?.onCancellationRequested?.(() => {
+            if (settled) { return; }
+            settled = true;
+            clearTimeout(timer);
+            cleanup();
+            reject(new JobPollingCancelledError());
+        });
+
         // Also do one initial HTTP check in case the job already completed
         getJobStatus(jobId).then(status => {
             if (settled) { return; }
@@ -56,6 +84,7 @@ function waitJobViaSignalR(
             if (status.Status === 'Completed' || status.Status === 'Failed') {
                 settled = true;
                 clearTimeout(timer);
+                cleanup();
                 resolve(status);
             }
         }).catch(() => {});
@@ -66,7 +95,7 @@ function waitJobViaSignalR(
                 settled = true;
                 clearTimeout(timer);
                 cleanup();
-                reject(new Error('Job polling cancelled.'));
+                reject(new JobPollingCancelledError());
                 return;
             }
 
@@ -125,13 +154,13 @@ async function pollJobHttp(
     onProgress: ((status: JobStatus) => void) | undefined,
     intervalMs: number,
     timeoutMs: number,
-    cancellationToken?: { isCancellationRequested: boolean },
+    cancellationToken?: JobCancellationToken,
 ): Promise<JobStatus> {
     const deadline = Date.now() + timeoutMs;
 
     while (true) {
         if (cancellationToken?.isCancellationRequested) {
-            throw new Error('Job polling cancelled.');
+            throw new JobPollingCancelledError();
         }
 
         const status = await getJobStatus(jobId);
@@ -145,6 +174,25 @@ async function pollJobHttp(
             throw new Error(`Job ${jobId} timed out after ${timeoutMs / 1000}s (last status: ${status.Status}).`);
         }
 
-        await new Promise(r => setTimeout(r, intervalMs));
+        await cancellableDelay(intervalMs, cancellationToken);
     }
+}
+
+function cancellableDelay(delayMs: number, cancellationToken?: JobCancellationToken): Promise<void> {
+    if (cancellationToken?.isCancellationRequested) {
+        return Promise.reject(new JobPollingCancelledError());
+    }
+
+    return new Promise((resolve, reject) => {
+        const cancellationState: { subscription?: { dispose(): unknown } } = {};
+        const timer = setTimeout(() => {
+            cancellationState.subscription?.dispose();
+            resolve();
+        }, delayMs);
+        cancellationState.subscription = cancellationToken?.onCancellationRequested?.(() => {
+            clearTimeout(timer);
+            cancellationState.subscription?.dispose();
+            reject(new JobPollingCancelledError());
+        });
+    });
 }

@@ -50,12 +50,11 @@ tia-connect-vscode/
 │   │   ├── vcsTreeProvider.ts      # TreeDataProvider (Source Control dans la sidebar)
 │   │   ├── vcsContentProvider.ts   # TextDocumentContentProvider (scheme tia-vcs, diff viewer)
 │   │   ├── originalContentProvider.ts # QuickDiff pour blocs en cours d'edition
-│   │   └── testTreeProvider.ts     # TreeDataProvider (PLC Tests dans la sidebar)
+│   │   └── testProvider.ts         # TestController natif VS Code (PLC Tests)
 │   ├── editors/
 │   │   ├── blockEditor.ts          # Ouverture, sauvegarde, reimport, prechargement blocs SCL/STL
 │   │   ├── blockFileManager.ts     # Fichiers temporaires + metadata .tia-meta.json + cache
 │   │   ├── crossRefWebview.ts      # Webview cross-references (sources, objets, locations)
-│   │   ├── testResultWebview.ts   # Webview resultats de tests (steps, assertions, pass/fail)
 │   │   ├── ladRenderer.ts         # Rendu LAD/FBD en SVG (contacts, bobines, branches OR)
 │   │   ├── ladWebview.ts          # Webview lecture seule pour blocs LAD/FBD
 │   │   ├── tagTableWebview.ts     # Webview tag tables (noms, adresses, types)
@@ -175,23 +174,26 @@ Panel dedie **Source Control** dans la sidebar T-IA Connect (pas le SCM natif de
 - Auto-refresh status toutes les 30 secondes
 - Verification licence `hasVcs` (cadenas si pas inclus)
 
-### 5. PLC Tests (`providers/testTreeProvider.ts`)
+### 5. PLC Tests (`providers/testProvider.ts`)
 
-`TreeDataProvider` integre dans la sidebar T-IA Connect (sous le Project Explorer).
+`TestController` integre dans le Test Explorer natif de VS Code. L'extension ne contribue plus de TreeView PLC parallele.
 
 **Pre-requis verifies automatiquement :**
-- Feature `hasTestHarness` activee dans la licence (sinon affiche icone cadenas)
-- PLCSim Advanced disponible via `/api/simulation/status` (sinon affiche icone warning)
+- Workspace approuve ; les tests restent bloques en Restricted Mode
+- Feature exacte `hasTestHarness` activee dans la licence
+- PLCSim Advanced disponible via `/api/simulation/status`
+- Un item de statut natif et non executable expose le blocage quand un pre-requis manque
 
 **Fonctionnalites :**
 - Decouverte des tests depuis le backend T-IA Connect
-- Arborescence : Test → Steps
-- Execution individuelle (bouton inline) ou globale (Run All)
-- Resultats pass/fail avec icones colorees et messages d'assertion detailles
-- **Webview detaillee** (`editors/testResultWebview.ts`) : panel HTML avec badges pass/fail, step cards colorees, tableau d'assertions (Tag, Expected, Actual, Message), duree, timestamps. S'ouvre automatiquement apres execution, recliquable sur un test termine.
+- Arborescence native : Test → Steps, resolue a l'expansion ou avant execution
+- Execution globale, selectionnee (test ou step), exclusions et deduplication parent/enfant
+- Le backend ne sait executer qu'un test complet : exclure un step exclut donc son test parent
+- Resultats natifs pass/fail/error/skipped, duree du test et messages d'assertion detailles (Tag, Expected, Actual, Message)
 - Progression via SignalR (temps reel) ou polling de jobs (fallback)
-- Messages d'erreur explicites quand PLCSim n'est pas disponible
-- Nodes de message (lock, warning, info) quand les pre-requis ne sont pas remplis
+- L'annulation VS Code interrompt immediatement l'attente SignalR ou le delai de polling et ignore le resultat tardif. Elle n'annule pas le job deja lance cote Desktop, faute d'API backend dediee.
+
+Les noms de tests sont des textes humains transmis au backend sans trim, changement de casse ni normalisation Unicode. Les identifiants opaques du Test Explorer sont derives avec `encodeURIComponent`, ce qui evite les collisions avec les separateurs internes tout en preservant l'identite exacte utilisee par l'API.
 
 ### 5b. Cross-References (`editors/crossRefWebview.ts`)
 
@@ -398,6 +400,7 @@ Les operations longues (commit VCS, execution pipeline, tests) retournent un `Jo
 **Fallback : HTTP polling** (`api/jobs.ts`)
 - Si SignalR n'est pas connecte, `pollJob()` bascule automatiquement sur le polling HTTP classique (`GET /api/jobs/{id}` toutes les secondes)
 - Transparent pour l'appelant : meme interface `pollJob(jobId, onProgress)`
+- Un token d'annulation optionnel interrompt immediatement l'attente SignalR ou le delai entre deux polls, sans utiliser `client.cancelAll()`.
 
 ## Settings VS Code
 

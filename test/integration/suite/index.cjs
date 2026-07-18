@@ -22,6 +22,12 @@ async function run() {
     const tiaContainer = activityBar.find((container) => container.id === 'tiaConnect');
     assert.ok(tiaContainer, 'The T-IA Connect Activity Bar container must exist');
     assert.equal(tiaContainer.icon, 'resources/icons/tia-portal.svg');
+    const tiaViews = manifest.contributes.views.tiaConnect;
+    assert.equal(
+        tiaViews.some((view) => view.id === 'tiaTestExplorer'),
+        false,
+        'PLC tests must use the native VS Code Test Explorer, not a contributed TreeView',
+    );
 
     await extension.activate();
     assert.equal(extension.isActive, true, 'The extension must activate successfully');
@@ -34,6 +40,8 @@ async function run() {
         'tiaConnect.showDashboard',
         'tiaConnect.compileDevice',
         'tiaConnect.diagnostic',
+        'tiaConnect.testRefresh',
+        'tiaConnect.testRunAll',
     ]) {
         assert.ok(commands.has(command), `Command ${command} must be registered`);
     }

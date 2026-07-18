@@ -176,12 +176,13 @@ Compatible with: **Claude Desktop**, **Claude Code**, **Cursor**, **Windsurf**, 
 
 ### PLC Tests
 
-Run PLC tests against PLCSim Advanced from the sidebar.
+Run PLC tests against PLCSim Advanced from the native VS Code Test Explorer.
 
-- Automatic license and PLCSim availability checks
-- Run individual tests or the entire suite
-- Detailed results: pass/fail badges, step cards, assertions table with expected vs actual values
-- Duration and timestamps
+- Automatic Workspace Trust, license, and PLCSim availability checks
+- Discover and refresh test suites directly in the Test Explorer
+- Run all tests, a selected test, or a selected step; exclusions and cancellation are supported
+- Native pass/fail/error results for suites and steps, with assertion messages and expected vs actual values
+- Test duration in the standard VS Code results panel
 
 ### Cross-References
 
@@ -325,7 +326,7 @@ All commands are available via **Ctrl+Shift+P**:
 | List / Run / History | Manage CI/CD pipelines |
 | Create from Template | Create pipeline from template |
 | Run All PLC Tests | Run the full test suite |
-| Run Test | Run a single test |
+| Test Explorer: Run | Run a selected PLC test or step |
 
 ---
 

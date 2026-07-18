@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ProjectTreeProvider } from './providers/projectTreeProvider';
 import { TiaSourceControl } from './providers/scmProvider';
-import { TestTreeProvider } from './providers/testTreeProvider';
+import { TiaTestProvider } from './providers/testProvider';
 import { BlockEditor } from './editors/blockEditor';
 import { registerProjectCommands } from './commands/projectCommands';
 import { registerBlockCommands } from './commands/blockCommands';
@@ -34,7 +34,7 @@ import { isWorkspaceTrusted, registerWorkspaceCommand } from './security/workspa
 
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
-let testProvider: TestTreeProvider;
+let testProvider: TiaTestProvider;
 let vcsTreeProvider: VcsTreeProvider;
 let authService: AuthService;
 
@@ -140,8 +140,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     });
     context.subscriptions.push(vcsTreeView, vcsTreeProvider);
 
-    // Test Explorer (integrated in sidebar)
-    testProvider = new TestTreeProvider();
+    // PLC tests in the native VS Code Test Explorer
+    testProvider = new TiaTestProvider();
     testProvider.activate(context);
     context.subscriptions.push(testProvider);
 

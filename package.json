@@ -808,20 +808,6 @@
         "enablement": "isWorkspaceTrusted"
       },
       {
-        "command": "tiaConnect.testRunSingle",
-        "title": "%command.testRunSingle%",
-        "category": "T-IA Connect Tests",
-        "icon": "$(play)",
-        "enablement": "isWorkspaceTrusted"
-      },
-      {
-        "command": "tiaConnect.testShowResult",
-        "title": "%command.testShowResult%",
-        "category": "T-IA Connect Tests",
-        "icon": "$(open-preview)",
-        "enablement": "isWorkspaceTrusted"
-      },
-      {
         "command": "tiaConnect.pipelineList",
         "title": "%command.pipelineList%",
         "category": "T-IA Connect Pipelines",
@@ -1123,11 +1109,6 @@
           "id": "tiaVcsExplorer",
           "name": "%view.vcsExplorer%",
           "when": "tiaConnect.connected"
-        },
-        {
-          "id": "tiaTestExplorer",
-          "name": "%view.testExplorer%",
-          "when": "tiaConnect.connected"
         }
       ],
       "tiaCopilot": [
@@ -1180,16 +1161,6 @@
         {
           "command": "tiaConnect.vcsTreeRefresh",
           "when": "view == tiaVcsExplorer",
-          "group": "navigation"
-        },
-        {
-          "command": "tiaConnect.testRunAll",
-          "when": "view == tiaTestExplorer",
-          "group": "navigation"
-        },
-        {
-          "command": "tiaConnect.testRefresh",
-          "when": "view == tiaTestExplorer",
           "group": "navigation"
         },
         {
@@ -1368,11 +1339,6 @@
           "command": "tiaConnect.vcsPull",
           "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote",
           "group": "4_vcs_sync"
-        },
-        {
-          "command": "tiaConnect.testRunSingle",
-          "when": "view == tiaTestExplorer && viewItem == plcTest",
-          "group": "inline"
         }
       ]
     },

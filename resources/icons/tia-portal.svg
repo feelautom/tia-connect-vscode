@@ -1,6 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-  <!-- C: circular arc, opening at 45deg top-right to 45deg bottom-right -->
-  <path d="M16.2 6.2A8 8 0 1 0 16.2 17.8" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/>
-  <!-- T-IA text centered -->
-  <text x="12.5" y="14" font-family="Arial,sans-serif" font-weight="bold" font-size="7" fill="currentColor" text-anchor="middle">T-IA</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+  <!-- Monochrome Activity Bar adaptation of the T-IA CONNECT 1.0.3 icon. -->
+  <text x="12" y="9" fill="currentColor" font-family="Arial Narrow,Segoe UI,Arial,sans-serif"
+        font-size="8.2" font-weight="700" text-anchor="middle">T-IA</text>
+  <path d="M2 11.25H22" stroke="currentColor" stroke-width="1"/>
+  <text x="2" y="18" fill="currentColor" font-family="Arial Narrow,Segoe UI,Arial,sans-serif"
+        font-size="4.5" font-weight="700" letter-spacing="0.05">CONNECT</text>
+
+  <!-- Official VS Code ribbon silhouette, scaled from Microsoft's 256x256 mark. -->
+  <path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"
+        transform="translate(15 14.5) scale(0.033)"
+        d="M181.534 254.252C185.566 255.823 190.164 255.722 194.234 253.764L246.94 228.403C252.478 225.738 256 220.132 256 213.983V42.0181C256 35.8689 252.478 30.2638 246.94 27.5988L194.234 2.23681C188.893-0.333132 182.642 0.296344 177.955 3.70418C177.285 4.191 176.647 4.73454 176.049 5.33354L75.149 97.3862 31.1992 64.0247C27.1079 60.9191 21.3853 61.1735 17.5855 64.63L3.48936 77.4525C-1.15853 81.6805-1.16386 88.9926 3.47785 93.2274L41.5926 128 3.47785 162.773C-1.16386 167.008-1.15853 174.32 3.48936 178.548L17.5855 191.37C21.3853 194.827 27.1079 195.081 31.1992 191.976L75.149 158.614 176.049 250.667C177.645 252.264 179.519 253.467 181.534 254.252ZM192.039 69.8853 115.479 128 192.039 186.115V69.8853Z"/>
 </svg>

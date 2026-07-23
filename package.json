@@ -1425,7 +1425,7 @@
   "devDependencies": {
     "@types/node": "^25.6.0",
     "@types/vscode": "^1.85.0",
-    "@vscode/test-electron": "2.5.2",
+    "@vscode/test-electron": "3.0.0",
     "esbuild": "^0.28.0",
     "eslint": "^9.0.0",
     "typescript": "^5.5.0",

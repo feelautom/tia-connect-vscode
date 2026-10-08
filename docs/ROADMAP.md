@@ -39,13 +39,13 @@
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
-| Panel Source Control dedie (sidebar T-IA Connect) | DONE | TreeDataProvider custom (remplace le SCM natif) |
+| Panel Source Control natif | DONE | `TiaSourceControl` est l'unique provider ; aucun TreeView VCS parallele |
 | Export Preview (detecter les changements) | DONE | Export sans commit, bouton oeil dans title bar |
 | Auto-export periodique (1 min) | DONE | Silencieux, met a jour le panneau automatiquement |
 | Export initial a la connexion | DONE | Lance automatiquement quand le projet se charge |
 | Diff side-by-side au clic (read-only) | DONE | `vscode.diff` via VcsContentProvider (scheme `tia-vcs`) |
 | Gestion Added/Modified/Removed | DONE | Added = contenu, Modified = diff, Removed = ancien contenu |
-| Verification licence `hasVcs` | DONE | Icone cadenas si pas inclus dans la licence |
+| Verification licence `hasVcs` | DONE | Garde exacte avant appels VCS et contextes de commandes natifs |
 | Status des changements (Added/Modified/Removed) | DONE | Icones diff |
 | Commit avec message (export projet + git) | DONE | Job asynchrone avec polling |
 | Push vers remote | DONE | |
@@ -124,7 +124,7 @@
 | Language Server SCL (autocompletion, go-to-definition) | DONE | Signature help, cross-file go-to-def, diagnostics, rename |
 | Webview LAD (visualisation graphique lecture seule) | DONE | Rendering SVG des reseaux LADDER |
 | Multi-projet (switch entre projets) | DONE | QuickPick avec historique + projets disponibles |
-| QuickDiff pour VCS (diff inline dans editeur) | DONE | VcsContentProvider + VcsTreeProvider |
+| QuickDiff pour VCS (diff inline dans editeur) | DONE | VcsContentProvider + TiaSourceControl |
 | Webview pour resultats de test detailles | DONE | Steps, assertions, pass/fail badges, duree, timestamps |
 | Notifications push (SignalR) | DONE | Client SignalR legacy (longPolling), fallback HTTP polling |
 | Server launch depuis VS Code | DONE | Sidebar buttons Headless/GUI, auto-connect, Stop Server |

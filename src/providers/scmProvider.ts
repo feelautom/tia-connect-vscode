@@ -5,28 +5,39 @@ import {
     vcsGetStatus, vcsCommit, vcsGetLog, vcsGetDiff,
     vcsListBranches, vcsCreateBranch, vcsCheckoutBranch,
     vcsDeleteBranch, vcsMerge, vcsPush, vcsPull, vcsInit,
-    vcsListRemotes, vcsAddRemote, vcsRemoveRemote
+    vcsListRemotes, vcsAddRemote, vcsRemoveRemote, vcsExportPreview
 } from '../api/sourceControl';
-import { pollJob } from '../api/jobs';
+import { isJobPollingCancellationError, pollJob } from '../api/jobs';
+import { getLicenseFeatures } from '../api/project';
 import { VcsFileChange } from '../api/types';
 import { log, logError } from '../views/outputChannel';
-import { CONTEXT_KEYS, ORIGINAL_SCHEME } from '../utils/constants';
+import { CONTEXT_KEYS } from '../utils/constants';
 import { OriginalContentProvider } from './originalContentProvider';
-import { VcsContentProvider, VCS_SCHEME } from './vcsContentProvider';
+import { VcsContentProvider } from './vcsContentProvider';
 
 export class TiaSourceControl implements vscode.Disposable {
     private scm: vscode.SourceControl;
     private changesGroup: vscode.SourceControlResourceGroup;
     private disposables: vscode.Disposable[] = [];
     private refreshTimer: NodeJS.Timeout | undefined;
+    private autoExportTimer: NodeJS.Timeout | undefined;
+    private initialAutoExportTimer: NodeJS.Timeout | undefined;
+    private exportCancellation: vscode.CancellationTokenSource | undefined;
+    private lifecycleGeneration = 0;
+    private monitoring = false;
+    private isExporting = false;
+    private isInitialized = false;
+    private hasVcsLicense: boolean | null = null;
+    private licenseCheckFailed = false;
     readonly originalContentProvider: OriginalContentProvider;
 
     constructor() {
         this.scm = vscode.scm.createSourceControl('tiaConnect', 'T-IA Connect VCS');
-        this.scm.inputBox.placeholder = 'Commit message (exports project + git commit)';
+        this.scm.inputBox.placeholder = l10n.t('Connect to T-IA Connect to use Source Control.');
+        this.scm.inputBox.enabled = false;
         this.scm.acceptInputCommand = {
             command: 'tiaConnect.vcsCommit',
-            title: 'Commit',
+            title: l10n.t('Commit'),
         };
 
         // QuickDiff: provides gutter decorations (green/red/blue bars)
@@ -57,76 +68,306 @@ export class TiaSourceControl implements vscode.Disposable {
             registerWorkspaceCommand('tiaConnect.vcsLog', () => this.showLog()),
             registerWorkspaceCommand('tiaConnect.vcsRemote', () => this.remoteMenu()),
             registerWorkspaceCommand('tiaConnect.vcsDiffFile', (change: VcsFileChange) => this.diffFile(change)),
+            registerWorkspaceCommand('tiaConnect.vcsExportPreview', () => this.exportPreview()),
+            registerWorkspaceCommand('tiaConnect.vcsLicenseInfo', () => this.showLicenseInfo()),
         ];
 
         context.subscriptions.push(...commands);
         this.disposables.push(...commands);
     }
 
-    async refresh(): Promise<void> {
+    async refresh(expectedGeneration = this.lifecycleGeneration): Promise<void> {
+        if (!this.monitoring || expectedGeneration !== this.lifecycleGeneration) { return; }
+        if (!await this.ensureVcsLicensed(expectedGeneration)) { return; }
+
         try {
             const status = await vcsGetStatus();
-            log(`VCS status: initialized=${status.IsInitialized}, changes=${status.ChangedFilesCount ?? 0}`);
+            if (!this.isCurrentGeneration(expectedGeneration)) { return; }
 
-            vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsInitialized, status.IsInitialized);
+            this.isInitialized = status.IsInitialized;
+            log(`VCS status: initialized=${status.IsInitialized}, changes=${status.ChangedFilesCount ?? 0}`);
+            void vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsInitialized, status.IsInitialized);
 
             if (!status.IsInitialized) {
-                this.changesGroup.resourceStates = [];
-                this.scm.count = 0;
-                vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, false);
-                this.scm.statusBarCommands = [{
-                    command: 'tiaConnect.vcsInit',
-                    title: '$(repo) Initialize VCS',
-                    tooltip: 'Initialize source control for this project',
-                }];
+                this.applyNotInitializedState();
                 return;
             }
 
-            // Check if remotes are configured
+            let hasRemote = false;
             try {
                 const remotes = await vcsListRemotes();
-                vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, remotes.length > 0);
+                if (!this.isCurrentGeneration(expectedGeneration)) { return; }
+                hasRemote = remotes.length > 0;
             } catch {
-                vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, false);
+                // Remote discovery is secondary to the main status refresh.
             }
+            void vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, hasRemote);
 
-            this.changesGroup.resourceStates = (status.Changes || []).map(c => this.toResourceState(c));
-            this.scm.count = status.ChangedFilesCount;
+            const changes = status.Changes || [];
+            this.changesGroup.resourceStates = changes.map(change => this.toResourceState(change));
+            this.scm.count = status.ChangedFilesCount ?? changes.length;
+            this.scm.inputBox.enabled = true;
+            this.scm.inputBox.placeholder = l10n.t('Commit message (exports project and creates a Git commit)');
 
             const branchLabel = status.LastCommitSha
                 ? `$(git-branch) ${status.LastCommitMessage || status.LastCommitSha.substring(0, 7)}`
-                : '$(git-branch) No commits';
+                : `$(git-branch) ${l10n.t('No commits')}`;
 
             this.scm.statusBarCommands = [
-                { command: 'tiaConnect.vcsBranch', title: branchLabel, tooltip: 'Branch operations' },
-                { command: 'tiaConnect.vcsPush', title: '$(cloud-upload)', tooltip: 'Push' },
-                { command: 'tiaConnect.vcsPull', title: '$(cloud-download)', tooltip: 'Pull' },
+                { command: 'tiaConnect.vcsBranch', title: branchLabel, tooltip: l10n.t('Branch operations') },
+                { command: 'tiaConnect.vcsPush', title: '$(cloud-upload)', tooltip: l10n.t('Push') },
+                { command: 'tiaConnect.vcsPull', title: '$(cloud-download)', tooltip: l10n.t('Pull') },
             ];
         } catch (err) {
+            if (!this.isCurrentGeneration(expectedGeneration)) { return; }
             const msg = err instanceof Error ? err.message : String(err);
-            if (/not connected|not available|aucun projet|no project/i.test(msg)) {
-                // Silent — no project open
-            } else {
+            if (!/not connected|not available|aucun projet|no project/i.test(msg)) {
                 logError('VCS refresh failed', err);
             }
-            vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsInitialized, false);
-            vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, false);
+            this.applyProjectUnavailableState();
         }
     }
 
-    startAutoRefresh(intervalMs = 30000): void {
-        this.stopAutoRefresh();
-        this.refreshTimer = setInterval(() => this.refresh(), intervalMs);
+    startMonitoring(refreshIntervalMs = 30000, autoExportIntervalMs = 60000, initialExportDelayMs = 8000): void {
+        this.stopMonitoring();
+        this.monitoring = true;
+        const generation = this.lifecycleGeneration;
+
+        void this.refresh(generation);
+        this.refreshTimer = setInterval(() => void this.refresh(generation), refreshIntervalMs);
+        this.initialAutoExportTimer = setTimeout(
+            () => void this.silentExportPreview(generation),
+            initialExportDelayMs,
+        );
+        this.autoExportTimer = setInterval(
+            () => void this.silentExportPreview(generation),
+            autoExportIntervalMs,
+        );
     }
 
-    stopAutoRefresh(): void {
+    stopMonitoring(): void {
+        this.monitoring = false;
+        this.lifecycleGeneration++;
+        this.clearMonitoringTimers();
+        this.exportCancellation?.cancel();
+        this.exportCancellation?.dispose();
+        this.exportCancellation = undefined;
+        this.isExporting = false;
+        this.hasVcsLicense = null;
+        this.licenseCheckFailed = false;
+        this.isInitialized = false;
+        this.applyDisconnectedState();
+    }
+
+    private async ensureVcsLicensed(expectedGeneration = this.lifecycleGeneration): Promise<boolean> {
+        if (!this.isCurrentGeneration(expectedGeneration)) { return false; }
+        if (this.hasVcsLicense !== null) { return this.hasVcsLicense; }
+
+        try {
+            const license = await getLicenseFeatures();
+            if (!this.isCurrentGeneration(expectedGeneration)) { return false; }
+            this.hasVcsLicense = license.Features?.some(
+                feature => feature.Key === 'hasVcs' && feature.Enabled === true,
+            ) === true;
+            this.licenseCheckFailed = false;
+        } catch {
+            if (!this.isCurrentGeneration(expectedGeneration)) { return false; }
+            this.hasVcsLicense = null;
+            this.licenseCheckFailed = true;
+        }
+
+        void vscode.commands.executeCommand('setContext', CONTEXT_KEYS.hasVcs, this.hasVcsLicense === true);
+        if (this.hasVcsLicense !== true) {
+            const message = this.currentLicenseMessage();
+            this.applyUnavailableState(message);
+            log(message);
+        }
+        return this.hasVcsLicense === true;
+    }
+
+    private async ensureVcsReady(): Promise<boolean> {
+        if (!this.monitoring) {
+            vscode.window.showWarningMessage(l10n.t('Connect to T-IA Connect to use Source Control.'));
+            return false;
+        }
+        if (!await this.ensureVcsLicensed()) {
+            vscode.window.showWarningMessage(this.currentLicenseMessage());
+            return false;
+        }
+        return true;
+    }
+
+    private async exportPreview(): Promise<void> {
+        if (!await this.ensureVcsReady()) { return; }
+        if (!this.isInitialized) {
+            vscode.window.showWarningMessage(l10n.t('VCS not initialized. Initialize the repository first.'));
+            return;
+        }
+        if (this.isExporting) {
+            vscode.window.showInformationMessage(l10n.t('A VCS export is already in progress.'));
+            return;
+        }
+
+        const generation = this.lifecycleGeneration;
+        this.isExporting = true;
+        const cancellation = new vscode.CancellationTokenSource();
+        this.exportCancellation = cancellation;
+        try {
+            const jobId = await vcsExportPreview();
+            const result = await vscode.window.withProgress(
+                { location: vscode.ProgressLocation.Notification, title: l10n.t('Exporting project...') },
+                () => pollJob(
+                    jobId,
+                    status => log(`Export preview: ${status.Status}${status.Message ? ` - ${status.Message}` : ''}`),
+                    undefined,
+                    undefined,
+                    cancellation.token,
+                ),
+            );
+            if (result.Status === 'Failed') {
+                throw new Error(result.Error || result.Message);
+            }
+            if (!this.isCurrentGeneration(generation)) { return; }
+            await this.refresh(generation);
+            const count = this.changesGroup.resourceStates.length;
+            vscode.window.showInformationMessage(
+                count > 0 ? l10n.t('{0} changed file(s) detected.', String(count)) : l10n.t('No changes detected.'),
+            );
+        } catch (err) {
+            if (!isJobPollingCancellationError(err)) {
+                logError('Export preview failed', err);
+                vscode.window.showErrorMessage(l10n.t('Export preview failed: {0}', err instanceof Error ? err.message : String(err)));
+            }
+        } finally {
+            cancellation.dispose();
+            if (this.exportCancellation === cancellation) {
+                this.exportCancellation = undefined;
+                this.isExporting = false;
+            }
+        }
+    }
+
+    private async silentExportPreview(expectedGeneration: number): Promise<void> {
+        if (!this.isCurrentGeneration(expectedGeneration) || this.isExporting) { return; }
+        if (!await this.ensureVcsLicensed(expectedGeneration) || !this.isInitialized) { return; }
+
+        this.isExporting = true;
+        const cancellation = new vscode.CancellationTokenSource();
+        this.exportCancellation = cancellation;
+        try {
+            log('Auto export: starting...');
+            const jobId = await vcsExportPreview();
+            const result = await pollJob(
+                jobId,
+                status => log(`Auto export: ${status.Status}${status.Message ? ` - ${status.Message}` : ''}`),
+                undefined,
+                undefined,
+                cancellation.token,
+            );
+            if (result.Status === 'Failed') {
+                throw new Error(result.Error || result.Message);
+            }
+            if (!this.isCurrentGeneration(expectedGeneration)) { return; }
+            await this.refresh(expectedGeneration);
+            log(`Auto export: done. ${this.changesGroup.resourceStates.length} change(s) detected.`);
+        } catch (err) {
+            if (!isJobPollingCancellationError(err)) {
+                logError('Auto export failed', err);
+            }
+        } finally {
+            cancellation.dispose();
+            if (this.exportCancellation === cancellation) {
+                this.exportCancellation = undefined;
+                this.isExporting = false;
+            }
+        }
+    }
+
+    private showLicenseInfo(): void {
+        vscode.window.showWarningMessage(this.currentLicenseMessage());
+    }
+
+    private currentLicenseMessage(): string {
+        return this.licenseCheckFailed
+            ? l10n.t('The Source Control license could not be verified.')
+            : l10n.t('Source Control is not included in the current license.');
+    }
+
+    private applyDisconnectedState(): void {
+        this.changesGroup.resourceStates = [];
+        this.scm.count = 0;
+        this.scm.inputBox.enabled = false;
+        this.scm.inputBox.value = '';
+        this.scm.inputBox.placeholder = l10n.t('Connect to T-IA Connect to use Source Control.');
+        this.scm.statusBarCommands = [];
+        void vscode.commands.executeCommand('setContext', CONTEXT_KEYS.hasVcs, false);
+        void vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsInitialized, false);
+        void vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, false);
+    }
+
+    private applyUnavailableState(message: string): void {
+        this.isInitialized = false;
+        this.changesGroup.resourceStates = [];
+        this.scm.count = 0;
+        this.scm.inputBox.enabled = false;
+        this.scm.inputBox.value = '';
+        this.scm.inputBox.placeholder = message;
+        this.scm.statusBarCommands = [{
+            command: 'tiaConnect.vcsLicenseInfo',
+            title: '$(lock) T-IA VCS',
+            tooltip: message,
+        }];
+        void vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsInitialized, false);
+        void vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, false);
+    }
+
+    private applyProjectUnavailableState(): void {
+        this.isInitialized = false;
+        this.changesGroup.resourceStates = [];
+        this.scm.count = 0;
+        this.scm.inputBox.enabled = false;
+        this.scm.inputBox.value = '';
+        this.scm.inputBox.placeholder = l10n.t('Open a TIA Portal project to use Source Control.');
+        this.scm.statusBarCommands = [];
+        void vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsInitialized, false);
+        void vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, false);
+    }
+
+    private applyNotInitializedState(): void {
+        this.changesGroup.resourceStates = [];
+        this.scm.count = 0;
+        this.scm.inputBox.enabled = false;
+        this.scm.inputBox.value = '';
+        this.scm.inputBox.placeholder = l10n.t('Initialize the VCS repository before committing.');
+        this.scm.statusBarCommands = [{
+            command: 'tiaConnect.vcsInit',
+            title: `$(repo) ${l10n.t('Initialize VCS')}`,
+            tooltip: l10n.t('Initialize source control for this project'),
+        }];
+        void vscode.commands.executeCommand('setContext', CONTEXT_KEYS.vcsHasRemote, false);
+    }
+
+    private isCurrentGeneration(expectedGeneration: number): boolean {
+        return this.monitoring && expectedGeneration === this.lifecycleGeneration;
+    }
+
+    private clearMonitoringTimers(): void {
         if (this.refreshTimer) {
             clearInterval(this.refreshTimer);
             this.refreshTimer = undefined;
         }
+        if (this.autoExportTimer) {
+            clearInterval(this.autoExportTimer);
+            this.autoExportTimer = undefined;
+        }
+        if (this.initialAutoExportTimer) {
+            clearTimeout(this.initialAutoExportTimer);
+            this.initialAutoExportTimer = undefined;
+        }
     }
 
     private async init(): Promise<void> {
+        if (!await this.ensureVcsReady()) { return; }
         try {
             await vcsInit();
             vscode.window.showInformationMessage(l10n.t('VCS repository initialized.'));
@@ -139,16 +380,17 @@ export class TiaSourceControl implements vscode.Disposable {
     }
 
     private async commit(): Promise<void> {
-        let message = this.scm.inputBox.value.trim();
-        if (!message) {
+        if (!await this.ensureVcsReady() || !this.isInitialized) { return; }
+        let message = this.scm.inputBox.value;
+        if (!message.trim()) {
             const input = await vscode.window.showInputBox({
                 prompt: 'Commit message',
                 placeHolder: 'Describe your changes...',
             });
             if (!input) { return; }
-            message = input.trim();
+            message = input;
         }
-        if (!message) { return; }
+        if (!message.trim()) { return; }
 
         try {
             const jobId = await vcsCommit(message);
@@ -177,6 +419,7 @@ export class TiaSourceControl implements vscode.Disposable {
     }
 
     private async push(): Promise<void> {
+        if (!await this.ensureVcsReady() || !this.isInitialized) { return; }
         try {
             const msg = await vscode.window.withProgress(
                 { location: vscode.ProgressLocation.Notification, title: 'Pushing...' },
@@ -191,6 +434,7 @@ export class TiaSourceControl implements vscode.Disposable {
     }
 
     private async pull(): Promise<void> {
+        if (!await this.ensureVcsReady() || !this.isInitialized) { return; }
         try {
             const msg = await vscode.window.withProgress(
                 { location: vscode.ProgressLocation.Notification, title: 'Pulling...' },
@@ -206,6 +450,7 @@ export class TiaSourceControl implements vscode.Disposable {
     }
 
     private async branchMenu(): Promise<void> {
+        if (!await this.ensureVcsReady() || !this.isInitialized) { return; }
         const pick = await vscode.window.showQuickPick(
             [l10n.t('Switch Branch'), l10n.t('Create Branch'), l10n.t('Delete Branch'), l10n.t('Merge Branch')],
             { placeHolder: l10n.t('Select branch operation') }
@@ -277,6 +522,7 @@ export class TiaSourceControl implements vscode.Disposable {
     }
 
     private async showLog(): Promise<void> {
+        if (!await this.ensureVcsReady() || !this.isInitialized) { return; }
         try {
             const entries = await vcsGetLog(30);
             const selected = await vscode.window.showQuickPick(
@@ -310,6 +556,7 @@ export class TiaSourceControl implements vscode.Disposable {
     }
 
     private async remoteMenu(): Promise<void> {
+        if (!await this.ensureVcsReady() || !this.isInitialized) { return; }
         try {
             const remotes = await vcsListRemotes();
 
@@ -368,6 +615,7 @@ export class TiaSourceControl implements vscode.Disposable {
     }
 
     private async diffFile(change: VcsFileChange): Promise<void> {
+        if (!await this.ensureVcsReady() || !this.isInitialized) { return; }
         try {
             const filePath = change.FilePath;
             const title = `${change.ItemName} (${change.Status})`;
@@ -399,7 +647,7 @@ export class TiaSourceControl implements vscode.Disposable {
         return {
             resourceUri: uri,
             decorations: {
-                strikeThrough: change.Status === 'Removed',
+                strikeThrough: change.Status === 'Removed' || change.Status === 'Deleted',
                 tooltip: `${change.Status}: ${change.Domain}/${change.ItemName}`,
                 iconPath: this.getStatusIcon(change.Status),
             },
@@ -415,14 +663,15 @@ export class TiaSourceControl implements vscode.Disposable {
         switch (status) {
             case 'Added': return new vscode.ThemeIcon('diff-added');
             case 'Modified': return new vscode.ThemeIcon('diff-modified');
-            case 'Removed': return new vscode.ThemeIcon('diff-removed');
+            case 'Removed':
+            case 'Deleted': return new vscode.ThemeIcon('diff-removed');
             case 'Renamed': return new vscode.ThemeIcon('diff-renamed');
             default: return new vscode.ThemeIcon('question');
         }
     }
 
     dispose(): void {
-        this.stopAutoRefresh();
+        this.stopMonitoring();
         for (const d of this.disposables) {
             d.dispose();
         }

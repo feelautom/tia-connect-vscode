@@ -28,6 +28,17 @@ async function run() {
         false,
         'PLC tests must use the native VS Code Test Explorer, not a contributed TreeView',
     );
+    assert.equal(
+        tiaViews.some((view) => view.id === 'tiaVcsExplorer'),
+        false,
+        'VCS changes must use the native VS Code Source Control view, not a contributed TreeView',
+    );
+    const contributedCommands = new Set(manifest.contributes.commands.map((command) => command.command));
+    assert.equal([...contributedCommands].some((command) => command.startsWith('tiaConnect.vcsTree')), false);
+    assert.ok(contributedCommands.has('tiaConnect.vcsExportPreview'));
+    assert.ok(manifest.contributes.menus['scm/title'].some(
+        (entry) => entry.command === 'tiaConnect.vcsExportPreview' && entry.when.includes('scmProvider == tiaConnect'),
+    ));
 
     await extension.activate();
     assert.equal(extension.isActive, true, 'The extension must activate successfully');
@@ -42,6 +53,8 @@ async function run() {
         'tiaConnect.diagnostic',
         'tiaConnect.testRefresh',
         'tiaConnect.testRunAll',
+        'tiaConnect.vcsRefresh',
+        'tiaConnect.vcsExportPreview',
     ]) {
         assert.ok(commands.has(command), `Command ${command} must be registered`);
     }

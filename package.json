@@ -742,56 +742,56 @@
         "title": "%command.vcsCommit%",
         "category": "T-IA Connect VCS",
         "icon": "$(check)",
-        "enablement": "isWorkspaceTrusted"
+        "enablement": "isWorkspaceTrusted && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized"
       },
       {
         "command": "tiaConnect.vcsRefresh",
         "title": "%command.vcsRefresh%",
         "category": "T-IA Connect VCS",
         "icon": "$(refresh)",
-        "enablement": "isWorkspaceTrusted"
+        "enablement": "isWorkspaceTrusted && tiaConnect.connected && tiaConnect.hasVcs"
       },
       {
         "command": "tiaConnect.vcsInit",
         "title": "%command.vcsInit%",
         "category": "T-IA Connect VCS",
         "icon": "$(repo)",
-        "enablement": "isWorkspaceTrusted"
+        "enablement": "isWorkspaceTrusted && tiaConnect.connected && tiaConnect.hasVcs && !tiaConnect.vcsInitialized"
       },
       {
         "command": "tiaConnect.vcsPush",
         "title": "%command.vcsPush%",
         "category": "T-IA Connect VCS",
         "icon": "$(cloud-upload)",
-        "enablement": "isWorkspaceTrusted"
+        "enablement": "isWorkspaceTrusted && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote"
       },
       {
         "command": "tiaConnect.vcsPull",
         "title": "%command.vcsPull%",
         "category": "T-IA Connect VCS",
         "icon": "$(cloud-download)",
-        "enablement": "isWorkspaceTrusted"
+        "enablement": "isWorkspaceTrusted && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote"
       },
       {
         "command": "tiaConnect.vcsRemote",
         "title": "%command.vcsRemote%",
         "category": "T-IA Connect VCS",
         "icon": "$(remote)",
-        "enablement": "isWorkspaceTrusted"
+        "enablement": "isWorkspaceTrusted && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized"
       },
       {
         "command": "tiaConnect.vcsBranch",
         "title": "%command.vcsBranch%",
         "category": "T-IA Connect VCS",
         "icon": "$(git-branch)",
-        "enablement": "isWorkspaceTrusted"
+        "enablement": "isWorkspaceTrusted && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized"
       },
       {
         "command": "tiaConnect.vcsLog",
         "title": "%command.vcsLog%",
         "category": "T-IA Connect VCS",
         "icon": "$(history)",
-        "enablement": "isWorkspaceTrusted"
+        "enablement": "isWorkspaceTrusted && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized"
       },
       {
         "command": "tiaConnect.testRefresh",
@@ -1002,32 +1002,11 @@
         "icon": "$(settings-gear)"
       },
       {
-        "command": "tiaConnect.vcsTreeRefresh",
-        "title": "%command.vcsTreeRefresh%",
-        "category": "T-IA Connect VCS",
-        "icon": "$(refresh)",
-        "enablement": "isWorkspaceTrusted"
-      },
-      {
         "command": "tiaConnect.vcsExportPreview",
         "title": "%command.vcsExportPreview%",
         "category": "T-IA Connect VCS",
         "icon": "$(eye)",
-        "enablement": "isWorkspaceTrusted"
-      },
-      {
-        "command": "tiaConnect.vcsTreeInit",
-        "title": "%command.vcsTreeInit%",
-        "category": "T-IA Connect VCS",
-        "icon": "$(repo)",
-        "enablement": "isWorkspaceTrusted"
-      },
-      {
-        "command": "tiaConnect.vcsTreeCommit",
-        "title": "%command.vcsTreeCommit%",
-        "category": "T-IA Connect VCS",
-        "icon": "$(check)",
-        "enablement": "isWorkspaceTrusted"
+        "enablement": "isWorkspaceTrusted && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized"
       },
       {
         "command": "tiaConnect.vcsDiffFile",
@@ -1104,11 +1083,6 @@
         {
           "id": "tiaProjectExplorer",
           "name": "%view.projectExplorer%"
-        },
-        {
-          "id": "tiaVcsExplorer",
-          "name": "%view.vcsExplorer%",
-          "when": "tiaConnect.connected"
         }
       ],
       "tiaCopilot": [
@@ -1147,22 +1121,51 @@
       }
     ],
     "menus": {
-      "view/title": [
+      "scm/title": [
+        {
+          "command": "tiaConnect.vcsInit",
+          "when": "scmProvider == tiaConnect && tiaConnect.connected && tiaConnect.hasVcs && !tiaConnect.vcsInitialized",
+          "group": "navigation@1"
+        },
         {
           "command": "tiaConnect.vcsExportPreview",
-          "when": "view == tiaVcsExplorer",
-          "group": "navigation"
+          "when": "scmProvider == tiaConnect && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized",
+          "group": "navigation@1"
         },
         {
-          "command": "tiaConnect.vcsTreeCommit",
-          "when": "view == tiaVcsExplorer",
-          "group": "navigation"
+          "command": "tiaConnect.vcsRefresh",
+          "when": "scmProvider == tiaConnect && tiaConnect.connected && tiaConnect.hasVcs",
+          "group": "navigation@2"
+        }
+      ],
+      "scm/sourceControl": [
+        {
+          "command": "tiaConnect.vcsBranch",
+          "when": "scmProvider == tiaConnect && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized",
+          "group": "1_vcs"
         },
         {
-          "command": "tiaConnect.vcsTreeRefresh",
-          "when": "view == tiaVcsExplorer",
-          "group": "navigation"
+          "command": "tiaConnect.vcsLog",
+          "when": "scmProvider == tiaConnect && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized",
+          "group": "1_vcs"
         },
+        {
+          "command": "tiaConnect.vcsRemote",
+          "when": "scmProvider == tiaConnect && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized",
+          "group": "2_sync"
+        },
+        {
+          "command": "tiaConnect.vcsPull",
+          "when": "scmProvider == tiaConnect && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote",
+          "group": "2_sync"
+        },
+        {
+          "command": "tiaConnect.vcsPush",
+          "when": "scmProvider == tiaConnect && tiaConnect.connected && tiaConnect.hasVcs && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote",
+          "group": "2_sync"
+        }
+      ],
+      "view/title": [
         {
           "command": "tiaConnect.copilotClear",
           "when": "view == tiaCopilotChat",
@@ -1307,37 +1310,37 @@
         },
         {
           "command": "tiaConnect.vcsInit",
-          "when": "view == tiaProjectExplorer && viewItem == project && !tiaConnect.vcsInitialized",
+          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.hasVcs && !tiaConnect.vcsInitialized",
           "group": "3_vcs"
         },
         {
           "command": "tiaConnect.vcsCommit",
-          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized",
+          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.hasVcs && tiaConnect.vcsInitialized",
           "group": "3_vcs"
         },
         {
           "command": "tiaConnect.vcsLog",
-          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized",
+          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.hasVcs && tiaConnect.vcsInitialized",
           "group": "3_vcs"
         },
         {
           "command": "tiaConnect.vcsBranch",
-          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized",
+          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.hasVcs && tiaConnect.vcsInitialized",
           "group": "3_vcs"
         },
         {
           "command": "tiaConnect.vcsRemote",
-          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized",
+          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.hasVcs && tiaConnect.vcsInitialized",
           "group": "4_vcs_sync"
         },
         {
           "command": "tiaConnect.vcsPush",
-          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote",
+          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.hasVcs && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote",
           "group": "4_vcs_sync"
         },
         {
           "command": "tiaConnect.vcsPull",
-          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote",
+          "when": "view == tiaProjectExplorer && viewItem == project && tiaConnect.hasVcs && tiaConnect.vcsInitialized && tiaConnect.vcsHasRemote",
           "group": "4_vcs_sync"
         }
       ]

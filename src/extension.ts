@@ -12,7 +12,6 @@ import { createDiagnostics, disposeDiagnostics } from './views/diagnostics';
 import { getOutputChannel, log } from './views/outputChannel';
 import { COMMANDS, CONTEXT_KEYS, ORIGINAL_SCHEME } from './utils/constants';
 import { VcsContentProvider, VCS_SCHEME } from './providers/vcsContentProvider';
-import { VcsTreeProvider } from './providers/vcsTreeProvider';
 import { registerLanguageProviders } from './language';
 import { getSignalRClient, disposeSignalR } from './api/signalr';
 import { AuthService } from './auth/authService';
@@ -35,7 +34,6 @@ import { isWorkspaceTrusted, registerWorkspaceCommand } from './security/workspa
 let blockEditor: BlockEditor;
 let scmProvider: TiaSourceControl;
 let testProvider: TiaTestProvider;
-let vcsTreeProvider: VcsTreeProvider;
 let authService: AuthService;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
@@ -132,14 +130,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Connect block editor to QuickDiff provider
     blockEditor.setOriginalContentProvider(scmProvider.originalContentProvider);
 
-    // VCS Tree View (our own Source Control panel)
-    vcsTreeProvider = new VcsTreeProvider();
-    vcsTreeProvider.activate(context);
-    const vcsTreeView = vscode.window.createTreeView('tiaVcsExplorer', {
-        treeDataProvider: vcsTreeProvider,
-    });
-    context.subscriptions.push(vcsTreeView, vcsTreeProvider);
-
     // PLC tests in the native VS Code Test Explorer
     testProvider = new TiaTestProvider();
     testProvider.activate(context);
@@ -182,11 +172,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     treeProvider.onProjectLoaded((overview) => {
         vscode.commands.executeCommand('setContext', CONTEXT_KEYS.connected, true);
         setConnected(overview.Name);
-        scmProvider.refresh();
-        scmProvider.startAutoRefresh();
-        vcsTreeProvider.refresh();
-        vcsTreeProvider.startAutoRefresh();
-        vcsTreeProvider.startAutoExport();
+        scmProvider.startMonitoring();
         testProvider.discoverTests();
         // Connect SignalR for real-time job notifications
         getSignalRClient().connect();
@@ -238,7 +224,6 @@ export async function deactivate(): Promise<void> {
     disposeSignalR();
     blockEditor?.dispose();
     scmProvider?.dispose();
-    vcsTreeProvider?.dispose();
     testProvider?.dispose();
     disposeDiagnostics();
     disposeStatusBar();

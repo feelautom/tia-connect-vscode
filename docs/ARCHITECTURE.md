@@ -46,8 +46,7 @@ tia-connect-vscode/
 │   │   └── serverDetector.ts       # Detection serveur (exe + running) + auto-fetch API key
 │   ├── providers/
 │   │   ├── projectTreeProvider.ts  # TreeDataProvider (explorateur projet TIA)
-│   │   ├── scmProvider.ts          # SourceControl provider (QuickDiff gutter)
-│   │   ├── vcsTreeProvider.ts      # TreeDataProvider (Source Control dans la sidebar)
+│   │   ├── scmProvider.ts          # SCM natif, QuickDiff, licence et auto-export VCS
 │   │   ├── vcsContentProvider.ts   # TextDocumentContentProvider (scheme tia-vcs, diff viewer)
 │   │   ├── originalContentProvider.ts # QuickDiff pour blocs en cours d'edition
 │   │   └── testProvider.ts         # TestController natif VS Code (PLC Tests)
@@ -148,20 +147,20 @@ Gere le cycle de vie de l'edition des blocs SCL/STL.
 - **Prechargement** : apres le chargement d'un projet, tous les blocs SCL/STL sont telecharges en arriere-plan. A l'ouverture, le bloc est servi depuis le cache si disponible (TTL 10 min).
 - **Cache** : `blockFileManager.hasCachedBlock()` verifie l'existence du fichier + age via metadata `exportedAt`.
 
-### 4. Source Control (`providers/vcsTreeProvider.ts` + `vcsContentProvider.ts`)
+### 4. Source Control (`providers/scmProvider.ts` + `vcsContentProvider.ts`)
 
-Panel dedie **Source Control** dans la sidebar T-IA Connect (pas le SCM natif de VS Code).
+Integration dans la vue **Source Control native de VS Code** via `vscode.scm.createSourceControl`.
 
 **Workflow :**
 1. Export Preview (bouton oeil) → exporte le projet sans commiter
-2. Les fichiers changes apparaissent dans le tree (Added/Modified/Removed)
+2. Les fichiers changes apparaissent comme ressources SCM (Added/Modified/Removed/Deleted)
 3. Clic sur un fichier → diff side-by-side read-only
-4. Commit (bouton checkmark) → export + git commit
+4. Commit via l'input SCM natif → export + git commit
 
 **Composants :**
-- `vcsTreeProvider.ts` — TreeDataProvider : affiche les changements, verification licence `hasVcs`, auto-export periodique (1 min), export initial a la connexion
+- `scmProvider.ts` — proprietaire unique du cycle VCS : ressources SCM, verification exacte de la licence `hasVcs`, commandes, auto-refresh (30 s), auto-export (1 min) et arret complet a la deconnexion
 - `vcsContentProvider.ts` — TextDocumentContentProvider pour le scheme `tia-vcs`. Recupere le contenu d'un fichier a un commit donne (HEAD, HEAD~1, WORKING) via `GET /api/source-control/file-content`
-- `scmProvider.ts` — QuickDiff gutter decorations pour les blocs en cours d'edition
+- `originalContentProvider.ts` — QuickDiff gutter decorations pour les blocs en cours d'edition
 
 **Fonctionnalites :**
 - Diff side-by-side read-only au clic (Modified = diff, Added = contenu, Removed = ancien)
@@ -172,7 +171,8 @@ Panel dedie **Source Control** dans la sidebar T-IA Connect (pas le SCM natif de
 - Branches : switch, create, delete, merge
 - Log de commits avec diff
 - Auto-refresh status toutes les 30 secondes
-- Verification licence `hasVcs` (cadenas si pas inclus)
+- Verification licence `hasVcs` avant tout appel VCS ; nouvelle verification automatique apres une erreur transitoire
+- Arret des timers et annulation du polling d'export a la deconnexion
 
 ### 5. PLC Tests (`providers/testProvider.ts`)
 

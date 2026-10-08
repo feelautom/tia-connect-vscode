@@ -195,8 +195,7 @@ async function connect(
 
         // Refresh all providers
         treeProvider.setConnected(true);
-        scmProvider.refresh();
-        scmProvider.startAutoRefresh();
+        scmProvider.startMonitoring();
         testProvider.discoverTests();
     } catch (err) {
         logError('Connection failed', err);
@@ -360,7 +359,7 @@ async function disconnect(treeProvider: ProjectTreeProvider, scmProvider: TiaSou
     getSignalRClient().disconnect();
     vscode.commands.executeCommand('setContext', CONTEXT_KEYS.connected, false);
     setDisconnected();
-    scmProvider.stopAutoRefresh();
+    scmProvider.stopMonitoring();
     treeProvider.setConnected(false);
     copilotProviderRef?.setConnected(false);
 

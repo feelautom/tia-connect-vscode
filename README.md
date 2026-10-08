@@ -128,7 +128,7 @@ Full bidirectional export and import for all project data.
 
 ### Source Control (VCS)
 
-Version your TIA Portal project with Git-based source control, directly in the sidebar.
+Version your TIA Portal project with Git-based source control in VS Code's native Source Control view.
 
 1. **Export Preview** (eye icon): export the project and detect changes since the last commit
 2. **Review**: click any changed file to open a read-only side-by-side diff
@@ -143,7 +143,8 @@ Additional features:
 - **Smart Comparison**: normalized XML diff (strips IDs, timestamps, whitespace) to detect real changes
 - **Dependency Sort**: topological ordering (Kahn's algorithm) for correct import order
 - **Orphan Cleanup**: detect blocks deleted in TIA Portal but still in source control
-- License check (lock icon if VCS is not included in your edition)
+- License-aware actions (VCS commands stay unavailable when `hasVcs` is not included in your edition)
+- Monitoring stops immediately on disconnect, including scheduled refreshes and exports
 
 ### AI Integration
 

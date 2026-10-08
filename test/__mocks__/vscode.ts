@@ -127,13 +127,34 @@ export const window = {
 };
 
 export const commands = {
-    registerCommand: () => ({ dispose: () => {} }),
-    executeCommand: async () => {},
+    registered: new Map<string, (...args: any[]) => unknown>(),
+    executed: [] as Array<{ command: string; args: any[] }>,
+    registerCommand(command: string, callback: (...args: any[]) => unknown) {
+        this.registered.set(command, callback);
+        return { dispose: () => this.registered.delete(command) };
+    },
+    async executeCommand(command: string, ...args: any[]) {
+        this.executed.push({ command, args });
+        return this.registered.get(command)?.(...args);
+    },
+    reset(): void {
+        this.registered.clear();
+        this.executed.length = 0;
+    },
 };
 
 export class TestMessage {
     location?: any;
     constructor(public message: string) {}
+}
+
+export class CancellationTokenSource {
+    readonly token: any = {
+        isCancellationRequested: false,
+        onCancellationRequested: () => ({ dispose: () => {} }),
+    };
+    cancel(): void { this.token.isCancellationRequested = true; }
+    dispose(): void {}
 }
 
 export enum TestRunProfileKind {
@@ -246,7 +267,9 @@ export const extensions = {
 };
 
 export const scm = {
-    createSourceControl: () => ({
+    created: [] as any[],
+    createSourceControl: () => {
+        const sourceControl = {
         inputBox: { placeholder: '', value: '' },
         acceptInputCommand: undefined as any,
         quickDiffProvider: undefined as any,
@@ -257,7 +280,11 @@ export const scm = {
         count: 0,
         statusBarCommands: [],
         dispose: () => {},
-    }),
+        };
+        scm.created.push(sourceControl);
+        return sourceControl;
+    },
+    reset(): void { this.created.length = 0; },
 };
 
 export const languages = {

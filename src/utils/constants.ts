@@ -23,6 +23,7 @@ export const CONTEXT_KEYS = {
     serverNotInstalled: 'tiaConnect.serverNotInstalled',
     vcsInitialized: 'tiaConnect.vcsInitialized',
     vcsHasRemote: 'tiaConnect.vcsHasRemote',
+    hasVcs: 'tiaConnect.hasVcs',
     hasAi: 'tiaConnect.hasAi',
 } as const;
 

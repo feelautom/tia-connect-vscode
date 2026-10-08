@@ -23,7 +23,7 @@ This extension connects to a running [T-IA Connect](https://t-ia-connect.com) se
 
 1. **Install the extension** from the VS Code Marketplace
 2. Click the **T-IA Connect** icon in the Activity Bar (left sidebar)
-3. **Sign in** with your T-IA Connect account (or create one for free)
+3. **Sign in** with your T-IA Connect account (or create an account, then choose a paid plan)
 4. If T-IA Connect is not installed, follow the download link in the sidebar
 5. Click **Launch Headless** or **Launch with GUI** to start the server
 6. Open a TIA Portal project: you're ready to code!
@@ -168,9 +168,9 @@ Dedicated AI assistant in the secondary sidebar, independent of GitHub Copilot.
 
 ![Copilot Summary](docs/screenshots/25-copilot-summary.png)
 
-#### MCP Server (100+ Tools)
+#### MCP Server
 
-The T-IA Connect server exposes a **Model Context Protocol** server with 100+ tools. The extension auto-generates `.vscode/mcp.json` so GitHub Copilot Chat can use all MCP tools automatically.
+The T-IA Connect server exposes hundreds of **Model Context Protocol** (MCP) tools, with the exact catalog depending on licensed features. The extension auto-generates `.vscode/mcp.json` so GitHub Copilot Chat can use the available MCP tools automatically.
 
 Compatible with: **Claude Desktop**, **Claude Code**, **Cursor**, **Windsurf**, and any MCP client.
 
@@ -377,4 +377,4 @@ The extension is fully translated in **French**. It displays in French when VS C
 
 This software is source-available. You may use, copy, distribute, and modify it, subject to the limitations in the license. You may **not** provide it as a hosted/managed service, and you may **not** circumvent the license key functionality.
 
-The T-IA Connect server requires a separate license: free trial available at [t-ia-connect.com](https://t-ia-connect.com).
+A paid T-IA Connect license is required for the server. Choose a plan at [t-ia-connect.com](https://t-ia-connect.com).

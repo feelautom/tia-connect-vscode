@@ -262,7 +262,8 @@
 
 | Fonctionnalite | Statut | Notes |
 |----------------|--------|-------|
-| Publication Marketplace | TODO | Quand la v1 sera stable |
+| Gate de release coordonnee | DONE | Dry-run Extension/Desktop/Website, validation stricte, inspection VSIX et checksum |
+| Publication Marketplace | BLOCKED | Attendre Desktop + WebSetup v2 valides, tickets bloquants fermes et approbation explicite |
 | Validation licence/compte (matching local vs cloud) | TODO | Nice to have — verifier coherence entre les comptes |
 
 ---

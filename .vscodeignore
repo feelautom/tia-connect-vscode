@@ -16,3 +16,5 @@ tsconfig.json
 docs/screenshots/**
 docs/screenshots.html
 internal/**
+scripts/**
+release/**

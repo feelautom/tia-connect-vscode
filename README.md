@@ -370,6 +370,7 @@ The extension is fully translated in **French**. It displays in French when VS C
 
 - [Architecture](docs/ARCHITECTURE.md): Code structure, components, data flow
 - [Roadmap](docs/ROADMAP.md): Development status by phase
+- [Release runbook](docs/RELEASE.md): Coordinated Desktop, Website, and Marketplace release gates
 - [Changelog](changelog.md): Version history
 
 ## License

@@ -1423,6 +1423,8 @@
     "test:watch": "vitest",
     "lint": "eslint src/",
     "package": "npx @vscode/vsce package",
+    "release:dry-run": "node scripts/release/validate-release.mjs --allow-no-go",
+    "release:validate": "node scripts/release/validate-release.mjs",
     "test:integration:untrusted": "node test/integration/runTest.cjs --untrusted"
   },
   "devDependencies": {

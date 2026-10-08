@@ -419,6 +419,12 @@ Les operations longues (commit VCS, execution pipeline, tests) retournent un `Jo
 - **T-IA Connect** v2.1.617+ (serveur)
 - **TIA Portal** V17-V21 (via le serveur)
 
+## Chaine de release coordonnee
+
+`release/release-plan.json` est le contrat machine-readable entre l'extension, le Desktop et le Website/WebSetup v2. `scripts/release/validate-release.mjs` bloque toute candidate incoherente : version deja publiee, versions package/lock/changelog/tag divergentes, commit Desktop ou Website absent, contrat public `desktop-websetup-v2` non valide, condition bloquante restante, worktree sale ou asset Marketplace non conforme aux empreintes SHA-256 approuvees.
+
+Le workflow GitHub manuel produit uniquement un artefact prive inspecte. Seul un tag exact peut creer une GitHub Release, et aucun chemin n'effectue automatiquement une publication Marketplace. Le mode operatoire complet est documente dans [RELEASE.md](RELEASE.md).
+
 ## Workspace Trust
 
 L'extension declare un support `limited` des workspaces non approuves. En Restricted Mode, l'authentification, les reglages, le diagnostic expurge et les fonctions de langage restent disponibles. Les commandes industrielles, le lancement Desktop, les imports/exports, les ecritures de fichiers, VCS, les tests et la configuration MCP sont desactives dans l'interface et bloques a l'execution. Les requetes REST mutantes disposent d'un second garde runtime. La confiance accordee relance automatiquement la detection Desktop et l'auto-connexion.

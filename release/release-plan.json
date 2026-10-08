@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "releaseStatus": "blocked",
+  "publishedExtensionVersion": "1.0.3",
+  "candidate": {
+    "extensionVersion": null,
+    "channel": "stable",
+    "desktop": {
+      "status": "blocked",
+      "requiredVersion": null,
+      "validatedVersion": null,
+      "sourceCommit": null,
+      "securityContract": "desktop-websetup-v2"
+    },
+    "website": {
+      "status": "blocked",
+      "sourceCommit": null,
+      "protocol": "websetup-v2"
+    },
+    "blockingConditions": [
+      "desktop-release-ready",
+      "website-websetup-v2-ready",
+      "end-to-end-validation-complete"
+    ]
+  },
+  "assets": {
+    "resources/icons/icon.png": "318ca775639f96cf403b18c43ba6b720e42ab1e6b736e19530d43c9f5938c270",
+    "resources/icons/tia-portal.svg": "8ba80cb54d041baab88a074e82aec3e146877c7a9ecbf8e751f7ea4202f38fab"
+  },
+  "marketplace": {
+    "currentPublicationMode": "manual",
+    "recommendedAuthentication": "microsoft-entra-workload-identity-federation",
+    "environment": "marketplace-production"
+  }
+}

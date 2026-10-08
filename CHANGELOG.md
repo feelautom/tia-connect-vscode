@@ -2,6 +2,20 @@
 
 All notable changes to the T-IA Connect for VS Code extension will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- Consolidate VCS into VS Code's native Source Control view and remove the duplicate custom VCS TreeView.
+- Make the native SCM provider the single owner of license checks, refresh, export preview, and scheduled auto-export.
+- Add a coordinated release plan and dry-run gate for the Extension, Desktop, and Website/WebSetup v2 candidates.
+- Require exact package, lockfile, changelog, tag, Desktop, Website, blocker, worktree, and Marketplace asset validation before release.
+- Produce an inspected, versioned VSIX artifact and SHA-256 checksum before any tag can create a GitHub Release.
+
+### Fixed
+- Stop all VCS refresh/export timers and cancel active export polling on disconnect.
+- Treat both `Removed` and `Deleted` backend statuses as removed SCM resources.
+- Preserve commit messages exactly as entered while still rejecting whitespace-only messages.
+
 ## [1.0.3] - 2026-07-18
 
 ### Security

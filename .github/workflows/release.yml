@@ -4,30 +4,35 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  release:
+  prepare:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 0
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 20
           cache: npm
 
       - run: npm ci
-
       - run: npm run lint
-
       - run: npm run typecheck
-
       - run: npm test
-
       - run: npm run build
+
+      - name: Verify candidate commit belongs to main
+        shell: bash
+        run: |
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
 
       - name: Test Extension Host
         run: |
@@ -36,24 +41,69 @@ jobs:
         env:
           VSCODE_TEST_VERSION: stable
 
-      - run: npx @vscode/vsce package --no-dependencies
-        env:
-          VSCE_PAT: fake
+      - name: Validate coordinated release plan
+        shell: bash
+        run: |
+          args=()
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            args+=(--tag "$GITHUB_REF_NAME")
+          fi
+          node scripts/release/validate-release.mjs "${args[@]}"
 
-      - name: Get VSIX filename
-        id: vsix
-        run: echo "file=$(ls *.vsix)" >> "$GITHUB_OUTPUT"
+      - name: Read candidate version
+        id: version
+        shell: bash
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Package versioned VSIX
+        run: npx @vscode/vsce package --no-dependencies --out "tia-connect-vscode-${{ steps.version.outputs.value }}.vsix"
+
+      - name: Validate packaged VSIX and create checksum
+        shell: bash
+        run: |
+          args=()
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            args+=(--tag "$GITHUB_REF_NAME")
+          fi
+          args+=(--vsix "tia-connect-vscode-${{ steps.version.outputs.value }}.vsix")
+          args+=(--sha-output SHA256SUMS.txt)
+          node scripts/release/validate-release.mjs "${args[@]}"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: release-candidate-${{ steps.version.outputs.value }}
+          path: |
+            tia-connect-vscode-${{ steps.version.outputs.value }}.vsix
+            SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  github-release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: release-candidate-*
+          merge-multiple: true
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@c12583777ecdfd3be55c69cf75464299dc01057e # v3
         with:
-          files: ${{ steps.vsix.outputs.file }}
+          files: |
+            *.vsix
+            SHA256SUMS.txt
           generate_release_notes: true
 
       - name: Scan with VirusTotal
-        uses: crazy-max/ghaction-virustotal@v5
+        uses: crazy-max/ghaction-virustotal@936d8c5c00afe97d3d9a1af26d017cfdf26800a2 # v5
         with:
           vt_api_key: ${{ secrets.VT_API_KEY }}
-          files: ${{ steps.vsix.outputs.file }}
+          files: "*.vsix"
           update_release_body: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
